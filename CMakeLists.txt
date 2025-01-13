@@ -34,8 +34,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 enable_language(C ASM)
 
 # Core project settings
-project(${CMAKE_PROJECT_NAME})
+project(${PROJECT_NAME})
 message("Build type: " ${CMAKE_BUILD_TYPE})
+message("Target MCU: " ${TARGET_MCU})
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})

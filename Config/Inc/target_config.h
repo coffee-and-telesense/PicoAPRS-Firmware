@@ -17,7 +17,7 @@
 #endif
 
 /* STM32L4 Series Configuration */
-#if defined(STM32L432KC) || defined(STM32L476JE) // @todo: The 76JE is not tested yet, but include as example
+#if TARGET_MCU == STM32L432KC // @TODO: Add more MCUs as needed
     //L4 Family HAL
     #include "stm32l4xx_hal.h"
 

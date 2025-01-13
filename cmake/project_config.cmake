@@ -8,16 +8,19 @@ set(SUPPORTED_MCUS
     #Add more supported MCUs here
 )
 
-# Check that target was provided
-if(NOT TARGET_MCU)
-    message(FATAL_ERROR
-        "\nTARGET_MCU not defined! \
-        \n\nTo configure the build with a target MCU, use a command like this \
-        \n\n  cmake -B build/Debug -DTARGET_MCU=STM32L432KC --preset Debug    (STM32L432KC target) \
-        \n  cmake --build build/L432KC         # Build the project \
-        \n\nSupported MCUs: ${SUPPORTED_MCUS}"
-        )
+# Check if target was provide else, use default configuration
+if (DEFINED TARGET_MCU)
+    set(CMAKE_TARGET_MCU ${TARGET_MCU} CACHE STRING "Target MCU")
+else()
+    set(CMAKE_TARGET_MCU "STM32L432KC" CACHE STRING "Target MCU")
+    message(WARNING 
+        "\nTARGET_MCU not defined, defaulting to STM32L432KC \
+        \nTo specify a different target, use: \
+        \n  cmake -B build/Debug -DTARGET_MCU=<target> --preset Debug"
+    )
 endif()
+
+add_compile_definitions(TARGET_MCU=${CMAKE_TARGET_MCU})
 
 # Validate if the provided TARGET_MCU is supported
 list(FIND SUPPORTED_MCUS ${TARGET_MCU} MCU_INDEX)
