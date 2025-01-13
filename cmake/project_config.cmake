@@ -8,9 +8,9 @@ set(SUPPORTED_MCUS
     #Add more supported MCUs here
 )
 
-#Check that target was provided
+# Check that target was provided
 if(NOT TARGET_MCU)
-    message(FATAL_ERROR 
+    message(FATAL_ERROR
         "\nTARGET_MCU not defined! \
         \n\nTo configure the build with a target MCU, use a command like this \
         \n\n  cmake -B build/Debug -DTARGET_MCU=STM32L432KC --preset Debug    (STM32L432KC target) \
@@ -31,8 +31,31 @@ if(MCU_INDEX EQUAL -1)
     )
 endif()
 
-# Project-specific features that aren't in presets
-option(ENABLE_DATA_LOGGING "Enable data logging features" ON)
+# UBX Protocol Configuration
+option(ENABLE_UBX_PROTOCOL "Enable UBX protocol support" ON)
+option(UBX_USE_I2C "Use I2C for UBX communication" ON)
+option(UBX_USE_UART "Use UART for UBX communication" OFF)
+
+# Validate UBX configuration
+if(ENABLE_UBX_PROTOCOL)
+    if(NOT UBX_USE_I2C AND NOT UBX_USE_UART)
+        message(FATAL_ERROR "UBX protocol enabled but no communication interface selected (I2C or UART)")
+    endif()
+    
+    # Add UBX-related definitions
+    add_definitions(-DFEATURE_UBX_PROTOCOL)
+    
+    if(UBX_USE_I2C)
+        add_definitions(-DUBX_USE_I2C)
+    endif()
+    
+    if(UBX_USE_UART)
+        add_definitions(-DUBX_USE_UART)
+    endif()
+endif()
+
+# Project-specific features, for example:
+# option(ENABLE_DATA_LOGGING "Enable data logging features" ON)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DFEATURE_DEBUG)
