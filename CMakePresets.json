@@ -37,6 +37,18 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "MinSizeRel"
             }
+        },
+        {
+            "name": "target-base",
+            "hidden": true,
+            "inherits": "default"
+        },
+        {
+            "name": "L432KC",
+            "inherits": "target-base",
+            "cacheVariables": {
+                "MCU_TARGET": "L432KC"
+            }
         }
     ],
     "buildPresets": [
