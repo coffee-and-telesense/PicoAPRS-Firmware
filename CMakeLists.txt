@@ -18,30 +18,14 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-if(NOT DEFINED MCU_TARGET)
-    message(FATAL_ERROR 
-        "MCU_TARGET is not defined\n"
-        "Please define MCU_TARGET, see CMakePresets for more options\n"
-        "Example: > cmake --preset Debug -DMCU_TARGET=L432KC"
-    )
-endif()
-
-# Check for errors in MCU_TARGET
-if(NOT MCU_TARGET MATCHES "L432KC")
-    message(FATAL_ERROR 
-        "MCU_TARGET '${MCU_TARGET}' is not valid\n"
-        "Please define MCU_TARGET, see CMakePresets for more options\n"
-        "Example: > cmake --preset Debug -DMCU_TARGET=L432KC"
-    )
-endif()
-
-add_compile_definitions(MCU_TARGET=${MCU_TARGET})
-
-# Set the project name
-set(CMAKE_PROJECT_NAME PicoAPRS-Firmware)
-
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")
+
+# Include project configuration from cmake/project_config.cmake
+include("cmake/project_config.cmake")
+
+# Set the project name from cmake/project_config.cmake
+set(CMAKE_PROJECT_NAME ${PROJECT_NAME} VERSION ${PROJECT_VERSION})
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
