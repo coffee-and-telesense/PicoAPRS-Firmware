@@ -47,7 +47,7 @@
             "name": "L432KC",
             "inherits": "target-base",
             "cacheVariables": {
-                "MCU_TARGET": "L432KC"
+                "MCU_TARGET": "STM32L432KC"
             }
         }
     ],
