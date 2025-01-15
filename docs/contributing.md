@@ -82,7 +82,7 @@ add_executable(${CMAKE_PROJECT_NAME})
 # Add test sources
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
-    # Example: ${CMAKE_SOURCE_DIR}/../../Src/Sensors/Src/u-blox_gnss_MAX-M10S.c
+    # Example: ${CMAKE_SOURCE_DIR}/test_gps.c
 )
 
 # Add include paths
@@ -106,6 +106,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
 )
 ```
+This [CMakeLists.txt](../tests/test_gps/CMakeLists.txt) is a fully functioning example
 
 ### 2. CMakePresets.json
 Copy and paste this but fix the `toolchainFile` line
