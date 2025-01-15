@@ -15,6 +15,16 @@
 
 Note: The ARM toolchain (`arm-none-eabi-*`) appears as dependencies in your toolchain file generate by the STM32 VS Code Extension and is essential for cross-compilation.
 
+## Project Structure
+```bash
+.
+├── Config/                 # Global configuration
+├── Src/                    # Core source code
+│   └── Sensors/            # Sensor drivers
+├── targets/                # Target-specific code
+├── tests/                  # Development and testing
+└── docs/                   # Documentation
+```
 
 ## 🚀 Getting Started
 
@@ -57,7 +67,6 @@ For Linux/MacOS:
 **Note: Actual paths may vary based on installation choices, these are just examples**
 
 ### 📥 Project Setup
-
 ```bash
 # Clone repository
 git clone https://github.com/coffee-and-telesense/PicoAPRS-Firmware.git
@@ -67,32 +76,17 @@ code PicoAPRS-Firmware
 ```
 
 ### 🔧 Project Import
+This step is important as it configures your vscode workspace to work with the stm32 tools. See the documenation on vscode's tasks and settings json files. 
 
 1. Open VSCode Command Palette (Ctrl+Shift+P)
 2. Type `STM32 Project Manager`
 3. Under the project manager view of the stm32 extnesion, choose "Import CMake Project"
 4. **[IMPORTANT]** Ensure that .vscode configuration generation completes (this generates important workspace settings for the stm32 extension)
 
-## 📁 Directory Structure
+### Next steps
+- Review our [contributing guide](docs/contributing.md) 
+- Learn the general stm32 HAL functions
+- Make your own small projects and play around with flashing your target board; blinking the user led is always a good place to start
+- 
 
-```
-project-root/
-├── CMakeFiles/              # CMake build system files
-├── Drivers/                 # STM32 HAL and CMSIS drivers
-│   ├── CMSIS/              # Core system files
-│   └── STM32L4xx_HAL_Driver/
-├── Inc/                     # Header files
-├── Src/                     # Source files
-├── Sensors/                 # Libs/Drivers for Sensors
-├── build/                   # Build output directory
-├── cmake/                   # CMake configuration files
-├── docs/                    # Documentation
-├── mcu-config.ioc          # STM32CubeMX configuration
-├── CMakeLists.txt          # Main CMake configuration
-├── startup_stm32l432xx.s   # Startup assembly
-└── stm32l432kcux_flash.ld  # Linker script
-```
-
-## ⚠️ Important Notes
-- Review STM32 extension documentation before starting
-- TODO: Add More 
+# TODO: 

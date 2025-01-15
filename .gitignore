@@ -1,4 +1,3 @@
-Drivers/*
-build/*
+*build/
 *.vscode
-cmake/stm32cubemx/*
+**/Drivers/
