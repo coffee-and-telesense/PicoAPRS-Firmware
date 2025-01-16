@@ -1,5 +1,0 @@
-C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/tests/test_gps/build/Debug/CMakeFiles/test_gps.dir
-C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/tests/test_gps/build/Debug/CMakeFiles/edit_cache.dir
-C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/tests/test_gps/build/Debug/CMakeFiles/rebuild_cache.dir
-C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/tests/test_gps/build/Debug/stm32cubemx/CMakeFiles/edit_cache.dir
-C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/tests/test_gps/build/Debug/stm32cubemx/CMakeFiles/rebuild_cache.dir

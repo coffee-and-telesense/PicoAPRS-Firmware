@@ -37,11 +37,6 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "MinSizeRel"
             }
-        },
-        {
-            "name": "target-base",
-            "hidden": true,
-            "inherits": "default"
         }
     ],
     "buildPresets": [
