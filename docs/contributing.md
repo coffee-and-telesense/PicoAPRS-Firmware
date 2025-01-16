@@ -20,7 +20,7 @@ Lastly, we are creating projects in the form of tests because we are early in th
 These are the general steps to getting up and running, but first make sure you are comfortable with cubemx and the CMake files it generates when selecting the CMake file option:
 1. Check to see if the files are already generated for your target in the `targets/` directory. 
 - If they aren't generated yet use stm32cubemx to generate these file. **Be sure to follow the current directory structure and naming conventions.** 
-- **IMPORTANT** When using stm32cubemx make sure these options are all selected before generating your code. 
+- **IMPORTANT** When using stm32cubemx make sure these options are all selected before generating your code. This is optional, but in the examples below I've also selected `Enable Full Assert` as this might be useful for verification and debugging. 
 ![Alt Text](images/cubemx-project-options.png)
 - **IMPORTANT** Then under the Code Generator tab on the left select these options. 
 ![Alt Text](images/cubemx-code-gen-options.png)
@@ -179,7 +179,24 @@ Copy and paste this but fix the `toolchainFile` line
 ```
 
 ### 3. Getting to `main()`
-Here's a skeleton main template, your target very well might need a different setup especially if you have other perihperals. 
+Remember back in the stm32CubeMX tool we selected `do not generate the main()`, this provides us some flexibility on where we define the 
+`main()` entry point for an application. Note, this code will go inside your application you're trying to develop. For an example see [test_gps](./../tests/test_gps/test_gps.c), and this is the basic test setup structure
+
+```bash
+PicoAPRS-Firmware\tests [⏱ 5s]
+❯ tree -L 2
+.
+`-- test_gps
+    |-- CMakeLists.txt
+    |-- CMakePresets.json
+    |-- build
+    |-- test_gps.c
+    `-- test_gps.h
+
+2 directories, 4 files
+```
+Here's a skeleton main template, **your target very well might need a different setup especially if you have other perihperals.**
+
 ```c
 // Gets us the peripheral handles and pin definitions from cubemx generated code
 #include "main.h"     // For HAL definitions and Error_Handler
@@ -215,7 +232,7 @@ int main(void)
 ```
 
 ### 4. main.h bug fix
-Simply go to the target directory you've generated code for. Find the main.h file, its likely in a similar path to this `targets/L432KC/Inc/main.h`
+Simply go to the target directory you've generated code for. Find the main.h file, its likely in a similar path to this `targets/L432KC/Inc/main.h`. I'm not sure why this isn't added by default. 
 - Add the following line as shown below
 ```c
 /* Exported functions prototypes ---------------------------------------------*/

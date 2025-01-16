@@ -87,6 +87,5 @@ This step is important as it configures your vscode workspace to work with the s
 - Review our [contributing guide](docs/contributing.md) 
 - Learn the general stm32 HAL functions
 - Make your own small projects and play around with flashing your target board; blinking the user led is always a good place to start
-- 
 
-# TODO: 
+
