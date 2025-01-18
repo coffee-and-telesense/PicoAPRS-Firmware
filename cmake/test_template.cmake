@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
 
-# Set project name first
+# FIXME: Set project name first
 set(PROJECT_NAME "test_gps")
 
 # Include project configuration
 include(${CMAKE_SOURCE_DIR}/../../cmake/test_config.cmake)
 
-# Set the target MCU - this is the only line users need to change
+# FIXME: Set the target MCU, must follow specific naming convention as defined in test_config.cmake
 set(TARGET_MCU "STM32L432KC")
 
 # Setup compiler settings
@@ -39,14 +39,15 @@ message("Target MCU: ${TARGET_MCU}")
 # Create executable
 add_executable(${PROJECT_NAME})
 
-# FIXME: Add test sources
+# FIXME: Add test sources must have one reference to main() function
 target_sources(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/test_gps.c
+    # Example ${CMAKE_SOURCE_DIR}/test_gps.c
 )
 
-# FIXME: Add include paths
+
 target_include_directories(${PROJECT_NAME} PRIVATE
     #Example ${CMAKE_SOURCE_DIR}/../../Src/Sensors/Inc
+    # Add include paths
 )
 
 # Add STM32CubeMX generated sources
@@ -58,4 +59,5 @@ add_subdirectory(
 
 target_link_libraries(${PROJECT_NAME} 
     stm32cubemx
+    # Add libraries
 )
