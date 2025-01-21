@@ -46,7 +46,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 # FIXME: Add include paths
 target_include_directories(${PROJECT_NAME} PRIVATE
-    #Example ${CMAKE_SOURCE_DIR}/../../Src/Sensors/Inc
+    ${CMAKE_SOURCE_DIR}/../../Config/Inc
 )
 
 # Add STM32CubeMX generated sources
@@ -56,6 +56,12 @@ add_subdirectory(
     ${CMAKE_BINARY_DIR}/stm32cubemx       # Binary directory
 )
 
+add_subdirectory(
+    ${CMAKE_SOURCE_DIR}/../../libs/gps
+    ${CMAKE_BINARY_DIR}/gps
+)
+
 target_link_libraries(${PROJECT_NAME} 
     stm32cubemx
+    ublox_gps_driver
 )
