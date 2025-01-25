@@ -1,158 +1,172 @@
-/*
-File u-blox_gnss_MAX-M10S.h
-*/
+/*******************************************************************************
+ * @file: u-blox_gnss_MAX-M10s.h
+ * @brief: U-blox (UBX) protocol frame structure and message definitions for MAX-M10
+ * 
+ * Frame Structure (see page 41 of interface manual):
+ * +-------+-------+-------+-----+--------+---------+-------+-------+
+ * | SYNC1 | SYNC2 | CLASS | ID  | LENGTH | PAYLOAD | CK_A  | CK_B  |
+ * | 0xB5  | 0x62  |  1B   | 1B  |   2B   |   NB    |  1B   |  1B   |
+ * +-------+-------+-------+-----+--------+---------+-------+-------+
+ * 
+ * Total frame size  6 + N + 2 bytes (where N is payload length)
+ * Checksum is calculated over the range: CLASS to PAYLOAD (inclusive)
+ * 
+ * @note:The u-blox module supports two types of standards NMEA and UBX. NMEA is not implement in this library but could 
+ *       be implemented in the future.
+ * 
+ * @version: 1.0
+ * @sources:
+ *   - u-blox MAX-M10 Interface Manual v5.10 (page of this manual will be referenced in comments)
+ *     https://www.u-blox.com/en/product/max-m10-series#Documentation-&-resources
+ *   - SparkFun u-blox GNSS Arduino Library v3
+ *     https://github.com/sparkfun/SparkFun_u-blox_GNSS_v3
+ * 
+ * @author: Reece Wayt
+ * @date: January 13, 2025
+ ******************************************************************************/
 #pragma once
 
 #include "target_config.h"
 #include "u-blox_Class_and_ID.h"
+#include "u-blox_packet_types.h"
+#ifdef DEBUG 
+  #include "logging.h"
+#endif
 #include "main.h"
 #include "i2c.h"
 #include <string.h>
 #include <stdbool.h>
 
-/*
-General UBX Frame Description
-*/
-#define UBX_SYNC_CHAR_1 0xB5
-#define UBX_SYNC_CHAR_2 0x62
-#define UBX_HEADER_LENGTH 6  // 2 sync + 1 class + 1 id + 2 length (bytes)
-#define UBX_CHECKSUM_LENGTH 2
-#define UBX_MAX_PAYLOAD_LENGTH 256  // Maximum payload length for u-blox (see pg. 24 of Integration Manual)
-#define UBX_MAX_PACKET_LENGTH (UBX_HEADER_LENGTH + UBX_MAX_PAYLOAD_LENGTH + UBX_CHECKSUM_LENGTH)
+/*******************************************************************************
+ * UBX Protocol Constants
+ ******************************************************************************/
+#define UBX_SYNC_CHAR_1         0xB5    /**< First sync character of UBX frame */
+#define UBX_SYNC_CHAR_2         0x62    /**< Second sync character of UBX frame */
+#define UBX_HEADER_LENGTH       6       /**< Header length: 2 sync + 1 class + 1 id + 2 length */
+#define UBX_CHECKSUM_LENGTH     2       /**< Checksum length in bytes */
+#define UBX_MAX_PAYLOAD_LENGTH  256     /**< Maximum payload length (see Integration Manual p.24) */
+#define UBX_PACKET_LENGTH   (UBX_HEADER_LENGTH + UBX_MAX_PAYLOAD_LENGTH + UBX_CHECKSUM_LENGTH)
 
-/* 
-Config Keys, each key consist of 32-bits
-See pg 124 of Interface Description
-We want to configure the UBX to be in BBR so it will retain this setting while battery backup supply is on. 
-*/
-#define UBX_CFG_L 0x01001000
-#define UBLOX_CFG_UBX_OUTPUT 0x10720001
 
-// I2C Configuration for u-blox
-//use left shift as bit stuffing for I2C address tack on 0 for write and 1 for read
-#define UBLOX_I2C_ADDR 0x42 << 1  // Default u-blox I2C address
-#define I2C_TIMEOUT 100      // Timeout in milliseconds
+/* Payload Length Constants in Bytes*/
+#define UBX_NAV_STATUS_LEN 16                /**< Length of UBX-NAV-STATUS payload */
+#define UBX_ACK_ACK_LEN    2                 /**< Length of UBX-ACK-ACK payload */
+#define UBX_CFG_VALSET_LEN 8                 /**< Length of UBX-CFG-VALSET payload */
+#define UBX_NAV_PVT_LEN        92                /**< Length of UBX-NAV-PVT payload */
 
-// Static buffer for payload data
-static uint8_t ubx_payload_buffer[UBX_MAX_PAYLOAD_LENGTH];
-static uint8_t ubx_packet_buffer[UBX_MAX_PACKET_LENGTH];
+/*******************************************************************************
+ * Configuration Constants
+ ******************************************************************************/
+/* Config Keys (32-bit) - See Interface Description p.124 */
+#define UBX_CFG_L              0x01001000    /**< BBR layer configuration */
+#define UBLOX_CFG_UBX_OUTPUT   0x10720001    /**< UBX protocol output config */
 
+/* I2C Configuration */
+#define UBLOX_I2C_ADDR         (0x42 << 1)   /**< Default u-blox I2C address (shifted for R/W bit) */
+#define I2C_TIMEOUT            100           /**< I2C timeout in milliseconds */
+
+
+/*******************************************************************************
+ * Type Definitions
+ ******************************************************************************/
+/**
+ * @brief Communication protocol type enumeration
+ */
 typedef enum {
-  UBX = 0, 
-  NMEA = 1  //Not implemented
-} comm_type_t;
+    UBX = 0,     /**< UBX protocol (binary) */
+    NMEA = 1     /**< NMEA protocol (not implemented) */
+} ublox_comm_type_e;
 
-// Union packet for holding current frame validity data
-typedef struct{
-    union {
-        uint8_t all;
-        struct {
-            uint8_t check_sum_a : 1;    // Checksum A is valid if set
-            uint8_t check_sum_b : 1;    // Checksum B is valid if set
-            uint8_t class : 1;          // Class matches reqested class, valid if set
-            uint8_t id : 1;             // ID matches requested ID, valid if set
-            uint8_t packet : 1;         // Packet is valid if set, all other bits must be valid
-        } bits;
-    };
-} valid_packet_t;
+/**
+ * @brief Error and status codes for u-blox module
+ * 
+ */
+typedef enum {
+    UBLOX_OK = 0,                       // Operation completed successfully
+    UBLOX_ERROR = 1,                    // Generic error
+    UBLOX_TIMEOUT = 2,                  // Operation timed out
+    UBLOX_INVALID_DATA = 3,             // Received invalid or corrupted data
+    UBLOX_NOT_INITIALIZED = 4,          // Module not initialized
+    UBLOX_CHECKSUM_ERROR = 5,           // Message checksum verification failed
+    UBLOX_PACKET_VALIDITY_ERROR = 6,    // Packet validation failed
+    UBLOX_PACKET_NEEDS_PROCESSING = 7,  // Previous packet not yet processed
+    UBLOX_NACK_ERROR = 8,               // Received NACK from module
+} ublox_status_e; 
+
+/**
+ * @brief Union of all possible UBX message payloads
+ * @note This union allows for easy extensibility to add more payload types as needed. 
+ *       If updating payload types, add a new structure in u-blox_packet_types.h then 
+ *       add it to the union here.
+ */
+typedef union {
+    ubx_nav_status_s nav_status;  // UBX-NAV-STATUS payload
+    ubx_nav_pvt_s nav_pvt;        // UBX-NAV-PVT payload
+    ubx_ack_ack_s ack_ack;        // UBX-ACK-ACK and UBX-ACK-NACK payloads
+    // Add more payload types as needed
+    uint8_t raw[256];             // UBX_MAX_PAYLOAD_LENGTH 256, some payloads might be larger and will need to adjust as necessary
+} ubx_payload_t;
 
 
-// This struct will hold the ubx frame data, it is a bidirectional packet used for sending and receiving
+/**
+ * @brief UBX packet structure, which included some additional fields for tracking packet data and validity
+ *        of the frame.
+ * 
+ * @note Careful management of this structure is important, as it is static and shared across the module.
+ */
 typedef struct {
+  uint8_t sync1, sync2;
   uint8_t cls;
   uint8_t id;
-  uint16_t len;             // Length of the payload. Does not include cls, id, or checksum bytes
-  uint16_t counter;         // Keeps track of number of overall bytes received. Some responses are larger than 255 bytes.
-  uint16_t startingSpot;    // The counter value needed to go past before we begin recording into payload array
-  uint8_t *payload;         // We will allocate RAM for the payload if/when needed.
-  uint8_t checksumA;        // Given to us from module. Checked against the rolling calculated A/B checksums.
+  uint16_t len;                // Length of the payload-> does not include cls, id, or checksum bytes
+  uint16_t counter;            // Keeps track of number of overall bytes received. Some responses are larger than 256 bytes.
+  uint16_t startingSpot;       // The counter value needed to go past before we begin recording into payload array
+  ubx_payload_t payload;       // Union of all payload types
+  uint8_t checksumA;        
   uint8_t checksumB;  
-  valid_packet_t valid;     // Valid bits for a current frame
+  bool valid;                  // Valid bits for a current frame, needs to be cleared after each frame is processed
 } ubx_packet_t;
+ 
+
+/*******************************************************************************
+ * Global Variables
+ ******************************************************************************/
+//Add global variables as needed
+
+/*******************************************************************************
+ * Public Function Prototypes
+ ******************************************************************************/
+/**
+ * @brief Initializes the u-blox GNSS module
+ * @return ublox_status_e Initialization status
+ */
+ublox_status_e ublox_init(void);
+
+/**
+ * @brief Retrieves navigation status from the GNSS module
+ * @return ublox_status_e Status of the navigation data request
+ */
+ublox_status_e ublox_get_nav_status(void);
+
+/**
+ * @brief Sends message to ublox module to get position, velocity, and time (PVT) data from the GNSS module
+ * @todo Implemnt this function
+ */
+ublox_status_e ublox_get_pvt(void);
+
+/**
+ * @brief Read the most recent pvt data 
+ * @todo Implement this function
+ */
+ublox_status_e ublox_get_curr_position(int32_t *lat, int32_t *lon, int32_t *height);
+
+/**
+ * @brief Resets the u-blox GNSS module which will clear all configurations and data structures in RAM 
+ *        and BBR memory. Hence, resets everything to default settings.
+ * @return ublox_status_e Reset status
+ */
+ublox_status_e ublox_reset(void);
 
 
-#define UBX_NAV_STATUS_LEN 16 
-
-typedef struct
-{
-  uint32_t iTOW;  // GPS time of week of the navigation epoch: ms
-  uint8_t gpsFix; // GPSfix Type: 0x00 = no fix; 0x01 = dead reckoning only; 0x02 = 2D-fix; 0x03 = 3D-fix
-                  // 0x04 = GPS + dead reckoning combined; 0x05 = Time only fix; 0x06..0xff = reserved
-  union
-  {
-    uint8_t all;
-    struct
-    {
-      uint8_t gpsFixOk : 1; // 1 = position and velocity valid and within DOP and ACC Masks.
-      uint8_t diffSoln : 1; // 1 = differential corrections were applied
-      uint8_t wknSet : 1;   // 1 = Week Number valid (see Time Validity section for details)
-      uint8_t towSet : 1;   // 1 = Time of Week valid (see Time Validity section for details)
-    } bits;
-  } flags;
-  union
-  {
-    uint8_t all;
-    struct
-    {
-      uint8_t diffCorr : 1;      // 1 = differential corrections available
-      uint8_t carrSolnValid : 1; // 1 = valid carrSoln
-      uint8_t reserved : 4;
-      uint8_t mapMatching : 2; // map matching status: 00: none
-                               // 01: valid but not used, i.e. map matching data was received, but was too old
-                               // 10: valid and used, map matching data was applied
-                               // 11: valid and used, map matching data was applied.
-    } bits;
-  } fixStat;
-  union
-  {
-    uint8_t all;
-    struct
-    {
-      uint8_t psmState : 2; // power save mode state
-                            // 0: ACQUISITION [or when psm disabled]
-                            // 1: TRACKING
-                            // 2: POWER OPTIMIZED TRACKING
-                            // 3: INACTIVE
-      uint8_t reserved1 : 1;
-      uint8_t spoofDetState : 2; // Spoofing detection state
-                                 // 0: Unknown or deactivated
-                                 // 1: No spoofing indicated
-                                 // 2: Spoofing indicated
-                                 // 3: Multiple spoofing indications
-      uint8_t reserved2 : 1;
-      uint8_t carrSoln : 2; // Carrier phase range solution status:
-                            // 0: no carrier phase range solution
-                            // 1: carrier phase range solution with floating ambiguities
-                            // 2: carrier phase range solution with fixed ambiguities
-    } bits;
-  } flags2;
-  uint32_t ttff; // Time to first fix (millisecond time tag): ms
-  uint32_t msss; // Milliseconds since Startup / Reset: ms
-} UBX_NAV_STATUS_data_t;
-
-// FIXME: Calling function should use this structure for reading
-//static UBX_NAV_STATUS_data_t packetUBX_NAV_STATUS; // Ram will be allocated when needed
-static ubx_packet_t ubx_packet;
-
-typedef enum {
-    UBLOX_OK = 0,
-    UBLOX_ERROR = 1,
-    UBLOX_TIMEOUT = 2,
-    UBLOX_INVALID_DATA = 3,
-    UBLOX_NOT_INITIALIZED = 4,
-    UBLOX_CHECKSUM_ERROR = 5,
-    UBLOX_PACKET_VALIDITY_ERROR = 6,
-    UBLOX_PACKET_NEEDS_PROCESSING = 7
-    //TODO: Add more error codes as needed
-} UBLOX_Status_t; 
-
-
-
-// Function prototypes
-UBLOX_Status_t ublox_init(void);
-UBLOX_Status_t ublox_get_nav_status(void);
-//static UBLOX_Status_t ublox_send_command(ubx_packet_t *outgoing_ubx, bool expect_ack_only); // TODO: Add parameters
-//static void calc_check_sum(ubx_packet_t *outgoing_ubx);
-//static uint16_t set_i2c_transaction_size(uint16_t len);
 
 

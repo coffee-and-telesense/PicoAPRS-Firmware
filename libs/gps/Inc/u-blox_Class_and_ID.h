@@ -1,31 +1,8 @@
 /*******************************************************************************
- * @file: ubx_protocol.h
- * @brief: U-blox (UBX) protocol frame structure and message definitions for MAX-M10
- * 
- * Frame Structure (see page 41 of interface manual):
- * +-------+-------+-------+-----+--------+---------+-------+-------+
- * | SYNC1 | SYNC2 | CLASS | ID  | LENGTH | PAYLOAD | CK_A  | CK_B  |
- * | 0xB5  | 0x62  |  1B   | 1B  |   2B   |   NB    |  1B   |  1B   |
- * +-------+-------+-------+-----+--------+---------+-------+-------+
- * 
- * Total frame size  6 + N + 2 bytes (where N is payload length)
- * Checksum is calculated over the range: CLASS to PAYLOAD (inclusive)
- * 
- * @note: The u-blox module support two types of standards NMEA and UBX. NMEA is not implement in this library but could 
- *       be implemented in the future.
- * 
- * @version: 1.0
- * @sources:
- *   - u-blox MAX-M10 Interface Manual v5.10 (page of this manual will be referenced in comments)
- *     https://www.u-blox.com/en/product/max-m10-series#Documentation-&-resources
- *   - SparkFun u-blox GNSS Arduino Library v3
- *     https://github.com/sparkfun/SparkFun_u-blox_GNSS_v3
- * 
+ * @file: u-blox_Class_and_ID.h
  * @author: Reece Wayt
  * @date: January 13, 2025
  ******************************************************************************/
-
-
 #pragma once
 
 /*******************************************************************************
@@ -54,12 +31,15 @@
 /*******************************************************************************
  * Message IDs
 ********************************************************************************/
-
 // Class: NAV
 #define UBX_NAV_STATUS 0x03    // Receiver Navigation Status
-
+#define UBX_NAV_PVT 0x07       // Navigation Position Velocity Time Solution
 
 // Class: CFG
-#define UBX_CFG_VALSET_PKT_LEN 7 // (Version + Layers + Reserved + Bit Key Value) => 7 Bytes
 #define UBX_CFG_VALSET 0x8A     // Set configuration item values
+#define UBX_CFG_RST 0x04        // Reset Receiver / Clear Backup Data Structures
+
+// Class: ACK
+#define UBX_ACK_ACK 0x01        // Acknowledge
+#define UBX_ACK_NACK 0x00       // Not Acknowledge
 

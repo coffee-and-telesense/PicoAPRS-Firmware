@@ -1,86 +1,149 @@
-#include "main.h"     // For HAL definitions and Error_Handler
-#include "gpio.h"     // For GPIO functions
-#include "i2c.h"      // For I2C functions
-#include "usart.h"    // For UART functions
-#include "test_gps.h" // 
+/* Includes ------------------------------------------------------------------*/
+#include "stm32l4xx_hal.h"
+#include "main.h"
+#include "gpio.h"
+#include "i2c.h"
+#include "usart.h"
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 #include "u-blox_gnss_MAX-M10S.h"
 
-#ifdef DEBUG 
-  #define DEBUG_UART huart2
-  #define debug_print(msg) do{ \
-    HAL_UART_Transmit(&DEBUG_UART, (uint8_t*)(msg), strlen(msg), 100); \
-  } while(0)
-#endif
+/* Private variables ---------------------------------------------------------*/
+uint8_t rx_char;
+ublox_status_e status;
+char debug_buff[100];  // Buffer for debug messages
 
-uint8_t rx_char; 
-UBLOX_Status_t status;
+/* Private function prototypes -----------------------------------------------*/
+static void print_location_data(void);
+static void process_command(uint8_t cmd);
 
 int main(void)
 {
   /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  //GPS handles init of I2C1
-  //MX_I2C1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  while(1) {
-    // Wait to receive start char
-    if (HAL_UART_Receive(&DEBUG_UART, &rx_char, 1, 10) == HAL_OK){
-      if (rx_char == 'S' || rx_char == 's') {
-          #ifdef DEBUG
-            debug_print("Initing GPS with UBX command...\r\n");
-          #endif
-          rx_char = 0; 
-          break; 
-      }
-    }
-    HAL_Delay(1000);
-  }
-
-  if (ublox_init() != UBLOX_OK){
-    #ifdef DEBUG
-      debug_print("GPS initialization failed!\r\n");
-    #endif
-    Error_Handler(); 
-  } 
 
   #ifdef DEBUG
-    debug_print("System initialized. Send 'T' to trigger NAV status request\r\n");
+    debug_print("GPS Test Program\r\n");
+    debug_print("Available Commands:\r\n");
+    debug_print("'I' - Initialize GPS module\r\n");
+    debug_print("'F' - Check GPS Fix status\r\n");
+    debug_print("'L' - Get Location data (lat/lon/height)\r\n");
   #endif
-  
-  while (1)
-  {
-    // Test loop
-    // Check if we received a character
-    if (HAL_UART_Receive(&DEBUG_UART, &rx_char, 1, 10) == HAL_OK) {
-      if (rx_char == 'T' || rx_char == 't') {
+
+  // Wait for initialization command
+  while(1) {
+    if (HAL_UART_Receive(&huart2, &rx_char, 1, 10) == HAL_OK) {
+      if (rx_char == 'I' || rx_char == 'i') {
         #ifdef DEBUG
-          debug_print("Requesting NAV status...\r\n");
+          debug_print("Initializing GPS module...\r\n");
         #endif
-        
-        status = ublox_get_nav_status();
-        
+        if (ublox_init() != UBLOX_OK) {
+          #ifdef DEBUG
+            debug_print("GPS initialization failed!\r\n");
+          #endif
+          Error_Handler();
+        }
         #ifdef DEBUG
-          if (status == UBLOX_OK) {
-            debug_print("NAV status request sent successfully\r\n");
-          } else {
-            debug_print("NAV status request failed\r\n");
-          }
+          debug_print("GPS initialized successfully\r\n");
+          debug_print("Use 'F' to check fix status before requesting location\r\n");
         #endif
+        break;
       }
     }
-
-    // Blink LED to show the program is running
     HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
     HAL_Delay(1000);
   }
+
+  /* Main loop --------------------------------------------------------------*/
+  while (1) {
+    // Check for commands
+    if (HAL_UART_Receive(&huart2, &rx_char, 1, 10) == HAL_OK) {
+      process_command(rx_char);
+    }
+    
+    // Heartbeat LED
+    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+    HAL_Delay(500);
+  }
+}
+
+/**
+ * @brief Process received commands
+ * @param cmd Command character received
+ */
+static void process_command(uint8_t cmd) {
+  switch(toupper(cmd)) {
+    case 'F':  // Check Fix status
+      #ifdef DEBUG
+        debug_print("Checking GPS fix status...\r\n");
+      #endif
+      status = ublox_get_nav_status();
+      #ifdef DEBUG
+        if (status == UBLOX_OK) {
+          debug_print("Good GPS fix - Ready for location data\r\n");
+        } else {
+          debug_print("No GPS fix - Please wait for satellite acquisition\r\n");
+        }
+      #endif
+      break;
+
+    case 'L':  // Get Location data
+      #ifdef DEBUG
+        debug_print("Requesting location data...\r\n");
+      #endif
+      
+      // First get fresh PVT data
+      status = ublox_get_pvt();
+      if (status != UBLOX_OK) {
+        #ifdef DEBUG
+          debug_print("Failed to get location data - Check fix status\r\n");
+        #endif
+        return;
+      }
+
+      // Now get the position data
+      print_location_data();
+      break;
+
+    default:
+      #ifdef DEBUG
+        debug_print("Unknown command. Available commands:\r\n");
+        debug_print("'F' - Check GPS Fix status\r\n");
+        debug_print("'L' - Get Location data\r\n");
+      #endif
+      break;
+  }
+}
+
+/**
+ * @brief Print location data from GPS
+ */
+static void print_location_data(void) {
+  int32_t lat, lon, height;
+  
+  status = ublox_get_curr_position(&lat, &lon, &height);
+  if (status != UBLOX_OK) {
+    #ifdef DEBUG
+      debug_print("Error retrieving location data\r\n");
+    #endif
+    return;
+  }
+
+  #ifdef DEBUG
+    debug_print("Current Location (raw values):\r\n");
+    
+    snprintf(debug_buff, sizeof(debug_buff), "  Latitude:  %ld\r\n", lat);
+    debug_print(debug_buff);
+    
+    snprintf(debug_buff, sizeof(debug_buff), "  Longitude: %ld\r\n", lon);
+    debug_print(debug_buff);
+    
+    snprintf(debug_buff, sizeof(debug_buff), "  Altitude:  %ld\r\n", height);
+    debug_print(debug_buff);
+  #endif
 }
