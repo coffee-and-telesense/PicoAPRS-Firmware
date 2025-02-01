@@ -51,11 +51,13 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths here
     # Example: ${CMAKE_SOURCE_DIR}/../../Src/Sensors/Inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/sensors/Inc
 )
 
 # Add project symbols (macros)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined symbols for local scope to target executable
+    # Note: CubeMX adds DEBUG for the Debug build type
 )
 
 # Add STM32CubeMX generated sources
@@ -64,6 +66,17 @@ add_subdirectory(
     ${CMAKE_BINARY_DIR}/stm32cubemx       # Binary directory
 )
 
+add_subdirectory(
+    ${CMAKE_SOURCE_DIR}/../../libs/common
+    ${CMAKE_BINARY_DIR}/libs/common
+)
+
+add_subdirectory(
+    ${CMAKE_SOURCE_DIR}/../../libs/sensors
+    ${CMAKE_BINARY_DIR}/libs/sensors
+)
+
 target_link_libraries(${CMAKE_PROJECT_NAME} 
+    sensors
     stm32cubemx
 )
