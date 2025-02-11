@@ -3,14 +3,14 @@
  * @brief: Implementation of the u-blox MAX-M10S GNSS module driver using UBX protocol
  *         Provides initialization and communication functions for configuring and
  *         retrieving data from the GPS module over I2C.
- * 
+ *
  * @note: This implementation focuses on UBX protocol support and I2C communication.
  *        NMEA protocol support may be added in future versions.
- * 
+ *
  * @author: Reece Wayt
  * @date: January 13, 2025
  * @version: 1.0
- * 
+ *
  * @dependencies:
  *   - STM32 HAL I2C driver
  *   - STM32 HAL UART driver (for debug output)
@@ -28,14 +28,13 @@ static uint16_t set_transaction_size(uint16_t len);
 static ublox_status_e set_ubx_i2c_output(ublox_comm_type_e comm_settings);
 static ublox_status_e parse_ack_response(void);
 static ublox_status_e process_nav_status(void);
-static ublox_status_e validate_nav_pvt(void); 
+static ublox_status_e validate_nav_pvt(void);
 
 /*******************************************************************************
  * Private & Extern Variables
  ******************************************************************************/
 static bool ublox_initialized = false;
 static ubx_packet_t ubx_packet;
-extern UART_HandleTypeDef huart2;
 
 /*******************************************************************************
  * Public Function Implementations
@@ -56,7 +55,7 @@ ublox_status_e ublox_init(void){
     memset(&ubx_packet, 0, sizeof(ubx_packet_t));
     ublox_status_e status = set_ubx_i2c_output(comm_settings);
     if(status != UBLOX_OK) {
-        return status; 
+        return status;
     }
     ublox_initialized = true;
     return UBLOX_OK;
@@ -85,7 +84,7 @@ ublox_status_e ublox_get_nav_status(void){
         return UBLOX_PACKET_NEEDS_PROCESSING;
     }
     // Always clear the packet before sending a new request
-    memset(&ubx_packet, 0, UBX_PACKET_LENGTH); 
+    memset(&ubx_packet, 0, UBX_PACKET_LENGTH);
 
     // Setup packet for nav status request
     ubx_packet.cls = UBX_CLASS_NAV;
@@ -123,7 +122,7 @@ ublox_status_e ublox_get_nav_status(void){
     }
     // Copy payload into packet structure
     memcpy(&ubx_packet.payload.nav_status, &buff[UBX_HEADER_LENGTH], UBX_NAV_STATUS_LEN);
-    
+
     // Set frame to valid
     ubx_packet.valid = true;
 
@@ -152,7 +151,7 @@ ublox_status_e ublox_get_pvt(void){
         return UBLOX_PACKET_NEEDS_PROCESSING;
     }
     // Always clear the packet before sending a new request
-    memset(&ubx_packet, 0, UBX_PACKET_LENGTH); 
+    memset(&ubx_packet, 0, UBX_PACKET_LENGTH);
 
     // Setup packet for nav PVT request
     ubx_packet.cls = UBX_CLASS_NAV;
@@ -190,19 +189,19 @@ ublox_status_e ublox_get_pvt(void){
     }
     // Copy payload into packet structure
     memcpy(&ubx_packet.payload.nav_pvt, &buff[UBX_HEADER_LENGTH], UBX_NAV_PVT_LEN);
-    
+
     // Set frame to valid
     ubx_packet.valid = true;
 
     // Returns UBX_OK if fix is valid and time is valid
-    return validate_nav_pvt(); 
+    return validate_nav_pvt();
 }
 
 /**
  * @brief Get lat, lon, height, and time from the gnss module
  * @details The ublox module returns the lat and lon in deg * 1e-7, and for height this returns
- *          the height above mean sea level in mm. All values from the module are 32 bit, signed integers (twos-complement). 
- * 
+ *          the height above mean sea level in mm. All values from the module are 32 bit, signed integers (twos-complement).
+ *
  */
 ublox_status_e ublox_get_curr_position(int32_t *lat, int32_t *lon, int32_t *height) {
     if(!ubx_packet.valid){
@@ -213,7 +212,7 @@ ublox_status_e ublox_get_curr_position(int32_t *lat, int32_t *lon, int32_t *heig
     }
     *lat = ubx_packet.payload.nav_pvt.lat;
     *lon = ubx_packet.payload.nav_pvt.lon;
-    *height = ubx_packet.payload.nav_pvt.hMSL; 
+    *height = ubx_packet.payload.nav_pvt.hMSL;
 
     return UBLOX_OK;
 }
@@ -232,13 +231,13 @@ static ublox_status_e ublox_send_command(bool expect_ack_only){
 
     #ifdef DEBUG
         debug_print("Sending UBX command...\r\n");
-    #endif   
-    
+    #endif
+
     //Calculate the size of the transaction (header + payload + checksum)
     uint16_t size = set_transaction_size(ubx_packet.len);
 
-    // Should never be zero 
-    if (size == 0){ 
+    // Should never be zero
+    if (size == 0){
         return UBLOX_ERROR;
     }
 
@@ -249,7 +248,7 @@ static ublox_status_e ublox_send_command(bool expect_ack_only){
     buff[3] = ubx_packet.id;
     buff[4] = ubx_packet.len & 0xFF;     //LSB
     buff[5] = ubx_packet.len >> 8;       // MSB
-    uint16_t i = 0; 
+    uint16_t i = 0;
     for(; i < ubx_packet.len; i++){
         // TODO: Add error check here so payload and i don't go out of bounds
         buff[i + 6] = ubx_packet.payload.raw[i];
@@ -261,21 +260,21 @@ static ublox_status_e ublox_send_command(bool expect_ack_only){
     if(HAL_I2C_Master_Transmit(&hi2c1, UBLOX_I2C_ADDR, buff, size, I2C_TIMEOUT) != HAL_OK){
         return UBLOX_ERROR;
     }
-    // After sending command always clear the valid bits since we expect a 
+    // After sending command always clear the valid bits since we expect a
     // response from the module
     ubx_packet.valid = 0;
 
     #ifdef DEBUG
         debug_print("Sent UBX command...\r\n");
-    #endif 
-    HAL_Delay(1000); // IMPORTANT: A small delay is needed to allow the module to process the command 
-                     // before the requestor can read the response. I tried 100 ms and adjusted until 
-                     // finding that 1000 ms was the sweet spot and allowed the module enough time to process 
-                     // a command. 
-    
+    #endif
+    HAL_Delay(1000); // IMPORTANT: A small delay is needed to allow the module to process the command
+                     // before the requestor can read the response. I tried 100 ms and adjusted until
+                     // finding that 1000 ms was the sweet spot and allowed the module enough time to process
+                     // a command.
+
     if(expect_ack_only) {
         // Parse the ACK/NACK response
-        return parse_ack_response(); 
+        return parse_ack_response();
     }
     return UBLOX_OK;
 }
@@ -309,7 +308,7 @@ static ublox_status_e process_nav_status(void) {
 
 /**
  * @brief validate_nav_pvt helper function to validate the packet before exposing the data to the user
- * 
+ *
  */
 static ublox_status_e validate_nav_pvt(void) {
     // Simple error check to see that the packet is valid
@@ -343,11 +342,10 @@ static ublox_status_e validate_nav_pvt(void) {
  * @param rx_buff Pointer to received data buffer
  * @param rx_len Length of received data
  * @return ublox_status_e UBX_OK if ACK received, UBX_ERROR if NACK or invalid response
- * @note TODO: function does not check error codes
  */
 static ublox_status_e parse_ack_response(void) {
     uint16_t size = 10;                        // Ack response is always 8 bytes
-    uint8_t buff[size]; 
+    uint8_t buff[size];
     if(HAL_I2C_Master_Receive(&hi2c1, UBLOX_I2C_ADDR, buff, size, I2C_TIMEOUT) != HAL_OK){
         return UBLOX_ERROR;
     }
@@ -371,7 +369,7 @@ static ublox_status_e parse_ack_response(void) {
             debug_print("Received NACK\r\n");
         #endif
         return UBLOX_NACK_ERROR;
-    } 
+    }
     else if (buff[3] == UBX_ACK_ACK) {
         #ifdef DEBUG
             debug_print("Received ACK\r\n");
@@ -389,22 +387,22 @@ static ublox_status_e parse_ack_response(void) {
             #endif
             return UBLOX_ERROR;
         }
-    } 
+    }
     // Should never reach here, unknown response
     return UBLOX_ERROR;
 }
 
 /**
  * @brief Calculates Fletcher checksum for UBX packet
- * 
+ *
  * @details Implements the Fletcher checksum algorithm for UBX protocol packets.
  *          Calculates checksums over class, ID, length, and payload bytes.
  *          The algorithm uses two running sums (checksumA and checksumB) where:
  *          - checksumA is a simple sum of bytes
  *          - checksumB is a sum of all checksumA values
- * 
+ *
  * @param outgoing_ubx Pointer to UBX packet structure containing data to checksum
- * 
+ *
  * @note Checksum calculation order:
  *       1. Class byte
  *       2. ID byte
@@ -415,44 +413,44 @@ static void calc_check_sum() {
     // Reset checksums
     ubx_packet.checksumA = 0;
     ubx_packet.checksumB = 0;
-    
+
     // Add class
     ubx_packet.checksumA += ubx_packet.cls;
     ubx_packet.checksumB += ubx_packet.checksumA;
-    
+
     // Add ID
     ubx_packet.checksumA += ubx_packet.id;
     ubx_packet.checksumB += ubx_packet.checksumA;
-    
+
     // Add length (2 bytes, little endian)
     ubx_packet.checksumA += (ubx_packet.len & 0xFF);
     ubx_packet.checksumB += ubx_packet.checksumA;
-    
+
     ubx_packet.checksumA += (ubx_packet.len >> 8);
     ubx_packet.checksumB += ubx_packet.checksumA;
-    
+
     // Add payload bytes if there are any
     if(ubx_packet.len > 0) {
         for(uint16_t i = 0; i < ubx_packet.len; i++) {
             ubx_packet.checksumA += ubx_packet.payload.raw[i];
             ubx_packet.checksumB += ubx_packet.checksumA;
         }
-    } 
+    }
 }
 
 
 /**
  * @brief Calculates and validates total transaction size for I2C communication
- * 
+ *
  * @details Calculates the total packet size including:
  *          - 6 bytes header (2 sync + 1 class + 1 ID + 2 length)
  *          - N bytes payload
  *          - 2 bytes checksum
  *          Validates that the total size doesn't exceed maximum packet length
- * 
+ *
  * @param len Length of payload in bytes
  * @return uint16_t Total transaction size if valid, 0 if size would exceed maximum
- * 
+ *
  * @note Debug message is output if size validation fails
  */
 static uint16_t set_transaction_size(uint16_t len){
@@ -463,21 +461,21 @@ static uint16_t set_transaction_size(uint16_t len){
             debug_print("Packet size exceeds maximum length!\r\n");
         #endif
         return 0; // Error
-    } 
-    return size;   
+    }
+    return size;
 }
 
 /**
  * @brief Configures the I2C output protocol settings of the u-blox module
- * 
+ *
  * @details Sets up the module to use specified protocol (UBX/NMEA) over I2C.
  *          Uses CFG-VALSET message to configure the I2COUTPROT setting.
  *          Configuration is stored in battery-backed RAM (BBRAM) to persist
  *          during power cycles while backup power is maintained.
- * 
+ *
  * @param comm_settings Communication protocol selection (UBX or NMEA)
  * @return ublox_status_e UBLOX_OK if configuration successful, error code otherwise
- * 
+ *
  * @note Configuration requires acknowledgment from module to confirm success
  */
 static ublox_status_e set_ubx_i2c_output(ublox_comm_type_e comm_settings) {
@@ -488,10 +486,10 @@ static ublox_status_e set_ubx_i2c_output(ublox_comm_type_e comm_settings) {
     memset(&ubx_packet, 0, sizeof(ubx_packet_t));
 
     // Setup packet for CFG-VALSET message
-    ubx_packet.cls = UBX_CLASS_CFG; 
+    ubx_packet.cls = UBX_CLASS_CFG;
     ubx_packet.id = UBX_CFG_VALSET;
     ubx_packet.len = 9;
-        
+
     ubx_packet.payload.raw[0] = 0x00;   // Version
     ubx_packet.payload.raw[1] = 0x11;   // Layer = BBRAM (0x10) | RAM (0x01) see pg. 125 of Interface Description
     ubx_packet.payload.raw[2] = 0x00;   // Reserved
@@ -507,12 +505,12 @@ static ublox_status_e set_ubx_i2c_output(ublox_comm_type_e comm_settings) {
     if(status != UBLOX_OK){
         return status;
     }
-    
+
     // Set the I2C output protocol to UBX
     memset(&ubx_packet, 0, sizeof(ubx_packet_t));
     ubx_packet.cls = UBX_CLASS_CFG;
     ubx_packet.id = UBX_CFG_VALSET;  // CFG-VALSET command ID
-    ubx_packet.len = 9;   
+    ubx_packet.len = 9;
 
     ubx_packet.payload.raw[0] = 0x00;   // Version
     ubx_packet.payload.raw[1] = 0x11;   // Layer = BBRAM (0x10) | RAM (0x01) see pg. 125 of Interface Description
@@ -530,19 +528,16 @@ static ublox_status_e set_ubx_i2c_output(ublox_comm_type_e comm_settings) {
 
 ublox_status_e ublox_reset(void) {
     memset(&ubx_packet, 0, UBX_PACKET_LENGTH);
-    
+
     ubx_packet.cls = UBX_CLASS_CFG;
     ubx_packet.id = 0x04;  // Reset command ID
     ubx_packet.len = 4;    // navBbrMask (X2) + resetMode (U1) + reserved (U1)
-    
+
     // Set payload
     ubx_packet.payload.raw[0] = 0xFF;   // Clear all BBR sections
     ubx_packet.payload.raw[1] = 0xFF;   // Clear all BBR sections
     ubx_packet.payload.raw[2] = 0x00;   // Hardware reset
     ubx_packet.payload.raw[3] = 0x00;   // Reserved byte
-    
+
     return ublox_send_command(false);  // Expect ACK
 }
-
-
-

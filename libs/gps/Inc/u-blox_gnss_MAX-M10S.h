@@ -1,26 +1,26 @@
 /*******************************************************************************
  * @file: u-blox_gnss_MAX-M10s.h
  * @brief: U-blox (UBX) protocol frame structure and message definitions for MAX-M10
- * 
+ *
  * Frame Structure (see page 41 of interface manual):
  * +-------+-------+-------+-----+--------+---------+-------+-------+
  * | SYNC1 | SYNC2 | CLASS | ID  | LENGTH | PAYLOAD | CK_A  | CK_B  |
  * | 0xB5  | 0x62  |  1B   | 1B  |   2B   |   NB    |  1B   |  1B   |
  * +-------+-------+-------+-----+--------+---------+-------+-------+
- * 
+ *
  * Total frame size  6 + N + 2 bytes (where N is payload length)
  * Checksum is calculated over the range: CLASS to PAYLOAD (inclusive)
- * 
- * @note:The u-blox module supports two types of standards NMEA and UBX. NMEA is not implement in this library but could 
+ *
+ * @note:The u-blox module supports two types of standards NMEA and UBX. NMEA is not implement in this library but could
  *       be implemented in the future.
- * 
+ *
  * @version: 1.0
  * @sources:
  *   - u-blox MAX-M10 Interface Manual v5.10 (page of this manual will be referenced in comments)
  *     https://www.u-blox.com/en/product/max-m10-series#Documentation-&-resources
  *   - SparkFun u-blox GNSS Arduino Library v3
  *     https://github.com/sparkfun/SparkFun_u-blox_GNSS_v3
- * 
+ *
  * @author: Reece Wayt
  * @date: January 13, 2025
  ******************************************************************************/
@@ -29,7 +29,7 @@
 #include "target_config.h"
 #include "u-blox_Class_and_ID.h"
 #include "u-blox_packet_types.h"
-#ifdef DEBUG 
+#ifdef DEBUG
   #include "logging.h"
 #endif
 #include "main.h"
@@ -79,7 +79,7 @@ typedef enum {
 
 /**
  * @brief Error and status codes for u-blox module
- * 
+ *
  */
 typedef enum {
     UBLOX_OK = 0,                       // Operation completed successfully
@@ -91,12 +91,12 @@ typedef enum {
     UBLOX_PACKET_VALIDITY_ERROR = 6,    // Packet validation failed
     UBLOX_PACKET_NEEDS_PROCESSING = 7,  // Previous packet not yet processed
     UBLOX_NACK_ERROR = 8,               // Received NACK from module
-} ublox_status_e; 
+} ublox_status_e;
 
 /**
  * @brief Union of all possible UBX message payloads
- * @note This union allows for easy extensibility to add more payload types as needed. 
- *       If updating payload types, add a new structure in u-blox_packet_types.h then 
+ * @note This union allows for easy extensibility to add more payload types as needed.
+ *       If updating payload types, add a new structure in u-blox_packet_types.h then
  *       add it to the union here.
  */
 typedef union {
@@ -111,7 +111,7 @@ typedef union {
 /**
  * @brief UBX packet structure, which included some additional fields for tracking packet data and validity
  *        of the frame.
- * 
+ *
  * @note Careful management of this structure is important, as it is static and shared across the module.
  */
 typedef struct {
@@ -122,11 +122,11 @@ typedef struct {
   uint16_t counter;            // Keeps track of number of overall bytes received. Some responses are larger than 256 bytes.
   uint16_t startingSpot;       // The counter value needed to go past before we begin recording into payload array
   ubx_payload_t payload;       // Union of all payload types
-  uint8_t checksumA;        
-  uint8_t checksumB;  
+  uint8_t checksumA;
+  uint8_t checksumB;
   bool valid;                  // Valid bits for a current frame, needs to be cleared after each frame is processed
 } ubx_packet_t;
- 
+
 
 /*******************************************************************************
  * Global Variables
@@ -150,23 +150,17 @@ ublox_status_e ublox_get_nav_status(void);
 
 /**
  * @brief Sends message to ublox module to get position, velocity, and time (PVT) data from the GNSS module
- * @todo Implemnt this function
  */
 ublox_status_e ublox_get_pvt(void);
 
 /**
- * @brief Read the most recent pvt data 
- * @todo Implement this function
+ * @brief Read the most recent pvt data
  */
 ublox_status_e ublox_get_curr_position(int32_t *lat, int32_t *lon, int32_t *height);
 
 /**
- * @brief Resets the u-blox GNSS module which will clear all configurations and data structures in RAM 
+ * @brief Resets the u-blox GNSS module which will clear all configurations and data structures in RAM
  *        and BBR memory. Hence, resets everything to default settings.
  * @return ublox_status_e Reset status
  */
 ublox_status_e ublox_reset(void);
-
-
-
-
