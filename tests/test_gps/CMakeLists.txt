@@ -39,23 +39,29 @@ message("Target MCU: ${TARGET_MCU}")
 # Create executable
 add_executable(${PROJECT_NAME})
 
-# FIXME: Add test sources
+# Add test sources
 target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/test_gps.c
 )
 
-# FIXME: Add include paths
+# Add include paths
 target_include_directories(${PROJECT_NAME} PRIVATE
-    #Example ${CMAKE_SOURCE_DIR}/../../Src/Sensors/Inc
+    ${CMAKE_SOURCE_DIR}/../../Config/Inc
 )
 
 # Add STM32CubeMX generated sources
-# add_subdirectory(${CUBEMX_PATH} ${CMAKE_BINARY_DIR}/stm32cubemx)
 add_subdirectory(
     ${CUBEMX_PATH}/                       # Source directory
     ${CMAKE_BINARY_DIR}/stm32cubemx       # Binary directory
 )
 
+add_subdirectory(
+    ${CMAKE_SOURCE_DIR}/../../libs
+    ${CMAKE_BINARY_DIR}/libs
+)
+
 target_link_libraries(${PROJECT_NAME} 
     stm32cubemx
+    ublox_gps_driver
+    common
 )

@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 /*******************************************************************************
  * @brief: Target MCU Configuration
@@ -13,7 +13,7 @@
  ******************************************************************************/
 
 #ifndef TARGET_MCU
-#error "TARGET_MCU must be defined"
+    #error "TARGET_MCU must be defined"
 #endif
 
 /* STM32L4 Series Configuration */
