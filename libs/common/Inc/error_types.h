@@ -60,6 +60,6 @@ static inline uint8_t GET_ERROR_COMPONENT(uint16_t error) {
 
 static inline uint16_t MAKE_ERROR(uint8_t subsystem, uint8_t component, bool fatal) {
     return (fatal ? ERR_FATAL_MASK : 0) |
-           ((subsystem & 0x7F) << 8) |
-           (component & 0xFF);
+           ((subsystem & ERR_SUBSYSTEM_MASK) << 8) |
+           (component & ERR_COMPONENT_MASK);
 }
