@@ -64,6 +64,12 @@ add_subdirectory(
     ${CMAKE_BINARY_DIR}/stm32cubemx       # Binary directory
 )
 
+add_subdirectory(
+    ${CMAKE_SOURCE_DIR}/../../libs/common
+    ${CMAKE_BINARY_DIR}/libs/common
+)
+
 target_link_libraries(${CMAKE_PROJECT_NAME} 
+    common
     stm32cubemx
 )
