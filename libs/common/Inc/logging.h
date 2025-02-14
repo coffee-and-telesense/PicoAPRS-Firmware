@@ -10,12 +10,21 @@
 #pragma once
 
 #include "main.h"
-#include <string.h>
-#include <stdio.h> // Required for snprintf()
 
+// The following macro may be used when inlining the code is preferable for
+// performance reasons, and the additional code size is not a concern.
+// A debug_print function is available in logger.c to provide equivalent
+// functionality with a reduced code footprint, but likely slower performance.
 #ifdef DEBUG
+
+    #include <string.h>
+    #include <stdio.h> // Required for snprintf()
+    #include <stdarg.h> // Required for va_list handling
+
+    void debug_print(const char *fmt, ...);
+
     #define DEBUG_UART huart2
-    #define debug_print(fmt, ...)                                                                                    \
+    #define debug_print_inline(fmt, ...)                                                                             \
     do                                                                                                               \
     {                                                                                                                \
         char buffer[128]; /* Adjust size as needed */                                                                \
@@ -34,5 +43,5 @@
         }                                                                                                            \
     } while (0)
 #else
-    #define debug_print(msg)
+    #define debug_print_inline(msg)
 #endif

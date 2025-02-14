@@ -90,6 +90,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  debug_print_inline("Printing with macro: %d\r\n", 5);
+  debug_print("Printing with function: %d\r\n", 10);
 
   /* USER CODE END 2 */
 
@@ -99,7 +101,6 @@ int main(void)
   {
     /* USER CODE END WHILE */
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-    debug_print("Testing debug_print with a variable: %d\r\n", 5);
     /* Insert delay 100 ms */
     HAL_Delay(1000);
 
