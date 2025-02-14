@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
 #include "logging.h"
@@ -29,6 +30,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+/* Defines ------------------------------------------------------------*/
+#define BME688_ADDRESS 0x77 << 1 // HAL expects 8-bit address (shifted left)
 
 /* USER CODE END PTD */
 
@@ -51,6 +54,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+uint8_t Read_Register(uint8_t reg);
 
 /* USER CODE END PFP */
 
@@ -92,6 +96,14 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+  if (HAL_I2C_IsDeviceReady(&hi2c1, BME688_ADDRESS, 3, HAL_MAX_DELAY) == HAL_OK) {
+    debug_print("Sensor is ready\r\n");
+  } else {
+    debug_print("Sensor not responding\r\n");
+  }
+
+    uint8_t sensor_id = Read_Register(0xD0);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -102,6 +114,7 @@ int main(void)
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
     debug_print("Testing debug_print with a variable: %d\r\n", 5);
     /* Insert delay 100 ms */
+    debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
     HAL_Delay(1000);
 
     /* USER CODE BEGIN 3 */
@@ -110,5 +123,12 @@ int main(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint8_t Read_Register(uint8_t reg)
+{
+  uint8_t data = 0;
+  HAL_I2C_Master_Transmit(&hi2c1, BME688_ADDRESS, &reg, 1, HAL_MAX_DELAY);
+  HAL_I2C_Master_Receive(&hi2c1, BME688_ADDRESS, &data, 1, HAL_MAX_DELAY);
+  return data;
+}
 
 /* USER CODE END 4 */
