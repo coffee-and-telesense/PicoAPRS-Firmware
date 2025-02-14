@@ -89,6 +89,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   debug_print_inline("Printing with macro: %d\r\n", 5);
   debug_print("Printing with function: %d\r\n", 10);
