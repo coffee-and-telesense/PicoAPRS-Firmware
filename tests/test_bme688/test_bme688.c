@@ -22,6 +22,7 @@
 #include "usart.h"
 #include "gpio.h"
 #include "logging.h"
+#include "bme86x_driver.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
