@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-set(CMAKE_PROJECT_NAME test_bme688)
+set(PROJECT_NAME "test_bme688")
 
 # Include project configuration
 include(${CMAKE_SOURCE_DIR}/../../cmake/test_config.cmake)
@@ -31,7 +31,7 @@ include(${TARGET_PATH}/cmake/gcc-arm-none-eabi.cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 
-project(${CMAKE_PROJECT_NAME} VERSION 1.0
+project(${PROJECT_NAME} VERSION 1.0
                   DESCRIPTION "Test BME688 sensor project"
                   LANGUAGES C CXX ASM
 )  
@@ -67,6 +67,11 @@ add_subdirectory(
 )
 
 add_subdirectory(
+    ${CMAKE_SOURCE_DIR}/../../libs/bme68x
+    ${CMAKE_BINARY_DIR}/libs/bme68x
+)
+
+add_subdirectory(
     ${CMAKE_SOURCE_DIR}/../../libs/common
     ${CMAKE_BINARY_DIR}/libs/common
 )
@@ -74,4 +79,5 @@ add_subdirectory(
 target_link_libraries(${CMAKE_PROJECT_NAME} 
     stm32cubemx
     common
+    bme68x
 )
