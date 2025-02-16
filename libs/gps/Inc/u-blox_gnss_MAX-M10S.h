@@ -27,105 +27,20 @@
 #pragma once
 
 #include "target_config.h"
-#include "u-blox_Class_and_ID.h"
+#include "error_types.h"
+#include "u-blox_types.h"
+#include "u-blox_ubx_protocol.h"
 #include "u-blox_packet_types.h"
+#include "u-blox_packet_handler.h"
 #ifdef DEBUG
   #include "logging.h"
+  #include "stdio.h"
 #endif
 #include "main.h"
 #include "i2c.h"
 #include <string.h>
 #include <stdbool.h>
 
-/*******************************************************************************
- * UBX Protocol Constants
- ******************************************************************************/
-#define UBX_SYNC_CHAR_1         0xB5    /**< First sync character of UBX frame */
-#define UBX_SYNC_CHAR_2         0x62    /**< Second sync character of UBX frame */
-#define UBX_HEADER_LENGTH       6       /**< Header length: 2 sync + 1 class + 1 id + 2 length */
-#define UBX_CHECKSUM_LENGTH     2       /**< Checksum length in bytes */
-#define UBX_MAX_PAYLOAD_LENGTH  256     /**< Maximum payload length (see Integration Manual p.24) */
-#define UBX_PACKET_LENGTH   (UBX_HEADER_LENGTH + UBX_MAX_PAYLOAD_LENGTH + UBX_CHECKSUM_LENGTH)
-
-
-/* Payload Length Constants in Bytes*/
-#define UBX_NAV_STATUS_LEN 16                /**< Length of UBX-NAV-STATUS payload */
-#define UBX_ACK_ACK_LEN    2                 /**< Length of UBX-ACK-ACK payload */
-#define UBX_CFG_VALSET_LEN 8                 /**< Length of UBX-CFG-VALSET payload */
-#define UBX_NAV_PVT_LEN        92                /**< Length of UBX-NAV-PVT payload */
-
-/*******************************************************************************
- * Configuration Constants
- ******************************************************************************/
-/* Config Keys (32-bit) - See Interface Description p.124 */
-#define UBX_CFG_L              0x01001000    /**< BBR layer configuration */
-#define UBLOX_CFG_UBX_OUTPUT   0x10720001    /**< UBX protocol output config */
-
-/* I2C Configuration */
-#define UBLOX_I2C_ADDR         (0x42 << 1)   /**< Default u-blox I2C address (shifted for R/W bit) */
-#define I2C_TIMEOUT            100           /**< I2C timeout in milliseconds */
-
-
-/*******************************************************************************
- * Type Definitions
- ******************************************************************************/
-/**
- * @brief Communication protocol type enumeration
- */
-typedef enum {
-    UBX = 0,     /**< UBX protocol (binary) */
-    NMEA = 1     /**< NMEA protocol (not implemented) */
-} ublox_comm_type_e;
-
-/**
- * @brief Error and status codes for u-blox module
- *
- */
-typedef enum {
-    UBLOX_OK = 0,                       // Operation completed successfully
-    UBLOX_ERROR = 1,                    // Generic error
-    UBLOX_TIMEOUT = 2,                  // Operation timed out
-    UBLOX_INVALID_DATA = 3,             // Received invalid or corrupted data
-    UBLOX_NOT_INITIALIZED = 4,          // Module not initialized
-    UBLOX_CHECKSUM_ERROR = 5,           // Message checksum verification failed
-    UBLOX_PACKET_VALIDITY_ERROR = 6,    // Packet validation failed
-    UBLOX_PACKET_NEEDS_PROCESSING = 7,  // Previous packet not yet processed
-    UBLOX_NACK_ERROR = 8,               // Received NACK from module
-} ublox_status_e;
-
-/**
- * @brief Union of all possible UBX message payloads
- * @note This union allows for easy extensibility to add more payload types as needed.
- *       If updating payload types, add a new structure in u-blox_packet_types.h then
- *       add it to the union here.
- */
-typedef union {
-    ubx_nav_status_s nav_status;  // UBX-NAV-STATUS payload
-    ubx_nav_pvt_s nav_pvt;        // UBX-NAV-PVT payload
-    ubx_ack_ack_s ack_ack;        // UBX-ACK-ACK and UBX-ACK-NACK payloads
-    // Add more payload types as needed
-    uint8_t raw[256];             // UBX_MAX_PAYLOAD_LENGTH 256, some payloads might be larger and will need to adjust as necessary
-} ubx_payload_t;
-
-
-/**
- * @brief UBX packet structure, which included some additional fields for tracking packet data and validity
- *        of the frame.
- *
- * @note Careful management of this structure is important, as it is static and shared across the module.
- */
-typedef struct {
-  uint8_t sync1, sync2;
-  uint8_t cls;
-  uint8_t id;
-  uint16_t len;                // Length of the payload-> does not include cls, id, or checksum bytes
-  uint16_t counter;            // Keeps track of number of overall bytes received. Some responses are larger than 256 bytes.
-  uint16_t startingSpot;       // The counter value needed to go past before we begin recording into payload array
-  ubx_payload_t payload;       // Union of all payload types
-  uint8_t checksumA;
-  uint8_t checksumB;
-  bool valid;                  // Valid bits for a current frame, needs to be cleared after each frame is processed
-} ubx_packet_t;
 
 
 /*******************************************************************************

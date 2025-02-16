@@ -1,9 +1,9 @@
 /*******************************************************************************
  * @file: logging.h
  * @brief: Simple debug printing utility for STM32 projects
- * 
+ *
  * @note: Requires UART to be initialized before use
- * 
+ *
  * @todo: This utility is very basic and could be expanded to include more features
  ******************************************************************************/
 

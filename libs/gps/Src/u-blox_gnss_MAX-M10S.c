@@ -23,8 +23,6 @@
  * Private Function Prototypes
  ******************************************************************************/
 static ublox_status_e ublox_send_command(bool expect_ack_only);
-static void calc_check_sum(void);
-static uint16_t set_transaction_size(uint16_t len);
 static ublox_status_e set_ubx_i2c_output(ublox_comm_type_e comm_settings);
 static ublox_status_e parse_ack_response(void);
 static ublox_status_e process_nav_status(void);
@@ -74,7 +72,7 @@ ublox_status_e ublox_get_nav_status(void){
         #ifdef DEBUG
             debug_print("GPS module not initialized!\r\n");
         #endif
-        return UBLOX_NOT_INITIALIZED;
+        return UBLOX_NOT_INITED;
     }
 
     if(ubx_packet.valid){
@@ -83,12 +81,11 @@ ublox_status_e ublox_get_nav_status(void){
         #endif
         return UBLOX_PACKET_NEEDS_PROCESSING;
     }
-    // Always clear the packet before sending a new request
-    memset(&ubx_packet, 0, UBX_PACKET_LENGTH);
+    ublox_status_e status = packet_prepare_command(&ubx_packet, UBX_CLASS_NAV, UBX_NAV_STATUS, NULL, 0);
 
-    // Setup packet for nav status request
-    ubx_packet.cls = UBX_CLASS_NAV;
-    ubx_packet.id = UBX_NAV_STATUS;
+    if(status != UBLOX_OK) {
+        return status;
+    }
 
     #ifdef DEBUG
         debug_print("Requesting NAV-STATUS...\r\n");
@@ -102,31 +99,24 @@ ublox_status_e ublox_get_nav_status(void){
     }
 
     // Command sent now read the response
-    uint16_t size = UBX_HEADER_LENGTH + UBX_NAV_STATUS_LEN + UBX_CHECKSUM_LENGTH;
-    uint8_t buff[size];
+    uint8_t buff[UBX_HEADER_LENGTH + UBX_NAV_STATUS_LEN + UBX_CHECKSUM_LENGTH];
 
-    if(HAL_I2C_Master_Receive(&hi2c1, UBLOX_I2C_ADDR, buff, size, I2C_TIMEOUT) != HAL_OK){
+    if(HAL_I2C_Master_Receive(&hi2c1, UBLOX_I2C_ADDR, buff, sizeof(buff), I2C_TIMEOUT) != HAL_OK){
         #ifdef DEBUG
             debug_print("I2C HAL Error receiving NAV-STATUS response\r\n");
         #endif
         return UBLOX_ERROR;
     }
 
-    // Verify sync chars
-    if (buff[0] != UBX_SYNC_CHAR_1 || buff[1] != UBX_SYNC_CHAR_2) {
-        return UBLOX_INVALID_DATA;
+    status = packet_validate_response(buff, sizeof(buff), UBX_CLASS_NAV, UBX_NAV_STATUS);
+    if(status != UBLOX_OK) {
+        return status;
     }
-    // Verify message class and ID
-    if (buff[2] != UBX_CLASS_NAV || buff[3] != UBX_NAV_STATUS) {
-        return UBLOX_INVALID_DATA;
+    status = packet_copy_payload(&ubx_packet, buff, UBX_NAV_STATUS_LEN);
+    if(status != UBLOX_OK) {
+        return status;
     }
-    // Copy payload into packet structure
-    memcpy(&ubx_packet.payload.nav_status, &buff[UBX_HEADER_LENGTH], UBX_NAV_STATUS_LEN);
 
-    // Set frame to valid
-    ubx_packet.valid = true;
-
-    // Returns UBX_OK if fix is valid and time is valid
     return process_nav_status();
 }
 
@@ -136,64 +126,65 @@ ublox_status_e ublox_get_nav_status(void){
  * @return Returns UBLOX_OK if fix is valid and time is valid; else UBLOX_ERROR_XX
  */
 ublox_status_e ublox_get_pvt(void){
-    bool ack_only = false; // Expect full response
+    bool ack_only = false;
 
-    if(!ublox_initialized){
+    if(!ublox_initialized) {
         #ifdef DEBUG
             debug_print("GPS module not initialized!\r\n");
         #endif
-        return UBLOX_NOT_INITIALIZED;
+        return UBLOX_NOT_INITED;
     }
-    if(ubx_packet.valid){
+
+    if(ubx_packet.valid) {
         #ifdef DEBUG
             debug_print("Packet is valid, previous frame not processed correctly\r\n");
         #endif
         return UBLOX_PACKET_NEEDS_PROCESSING;
     }
-    // Always clear the packet before sending a new request
-    memset(&ubx_packet, 0, UBX_PACKET_LENGTH);
 
-    // Setup packet for nav PVT request
-    ubx_packet.cls = UBX_CLASS_NAV;
-    ubx_packet.id = UBX_NAV_PVT;
+    // Prepare command packet
+    ublox_status_e status = packet_prepare_command(&ubx_packet,
+                                                 UBX_CLASS_NAV,
+                                                 UBX_NAV_PVT,
+                                                 NULL,
+                                                 0);
+    if(status != UBLOX_OK) {
+        return status;
+    }
 
     #ifdef DEBUG
         debug_print("Requesting NAV-PVT...\r\n");
     #endif
 
-    if(ublox_send_command(ack_only) != UBLOX_OK){
+    if(ublox_send_command(ack_only) != UBLOX_OK) {
         #ifdef DEBUG
             debug_print("Error sending NAV-PVT request\r\n");
         #endif
         return UBLOX_ERROR;
     }
 
-    // Command sent now read the response
-    uint16_t size = UBX_HEADER_LENGTH + UBX_NAV_PVT_LEN + UBX_CHECKSUM_LENGTH;
-    uint8_t buff[size];
+    // Read response
+    uint8_t buff[UBX_HEADER_LENGTH + UBX_NAV_PVT_LEN + UBX_CHECKSUM_LENGTH];
 
-    if(HAL_I2C_Master_Receive(&hi2c1, UBLOX_I2C_ADDR, buff, size, I2C_TIMEOUT) != HAL_OK){
+    if(HAL_I2C_Master_Receive(&hi2c1, UBLOX_I2C_ADDR, buff, sizeof(buff), I2C_TIMEOUT) != HAL_OK) {
         #ifdef DEBUG
             debug_print("I2C HAL Error receiving NAV-PVT response\r\n");
         #endif
-        return UBLOX_ERROR;
+        return UBLOX_I2C_ERROR;
     }
 
-    // Verify sync chars
-    if (buff[0] != UBX_SYNC_CHAR_1 || buff[1] != UBX_SYNC_CHAR_2) {
-        return UBLOX_INVALID_DATA;
+    // Validate response
+    status = packet_validate_response(buff, sizeof(buff), UBX_CLASS_NAV, UBX_NAV_PVT);
+    if(status != UBLOX_OK) {
+        return status;
     }
-    // Verify message class and ID
-    if (buff[2] != UBX_CLASS_NAV || buff[3] != UBX_NAV_PVT) {
-        return UBLOX_INVALID_DATA;
+
+    // Copy payload
+    status = packet_copy_payload(&ubx_packet, buff, UBX_NAV_PVT_LEN);
+    if(status != UBLOX_OK) {
+        return status;
     }
-    // Copy payload into packet structure
-    memcpy(&ubx_packet.payload.nav_pvt, &buff[UBX_HEADER_LENGTH], UBX_NAV_PVT_LEN);
 
-    // Set frame to valid
-    ubx_packet.valid = true;
-
-    // Returns UBX_OK if fix is valid and time is valid
     return validate_nav_pvt();
 }
 
@@ -214,6 +205,9 @@ ublox_status_e ublox_get_curr_position(int32_t *lat, int32_t *lon, int32_t *heig
     *lon = ubx_packet.payload.nav_pvt.lon;
     *height = ubx_packet.payload.nav_pvt.hMSL;
 
+    // Reset the packet to invalid since processing is complete
+    ubx_packet.valid = false;
+
     return UBLOX_OK;
 }
 
@@ -227,34 +221,29 @@ ublox_status_e ublox_get_curr_position(int32_t *lat, int32_t *lon, int32_t *heig
  *          and handles I2C transmission
  */
 static ublox_status_e ublox_send_command(bool expect_ack_only){
-    calc_check_sum();
+    // Holds the last message class and ID state
+    static uint8_t last_msg_class = 0;
+    static uint8_t last_msg_id = 0;
+    static uint32_t delay_ms = 1000; // Delay after sending command, adjusts based on previous command
 
     #ifdef DEBUG
         debug_print("Sending UBX command...\r\n");
     #endif
 
-    //Calculate the size of the transaction (header + payload + checksum)
-    uint16_t size = set_transaction_size(ubx_packet.len);
-
-    // Should never be zero
-    if (size == 0){
-        return UBLOX_ERROR;
-    }
-
+    uint16_t size = UBX_HEADER_LENGTH + ubx_packet.len + UBX_CHECKSUM_LENGTH;
     uint8_t buff[size];
+
     buff[0] = UBX_SYNC_CHAR_1;
     buff[1] = UBX_SYNC_CHAR_2;
     buff[2] = ubx_packet.cls;
     buff[3] = ubx_packet.id;
     buff[4] = ubx_packet.len & 0xFF;     //LSB
     buff[5] = ubx_packet.len >> 8;       // MSB
-    uint16_t i = 0;
-    for(; i < ubx_packet.len; i++){
-        // TODO: Add error check here so payload and i don't go out of bounds
-        buff[i + 6] = ubx_packet.payload.raw[i];
-    }
-    buff[i + 6] = ubx_packet.checksumA;
-    buff[i + 7] = ubx_packet.checksumB;
+
+    memcpy(&buff[6], ubx_packet.payload.raw, ubx_packet.len);
+
+    // Calculate checksum
+    calc_check_sum(&buff[2], ubx_packet.len + 4, &buff[size-2], &buff[size-1]);
 
     // Send the data on bus
     if(HAL_I2C_Master_Transmit(&hi2c1, UBLOX_I2C_ADDR, buff, size, I2C_TIMEOUT) != HAL_OK){
@@ -267,10 +256,27 @@ static ublox_status_e ublox_send_command(bool expect_ack_only){
     #ifdef DEBUG
         debug_print("Sent UBX command...\r\n");
     #endif
-    HAL_Delay(1000); // IMPORTANT: A small delay is needed to allow the module to process the command
-                     // before the requestor can read the response. I tried 100 ms and adjusted until
-                     // finding that 1000 ms was the sweet spot and allowed the module enough time to process
-                     // a command.
+
+    if (ubx_packet.cls == last_msg_class && ubx_packet.id == last_msg_id) {
+        // If the same message is sent twice in a row, decrease delay
+        if(ubx_packet.cls == UBX_CLASS_CFG) // CFG messages are slow, keep this here.
+            delay_ms = 1000; // try this to start
+        else {
+            delay_ms = 500; // try this to start
+        }
+    } else {
+        // Reset delay if a different message is sent
+        delay_ms = 1000;
+    }
+
+    // Update state variables
+    last_msg_class = ubx_packet.cls;
+    last_msg_id = ubx_packet.id;
+
+    HAL_Delay(delay_ms); // IMPORTANT: A small delay is needed to allow the module to process the command
+                         // before the requestor can read the response. I tried 100 ms and adjusted until
+                         // finding that 1000 ms was the sweet spot and allowed the module enough time to process
+                         // a command. Sequential commands to the same class and ID can be read a bit faster.
 
     if(expect_ack_only) {
         // Parse the ACK/NACK response
@@ -344,125 +350,33 @@ static ublox_status_e validate_nav_pvt(void) {
  * @return ublox_status_e UBX_OK if ACK received, UBX_ERROR if NACK or invalid response
  */
 static ublox_status_e parse_ack_response(void) {
-    uint16_t size = 10;                        // Ack response is always 8 bytes
-    uint8_t buff[size];
-    if(HAL_I2C_Master_Receive(&hi2c1, UBLOX_I2C_ADDR, buff, size, I2C_TIMEOUT) != HAL_OK){
+    uint8_t buff[UBX_HEADER_LENGTH + UBX_ACK_ACK_LEN + UBX_CHECKSUM_LENGTH];
+    if(HAL_I2C_Master_Receive(&hi2c1, UBLOX_I2C_ADDR, buff, sizeof(buff), I2C_TIMEOUT) != HAL_OK){
         return UBLOX_ERROR;
     }
 
-    // Check sync chars
-    if (buff[0] != UBX_SYNC_CHAR_1 || buff[1] != UBX_SYNC_CHAR_2) {
-        #ifdef DEBUG
-            debug_print("Invalid sync chars in ACK response\r\n");
-        #endif
-        return UBLOX_INVALID_DATA;
-    }
-    // Check class and ID for ACK-ACK (0x05 0x01) or ACK-NACK (0x05 0x00)
-    if (buff[2] != UBX_CLASS_ACK) {
-        #ifdef DEBUG
-            debug_print("Invalid class in ACK response\r\n");
-        #endif
-        return UBLOX_INVALID_DATA;
-    }
-    if (buff[3] == UBX_ACK_NACK){
-        #ifdef DEBUG
-            debug_print("Received NACK\r\n");
-        #endif
-        return UBLOX_NACK_ERROR;
-    }
-    else if (buff[3] == UBX_ACK_ACK) {
-        #ifdef DEBUG
-            debug_print("Received ACK\r\n");
-        #endif
-        // Length should be 2 bytes, skip these since we know if will always be 2 here
-        if(buff[6] == ubx_packet.cls && buff[7] == ubx_packet.id){
+    ublox_status_e status = packet_validate_response(buff, sizeof(buff), UBX_CLASS_ACK, UBX_ACK_ACK);
+
+    if (status != UBLOX_OK) {
+        if (buff[3] == UBX_ACK_NACK) {
             #ifdef DEBUG
-                debug_print("ACK payload matches sent command\r\n");
-            #endif
-            return UBLOX_OK;
-        }
-        else{
-            #ifdef DEBUG
-                debug_print("ACK payload does not match sent command\r\n");
+                debug_print("Received NACK response\r\n");
             #endif
             return UBLOX_ERROR;
         }
+        return status;
     }
-    // Should never reach here, unknown response
-    return UBLOX_ERROR;
-}
 
-/**
- * @brief Calculates Fletcher checksum for UBX packet
- *
- * @details Implements the Fletcher checksum algorithm for UBX protocol packets.
- *          Calculates checksums over class, ID, length, and payload bytes.
- *          The algorithm uses two running sums (checksumA and checksumB) where:
- *          - checksumA is a simple sum of bytes
- *          - checksumB is a sum of all checksumA values
- *
- * @param outgoing_ubx Pointer to UBX packet structure containing data to checksum
- *
- * @note Checksum calculation order:
- *       1. Class byte
- *       2. ID byte
- *       3. Length bytes (little endian)
- *       4. All payload bytes (if present)
- */
-static void calc_check_sum() {
-    // Reset checksums
-    ubx_packet.checksumA = 0;
-    ubx_packet.checksumB = 0;
-
-    // Add class
-    ubx_packet.checksumA += ubx_packet.cls;
-    ubx_packet.checksumB += ubx_packet.checksumA;
-
-    // Add ID
-    ubx_packet.checksumA += ubx_packet.id;
-    ubx_packet.checksumB += ubx_packet.checksumA;
-
-    // Add length (2 bytes, little endian)
-    ubx_packet.checksumA += (ubx_packet.len & 0xFF);
-    ubx_packet.checksumB += ubx_packet.checksumA;
-
-    ubx_packet.checksumA += (ubx_packet.len >> 8);
-    ubx_packet.checksumB += ubx_packet.checksumA;
-
-    // Add payload bytes if there are any
-    if(ubx_packet.len > 0) {
-        for(uint16_t i = 0; i < ubx_packet.len; i++) {
-            ubx_packet.checksumA += ubx_packet.payload.raw[i];
-            ubx_packet.checksumB += ubx_packet.checksumA;
-        }
-    }
-}
-
-
-/**
- * @brief Calculates and validates total transaction size for I2C communication
- *
- * @details Calculates the total packet size including:
- *          - 6 bytes header (2 sync + 1 class + 1 ID + 2 length)
- *          - N bytes payload
- *          - 2 bytes checksum
- *          Validates that the total size doesn't exceed maximum packet length
- *
- * @param len Length of payload in bytes
- * @return uint16_t Total transaction size if valid, 0 if size would exceed maximum
- *
- * @note Debug message is output if size validation fails
- */
-static uint16_t set_transaction_size(uint16_t len){
-    // Number of bytes written is payload length + 8 bytes for header and checksum
-    uint16_t size = len + 8;
-    if(size > UBX_PACKET_LENGTH){
+    // Verify ACK payload matches our sent command
+    if(buff[6] != ubx_packet.cls || buff[7] != ubx_packet.id) {
         #ifdef DEBUG
-            debug_print("Packet size exceeds maximum length!\r\n");
+            debug_print("ACK payload does not match sent command\r\n");
         #endif
-        return 0; // Error
+        return UBLOX_ERROR;
     }
-    return size;
+
+    return UBLOX_OK;
+
 }
 
 /**
@@ -483,61 +397,73 @@ static ublox_status_e set_ubx_i2c_output(ublox_comm_type_e comm_settings) {
     if(comm_settings != UBX){
         return UBLOX_ERROR;
     }
-    memset(&ubx_packet, 0, sizeof(ubx_packet_t));
 
-    // Setup packet for CFG-VALSET message
-    ubx_packet.cls = UBX_CLASS_CFG;
-    ubx_packet.id = UBX_CFG_VALSET;
-    ubx_packet.len = 9;
+    // Setup payload for enabling UBX protocol
+    uint8_t payload_en_ubx[] = {
+        0x00,   // Version
+        0x11,   // Layer = BBRAM (0x10) | RAM (0x01)
+        0x00,   // Reserved
+        0x00,   // Reserved
+        0x01,   // LSB: Key ID (0x10720001)
+        0x00,   // CFG-I2COUTPROT-UBX
+        0x72,
+        0x10,   // MSB: Key ID
+        0x01    // Value = UBX protocol
+    };
+    ublox_status_e status = packet_prepare_command(&ubx_packet, UBX_CLASS_CFG, UBX_CFG_VALSET, payload_en_ubx, sizeof(payload_en_ubx));
 
-    ubx_packet.payload.raw[0] = 0x00;   // Version
-    ubx_packet.payload.raw[1] = 0x11;   // Layer = BBRAM (0x10) | RAM (0x01) see pg. 125 of Interface Description
-    ubx_packet.payload.raw[2] = 0x00;   // Reserved
-    ubx_packet.payload.raw[3] = 0x00;   // Reserved
+    if(status != UBLOX_OK){
+        return status;
+    }
+    // Send command and expect ACK
+    status = ublox_send_command(true);
 
-    ubx_packet.payload.raw[4] = 0x01;   // LSB: Key ID (0x10720001)
-    ubx_packet.payload.raw[5] = 0x00;   // CFG-I2COUTPROT-UBX
-    ubx_packet.payload.raw[6] = 0x72;   //
-    ubx_packet.payload.raw[7] = 0x10;   // MSB: Key ID
-    ubx_packet.payload.raw[8] = 0x01;   // Value = UBX protocol
-
-    ublox_status_e status = ublox_send_command(true);
     if(status != UBLOX_OK){
         return status;
     }
 
-    // Set the I2C output protocol to UBX
-    memset(&ubx_packet, 0, sizeof(ubx_packet_t));
-    ubx_packet.cls = UBX_CLASS_CFG;
-    ubx_packet.id = UBX_CFG_VALSET;  // CFG-VALSET command ID
-    ubx_packet.len = 9;
+    // Setup payload for disabling NMEA protocol
+    uint8_t payload_disable_nmea[] = {
+        0x00,   // Version
+        0x11,   // Layer = BBRAM (0x10) | RAM (0x01)
+        0x00,   // Reserved
+        0x00,   // Reserved
+        0x02,   // LSB: Key ID (0x10720002)
+        0x00,   // CFG-I2COUTPROT-NMEA
+        0x72,
+        0x10,   // MSB: Key ID
+        0x00    // Value = NMEA protocol (disabled)
+    };
 
-    ubx_packet.payload.raw[0] = 0x00;   // Version
-    ubx_packet.payload.raw[1] = 0x11;   // Layer = BBRAM (0x10) | RAM (0x01) see pg. 125 of Interface Description
-    ubx_packet.payload.raw[2] = 0x00;   // Reserved
-    ubx_packet.payload.raw[3] = 0x00;   // Reserved
+    // Prepare command packet
+    status = packet_prepare_command(&ubx_packet, UBX_CLASS_CFG, UBX_CFG_VALSET, payload_disable_nmea, sizeof(payload_disable_nmea));
 
-    ubx_packet.payload.raw[4] = 0x02;   // LSB: Key ID (0x10720002)
-    ubx_packet.payload.raw[5] = 0x00;   // CFG-I2COUTPROT-NMEA
-    ubx_packet.payload.raw[6] = 0x72;   //
-    ubx_packet.payload.raw[7] = 0x10;   // MSB: Key ID
-    ubx_packet.payload.raw[8] = 0x00;   // Value = NMEA protocol (i.e. disable NMEA)
+    if(status != UBLOX_OK){
+        return status;
+    }
 
-    return ublox_send_command(true);
+    return ublox_send_command(true); // Expect ACK
 }
 
+
 ublox_status_e ublox_reset(void) {
-    memset(&ubx_packet, 0, UBX_PACKET_LENGTH);
+    // Prepare the reset payload
+    uint8_t reset_payload[] = {
+        0xFF,   // Clear all BBR sections
+        0xFF,   // Clear all BBR sections
+        0x00,   // Hardware reset
+        0x00    // Reserved byte
+    };
 
-    ubx_packet.cls = UBX_CLASS_CFG;
-    ubx_packet.id = 0x04;  // Reset command ID
-    ubx_packet.len = 4;    // navBbrMask (X2) + resetMode (U1) + reserved (U1)
-
-    // Set payload
-    ubx_packet.payload.raw[0] = 0xFF;   // Clear all BBR sections
-    ubx_packet.payload.raw[1] = 0xFF;   // Clear all BBR sections
-    ubx_packet.payload.raw[2] = 0x00;   // Hardware reset
-    ubx_packet.payload.raw[3] = 0x00;   // Reserved byte
+    // Use packet handler to prepare the command
+    ublox_status_e status = packet_prepare_command(&ubx_packet,
+                                                 UBX_CLASS_CFG,
+                                                 UBX_CFG_RST,  // Reset command ID
+                                                 reset_payload,
+                                                 sizeof(reset_payload));
+    if(status != UBLOX_OK) {
+        return status;
+    }
 
     return ublox_send_command(false);  // Expect ACK
 }

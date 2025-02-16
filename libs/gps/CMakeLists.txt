@@ -4,6 +4,7 @@ project(ublox_gps_driver)
 
 add_library(ublox_gps_driver STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/u-blox_gnss_MAX-M10S.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/u-blox_packet_handler.c
 )
 
 target_compile_definitions(ublox_gps_driver PUBLIC
