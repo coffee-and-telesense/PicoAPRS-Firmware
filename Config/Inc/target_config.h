@@ -17,7 +17,7 @@
 #endif
 
 /* STM32L4 Series Configuration */
-#if TARGET_MCU == STM32L432KC // @TODO: Add more MCUs as needed
+#if (TARGET_MCU == STM32L432KC) || (TARGET_MCU == STM32L476RG) // @TODO: Add more MCUs as needed
     //L4 Family HAL
     #include "stm32l4xx_hal.h"
 

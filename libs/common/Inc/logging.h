@@ -9,7 +9,9 @@
 
 #pragma once
 
-#include "main.h"
+#include "stm32f4xx_hal.h"
+#include "usart.h"
+extern UART_HandleTypeDef huart2;
 
 // The following macro may be used when inlining the code is preferable for
 // performance reasons, and the additional code size is not a concern.

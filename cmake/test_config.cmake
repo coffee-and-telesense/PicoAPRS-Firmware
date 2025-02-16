@@ -25,7 +25,7 @@ set(SUPPORTED_TARGETS
 set(STM32L432KC_PATH "${CMAKE_SOURCE_DIR}/../../targets/stm32L4xx/L432KC")
 set(STM32L432KC_CUBEMX_PATH "${STM32L432KC_PATH}/cmake/stm32cubemx")
 
-set(STM32L476RG_PATH "${CMAKE_SOURCE_DIR}/targets/stm32L4xx/L476RG")
+set(STM32L476RG_PATH "${CMAKE_SOURCE_DIR}/../../targets/stm32L4xx/L476RG")
 set(STM32L476RG_CUBEMX_PATH "${STM32L476RG_PATH}/cmake/stm32cubemx")
 # TODO: Add more target specific paths as needed
 
