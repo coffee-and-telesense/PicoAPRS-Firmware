@@ -57,10 +57,8 @@ ublox_status_e packet_validate_response(const uint8_t *buffer, uint16_t size,
 
     if (ckA != buffer[size-2] || ckB != buffer[size-1]) {
         #ifdef DEBUG
-            char debug_msg[100];
-            snprintf(debug_msg, sizeof(debug_msg), "Checksum mismatch: expected %02X:%02X, got %02X:%02X\r\n",
-                     ckA, ckB, buffer[size-2], buffer[size-1]);
-            debug_print(debug_msg);
+            debug_print("Checksum mismatch: expected %02X:%02X, got %02X:%02X\n",
+                       ckA, ckB, buffer[size-2], buffer[size-1]);
         #endif
         return UBLOX_INVALID_DATA;
     }
