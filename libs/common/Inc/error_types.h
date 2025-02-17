@@ -45,21 +45,15 @@
 // Success code only - all other errors defined by specific components
 #define ERR_OK 0x0000
 
-// Helper Functions
-static inline bool IS_ERROR_FATAL(uint16_t error) {
-    return (error & ERR_FATAL_MASK) != 0;
-}
+// Helper Macros
 
-static inline uint8_t GET_ERROR_SUBSYSTEM(uint16_t error) {
-    return (error & ERR_SUBSYSTEM_MASK) >> 8;
-}
+#define IS_ERROR_FATAL(error) (((error) & ERR_FATAL_MASK) != 0)
 
-static inline uint8_t GET_ERROR_COMPONENT(uint16_t error) {
-    return error & ERR_COMPONENT_MASK;
-}
+#define GET_ERROR_SUBSYSTEM(error) (((error) & ERR_SUBSYSTEM_MASK) >> 8)
 
-static inline uint16_t MAKE_ERROR(uint8_t subsystem, uint8_t component, bool fatal) {
-    return (fatal ? ERR_FATAL_MASK : 0) |
-           ((subsystem & ERR_SUBSYSTEM_MASK) << 8) |
-           (component & ERR_COMPONENT_MASK);
-}
+#define GET_ERROR_COMPONENT(error) ((error) & ERR_COMPONENT_MASK)
+
+#define MAKE_ERROR(subsystem, component, fatal) \
+    (((fatal) ? ERR_FATAL_MASK : 0) | \
+    (((subsystem) & ERR_SUBSYSTEM_MASK) << 8) | \
+    ((component) & ERR_COMPONENT_MASK))
