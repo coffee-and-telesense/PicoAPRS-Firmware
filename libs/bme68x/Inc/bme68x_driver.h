@@ -31,6 +31,7 @@
 // reduced to only the necessary functionality
 #define BME68X_DO_NOT_USE_FPU
 
+#include "bme68x_defs.h"
 #include "bme68x.h"
 
 // Alias default address
@@ -40,12 +41,12 @@
 
 typedef struct
 {
-  int8_t status;                // Stores the BME68x sensor APIs error code after an execution
-  I2C_HandleTypeDef i2c_handle; // I2C handle (e.g. *hi2c1)
-  bme68x_dev device;            // BME68X device (see bme68x_defs.h)
-  bme68x_conf conf;             // Configuration settings (see bme68x_defs.h, includes oversampling and filter coefficient settings)
-  bme68x_heatr_conf heatr_conf; // Heater configuration (see bme68x_defs.h)
-  bme68x_data sensor_data;      // Sensor data storage (see bme68x_defs.h, starting with a single value)
+  int8_t status;                 // Stores the BME68x sensor APIs error code after an execution
+  I2C_HandleTypeDef *i2c_handle; // I2C handle (e.g. *hi2c1)
+  struct bme68x_dev device;             // BME68X device (see bme68x_defs.h)
+  struct bme68x_conf conf;              // Configuration settings (see bme68x_defs.h, includes oversampling and filter coefficient settings)
+  struct bme68x_heatr_conf heatr_conf;  // Heater configuration (see bme68x_defs.h)
+  struct bme68x_data sensor_data;       // Sensor data storage (see bme68x_defs.h, starting with a single value)
   // bme68x_data sensor_data[3];   // Sensor data storage (see bme68x_defs.h, assuming max of 3)
   // uint8_t n_fields, i_fields;   // Used for parallel mode
   // uint8_t last_op_mode;         // Last operation mode used
@@ -55,6 +56,8 @@ typedef struct
 /*!               Function Pointers                       */
 /********************************************************* */
 
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle);
+
 /**
  * @brief Function that implements the default I2C write transaction
  * @param reg_addr : Register address of the sensor
@@ -63,7 +66,7 @@ typedef struct
  * @param i2c_handle : Pointer to the stm32 I2C peripheral handle
  * @return 0 if successful, non-zero otherwise
  */
-int8_t bme68x_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle);
+// int8_t bme68x_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle);
 
 /**
  * @brief Function that implements the default I2C read transaction
@@ -73,4 +76,4 @@ int8_t bme68x_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, 
  * @param i2c_handle : Pointer to the stm32 I2C peripheral handle
  * @return 0 if successful, non-zero otherwise
  */
-int8_t bme68x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle);
+// int8_t bme68x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle);

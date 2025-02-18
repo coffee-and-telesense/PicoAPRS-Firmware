@@ -8,9 +8,52 @@
 
 #include "bme68x_driver.h"
 
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
+{
+  if (bme == NULL)
+  {
+    return;
+  }
+
+  // Zero-initialize all members
+  memset(bme, 0, sizeof(bme68x_sensor_t));
+
+  // Assign the I2C handle
+  bme->i2c_handle = i2c_handle;
+
+  // Zero out the other struct members to ensure a clean initialization
+  memset(&bme->device, 0, sizeof(bme->device));
+  memset(&bme->conf, 0, sizeof(bme->conf));
+  memset(&bme->heatr_conf, 0, sizeof(bme->heatr_conf));
+  // Update this if we switch to an array of sensor_data items
+  // memset(bme->sensor_data, 0, sizeof(bme->sensor_data));
+  memset(&bme->sensor_data, 0, sizeof(bme->sensor_data));
+
+  //
+  // Set default values
+  //
+  // TODO:
+  // Set bme->device items:
+  // - intf_ptr (interface pointer)
+  // - variant ID
+  // - intf (I2C interface, not sure how this is different from the above)
+  // - (maybe) read function pointer
+  // - (maybe) write function pointer
+  // - delay_us delay function pointer
+  bme->status = BME68X_OK;
+  // bme->n_fields = 0;
+  // bme->i_fields = 0;
+  // Typical ambient temperature in Celsius
+  bme->device.amb_temp = 25;
+  // Assume sensor starts in sleep mode
+  // bme->last_op_mode = BME68X_SLEEP_MODE;
+}
+
+/*
 int8_t bme68x_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle) {
   return 0;
 }
+*/
 
 /**
  * @brief Function that implements the default I2C read transaction
@@ -20,6 +63,8 @@ int8_t bme68x_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, 
  * @param i2c_handle : Pointer to the stm32 I2C peripheral handle
  * @return 0 if successful, non-zero otherwise
  */
+/*
 int8_t bme68x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle) {
   return 0;
 }
+*/
