@@ -103,8 +103,11 @@ int main(void)
   } else {
     debug_print("Sensor not responding\r\n");
   }
-  // Create bme instance / struct
-  // Initialize or begin
+
+      // Create bme instance / struct
+  bme68x_sensor_t bme;
+  // Initialize / begin
+  bme_init(&bme, &hi2c1);
   // Check status
   // bme.setTPH (set temp, pressure, humidity config)
   // bme.setHeaterProf(int, int) (set heater profile)
