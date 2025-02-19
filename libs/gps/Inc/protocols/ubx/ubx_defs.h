@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file: u-blox_ubx_protocol.h
+ * @file: ubx_defs.h
  * @brief: UBX protocol definitions and constants for u-blox GNSS modules
  *
  * @note: Contains all protocol-specific constants including:

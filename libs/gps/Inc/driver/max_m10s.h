@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file: u-blox_gnss_MAX-M10s.h
+ * @file: .h
  * @brief: U-blox (UBX) protocol frame structure and message definitions for MAX-M10
  *
  * Frame Structure (see page 41 of interface manual):
@@ -28,13 +28,14 @@
 
 #include "target_config.h"
 #include "error_types.h"
-#include "u-blox_types.h"
-#include "u-blox_ubx_protocol.h"
-#include "u-blox_packet_types.h"
-#include "u-blox_packet_handler.h"
+#include "gps_types.h"
+#include "ubx_defs.h"
+#include "ubx_packet_handler.h"
+#include "ubx_messages.h"
+#include "ubx_protocol.h"
+
 #ifdef DEBUG
   #include "logging.h"
-  #include "stdio.h"
 #endif
 #include "main.h"
 #include "i2c.h"
@@ -42,40 +43,57 @@
 #include <stdbool.h>
 
 
-
-/*******************************************************************************
- * Global Variables
- ******************************************************************************/
-//Add global variables as needed
-
 /*******************************************************************************
  * Public Function Prototypes
  ******************************************************************************/
 /**
- * @brief Initializes the u-blox GNSS module
- * @return ublox_status_e Initialization status
+ * @brief Initialize the MAX-M10S GPS module
+ * @param driver Pointer to driver structure
+ * @return GPS_STATUS_OK if successful
  */
-ublox_status_e ublox_init(void);
+gps_status_e max_m10s_init(void);
 
 /**
- * @brief Retrieves navigation status from the GNSS module
- * @return ublox_status_e Status of the navigation data request
+ * @brief Get the current position from the GPS
+ * @param driver Pointer to driver structure
+ * @param position Pointer to position structure to fill
+ * @return GPS_STATUS_OK if valid position obtained
  */
-ublox_status_e ublox_get_nav_status(void);
+gps_status_e max_m10s_get_position(gps_position_t *position);
 
 /**
- * @brief Sends message to ublox module to get position, velocity, and time (PVT) data from the GNSS module
+ * @brief Get the current time from the GPS
+ * @param driver Pointer to driver structure
+ * @param time Pointer to time structure to fill
+ * @return GPS_STATUS_OK if valid time obtained
  */
-ublox_status_e ublox_get_pvt(void);
+gps_status_e max_m10s_get_time(gps_time_t *time);
 
 /**
- * @brief Read the most recent pvt data
- */
-ublox_status_e ublox_get_curr_position(int32_t *lat, int32_t *lon, int32_t *height);
+  * @brief Retrieves navigation status from the GNSS module
+  * @details Requests NAV-STATUS message which provides receiver navigation status
+  *          including fix type, validity flags, and time information
+  * @return Returns UBLOX_OK if fix is valid and time is valid; else UBLOX_ERROR_XX
+  */
+ gps_status_e max_m10s_get_nav_status(void);
 
 /**
- * @brief Resets the u-blox GNSS module which will clear all configurations and data structures in RAM
- *        and BBR memory. Hence, resets everything to default settings.
- * @return ublox_status_e Reset status
+ * @brief Mark current frame as processed
+ *
  */
-ublox_status_e ublox_reset(void);
+gps_status_e max_m10s_invalidate_frame(void);
+
+/**
+ * @brief Reset the GPS module
+ * @param driver Pointer to driver structure
+ * @return GPS_STATUS_OK if reset successful
+ */
+gps_status_e max_m10s_reset(void);
+
+/**
+ * @brief Get the GPS interface structure for this driver
+ * @param driver Pointer to driver structure
+ * @return Filled gps_interface_t structure
+ */
+// TODO: Implement this function
+//gps_interface_t max_m10s_get_interface(max_m10s_driver_t *driver);
