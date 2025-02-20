@@ -1,6 +1,6 @@
 # Library: ublox_gps_driver
 cmake_minimum_required(VERSION 3.22)
-project(ublox_gps_driver)
+project(ublox_gps_driver_legacy)
 
 add_library(ublox_gps_driver STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/driver/max_m10s.c
