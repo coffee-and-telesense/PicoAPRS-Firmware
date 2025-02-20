@@ -34,6 +34,10 @@
 #include "bme68x_defs.h"
 #include "bme68x.h"
 
+// TODO: Use error types from common?
+#define BME68X_ERROR INT8_C(-1)
+#define BME68X_WARNING INT8_C(1)
+
 // Alias default address
 #define BME68X_ADDR (BME68X_I2C_ADDR_HIGH << 1) // HAL expects 8-bit address (shifted left)
 
@@ -57,6 +61,9 @@ typedef struct
 /********************************************************* */
 
 void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle);
+int8_t bme_check_status(bme68x_sensor_t *bme);
+void bme_set_TPH_default(bme68x_sensor_t *bme);
+void bme_set_TPH(bme68x_sensor_t *bme, uint8_t osTemp, uint8_t osPres, uint8_t osHum);
 
 /**
  * @brief Function that implements the default I2C write transaction
@@ -66,14 +73,14 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle);
  * @param i2c_handle : Pointer to the stm32 I2C peripheral handle
  * @return 0 if successful, non-zero otherwise
  */
-// int8_t bme68x_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle);
+int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
 
 /**
  * @brief Function that implements the default I2C read transaction
  * @param reg_addr : Register address of the sensor
- * @param reg_data : Pointer to the data to be written to the sensor
+ * @param reg_data : Pointer to the data to write the sensor value to
  * @param length   : Length of the transfer
  * @param i2c_handle : Pointer to the stm32 I2C peripheral handle
  * @return 0 if successful, non-zero otherwise
  */
-// int8_t bme68x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, I2C_HandleTypeDef *i2c_handle);
+int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
