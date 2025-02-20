@@ -73,8 +73,11 @@ gps_status_e max_m10s_get_nav_status(void) {
         return UBLOX_NOT_INITED;
     }
 
-    if (gps_driver.ubx.valid) {
-        return UBLOX_PACKET_NEEDS_PROCESSING;
+    if(gps_driver.ubx.frame_state == UBX_FRAME_IN_USE) {
+        #ifdef DEBUG
+            debug_print("Frame in use. If you need this data, call max_m10s_free_frame()\r\n");
+        #endif
+        return UBLOX_FRAME_IN_USE;
     }
 
     return ubx_get_nav_status(&gps_driver.ubx);
@@ -123,14 +126,14 @@ gps_status_e max_m10s_get_time(gps_time_t *time) {
 }
 
 /**
- * @brief Finished with current frame, mark as processed
+ * @brief Finished with current frame free it so protocol layer can reuse it.
  * @return
  */
-gps_status_e max_m10s_mark_processed(void) {
+gps_status_e max_m10s_free_frame(void) {
     if (!gps_driver.initialized) {
         return UBLOX_NOT_INITED;
     }
-    return ubx_mark_processed(&gps_driver.ubx);
+    return ubx_free_frame(&gps_driver.ubx);
 }
 
 gps_status_e max_m10s_reset(void) {

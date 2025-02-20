@@ -5,128 +5,129 @@ This is a lightweight driver that provides a C interface for communicating with 
 
 The driver is designed for use with STM32 microcontrollers and **depends on the HAL I2C driver for communication.**
 
-**Note**: Communication with the device is realtively slow and requires a 1 second delay between reading and writing to the device. I was not 
-able to find information in the datasheet that specified this for I2C communication but I arrived at 1 second through trial and error. Anyhting less then 1 second tended to cause errors and the Ublox module would not respond with a valid message. Because of this you will see `HAL_Delay(1000)` in the driver code's method for sending a ubx command.
+**Note**: Communication with the device is realtively slow and requires a 1 second delay between reading and writing to the device. I was not  able to find information in the datasheet that specified this for I2C communication but I arrived at 1 second through trial and error. Anything less then 1 second tended to cause errors and the Ublox module would not respond with a valid message. Because of this you will see `HAL_Delay(1000)` in the driver code's method for sending a ubx command.
 
-## Key Features
-- I2C communication with the MAX-M10S module
-- UBX protocol support
-- Navigation status checking
-- Position, Velocity, and Time (PVT) data retrieval
-- Module configuration and reset capabilities
+## Library Structure
+```bash
+PicoAPRS-Firmware\libs\gps
+❯ tree
+.
+|-- CMakeLists.txt                  # Build configuration
+|-- Inc
+|   |-- core                        # Core definitions shared across layers
+|   |   `-- gps_types.h             # Common GPS data structures and types
+|   |-- driver                      # Driver API layer headers
+|   |   `-- max_m10s.h              # Public driver interface
+|   `-- protocols                   # Protocol-specific headers
+|       `-- ubx                     # UBX protocol implementation
+|           |-- ubx_defs.h          # UBX protocol constants and definitions
+|           |-- ubx_messages.h      # UBX message structure definitions
+|           |-- ubx_packet_handler.h # Low-level packet operations
+|           |-- ubx_protocol.h      # UBX protocol interface
+|           `-- ubx_types.h         # UBX-specific type definitions
+`-- Src
+   |-- driver                       # Driver API implementation
+   |   `-- max_m10s.c               # Driver interface implementation
+   `-- protocols                    # Protocol implementations
+       `-- ubx                      # UBX protocol source
+           |-- ubx_packet_handler.c # Packet handling implementation
+           `-- ubx_protocol.c       # UBX protocol implementation
+```
+## Driver Architecture
+The driver is organized into two distinct layers to provide a simple API interface that abstracts away from protocol implementations. In this sense the driver could be expanded to easily suport NMEA protocols as well (current only supports UBX). Having this abstraction also creates division of concerns that should make maintaining the code easier.
+### 1. API Layer
+`max_m10s.h/.c`
+- This is a simple, protocol agnostic interface that contains common GPS operations
+- It does not have direct Hardware access
 
-## Getting Started
-1. Initialize the module using `ublox_init()`
-2. Check for valid GPS fix using `ublox_get_nav_status()`
-3. Once a fix is obtained, retrieve position data using `ublox_get_pvt()` followed by `ublox_get_curr_position()`
+### 2. Protocol Layer
+`ubx_protocol.h/.c`
+- Responsible for UBX frame formatting and parse
+- Performs data validation and check sums
+- This layer maintains a **single ubx frame** that represents the current GPS data.
+- Manages I2C communication
+
+**UBX Frame Lifecycle**: Since there is only one frame the application code is responsible for freeing the frame once done processing (see the function `max_m10s_free_frame()`). States are managed through the `ubx_frame_state_e` enum.
+
+```c
+// core/gps_types.h
+typedef enum {
+    UBX_FRAME_EMPTY,      // No data received yet
+    UBX_FRAME_RECEIVED,   // Fresh data from device
+    UBX_FRAME_IN_USE,     // Application is processing
+    UBX_FRAME_PROCESSED   // Application is done with frame
+} ubx_frame_state_e;
+```
+
+
+
+
 
 ## Example Usage
 ```c
-int32_t lat, lon, height;
+#include "max_m10s.h"
+
+gps_data_t gps_data;
 
 // Initialize the module
-if (ublox_init() != UBLOX_OK) {
+if (max_m10s_init() != UBLOX_OK) {
     // Handle error
 }
 
 // Wait for valid fix
-while (ublox_get_nav_status() != UBLOX_OK) {
-    HAL_Delay(1000);  // Check every second
+if (max_m10s_get_nav_status() != UBLOX_OK) {
+    // This is a useful method if want to poll when a nav fix is ready or
+    // after a system reset since the get pvt data frame is much larger and
+    // more involved
 }
 
 // Get position data
-if (ublox_get_pvt() == UBLOX_OK) {
-    if (ublox_get_curr_position(&lat, &lon, &height) == UBLOX_OK) {
+if (max_m10s_get_position(&gps_data.position) == UBLOX_OK) {
+    if (position.valid) {
         // Process position data
-        // Note: lat/lon are in degrees * 10^-7
-        // height is in millimeters
+        // Note: latitude/longitude are in degrees * 10^-7
+        // altitude is in millimeters
+    }
+    if(max_m10s_get_time(&gps_data.time)) {
+        // Process time data
     }
 }
+
+// Mark frame as processed when done
+max_m10s_free_frame();
 ```
 
 ## Function Documentation
-
-### `ublox_init()`
-Initializes the u-blox GNSS module.
-
-This function performs the following initialization steps:
-1. Initializes the I2C peripheral
-2. Configures the module for UBX protocol output
-3. Disables NMEA protocol output
-
-**Returns:**
-- `UBLOX_OK` if initialization successful, error code otherwise
-
-### `ublox_get_nav_status()`
-Retrieves navigation status from the GNSS module.
-
-Requests and processes the UBX-NAV-STATUS message to determine if:
-- GPS has a valid fix
-- Time data is valid
-
-**Returns:**
-- `UBLOX_OK` if valid fix and time data available, error code otherwise
-
-### `ublox_get_pvt()`
-Requests Position, Velocity, and Time data from the module.
-
-Sends a UBX-NAV-PVT message request to the module. This function must be called before `ublox_get_curr_position()` to get fresh position data.
-
-**Returns:**
-- `UBLOX_OK` if valid PVT data received, error code otherwise
-
-### `ublox_get_curr_position()`
-Retrieves the current position from the most recent PVT data.
-
-**Note:** This function must be called after a successful `ublox_get_pvt()` call
+### `max_m10s_get_position()`
+Retrieves the current position data from the GPS.
 
 **Parameters:**
-- `lat`: Pointer to store latitude (degrees * 10^-7)
-- `lon`: Pointer to store longitude (degrees * 10^-7)
-- `height`: Pointer to store height above mean sea level (millimeters)
+- `position`: Pointer to position structure to fill with data
 
 **Returns:**
 - `UBLOX_OK` if valid position data retrieved, error code otherwise
 
-**Example coordinate conversion:**
-- Latitude: 455137510 * 10^-7 = 45.5137510° N
-- Longitude: -1226464697 * 10^-7 = -122.6464697° W
-- Height: 36673 mm = 36.673 meters
+### `max_m10s_get_time()`
+Retrieves the current UTC time from the GPS.
 
-### `ublox_reset()`
-Resets the u-blox GNSS module.
-
-Performs a hardware reset of the module and clears all configuration data in RAM and battery-backed RAM.
+**Parameters:**
+- `time`: Pointer to time structure to fill with data
 
 **Returns:**
-- `UBLOX_OK` if reset successful, error code otherwise
+- `UBLOX_OK` if valid time data retrieved, error code otherwise
 
-## Status Codes
-```c
-typedef enum {
-    UBLOX_OK = 0,                    // Operation completed successfully
-    UBLOX_ERROR = 1,                 // Generic error
-    UBLOX_TIMEOUT = 2,               // Operation timed out
-    UBLOX_INVALID_DATA = 3,          // Received invalid or corrupted data
-    UBLOX_NOT_INITIALIZED = 4,        // Module not initialized
-    UBLOX_CHECKSUM_ERROR = 5,        // Message checksum verification failed
-    UBLOX_PACKET_VALIDITY_ERROR = 6,  // Packet validation failed
-    UBLOX_PACKET_NEEDS_PROCESSING = 7, // Previous packet not yet processed
-    UBLOX_NACK_ERROR = 8,            // Received NACK from module
-} ublox_status_e;
-```
+### `max_m10s_free_frame()`
+Marks the current frame as processed, indicating the application is done using the data.
+
+**Returns:**
+- `UBLOX_OK` if successful, error code otherwise
+
+
 
 ## Test Application
-The driver includes a test application that demonstrates proper usage of this API.
-The test application provides these commands:
+The driver includes a test application that demonstrates proper usage of this API and
+was used in verifying API methods
 
-- `I`: Initialize the GPS module
-- `F`: Check GPS Fix status
-- `L`: Get Location data (lat/lon/height)
-
-The test application shows proper initialization sequence, error handling, and data retrieval methods. It also demonstrates how to convert the raw position values into human-readable format.
-
-See `u-blox_test.c` for the complete test application implementation.
 
 **Compiling and building the test application**
 ```bash
@@ -134,11 +135,10 @@ cd tests/test_gps
 cmake --preset Debug # If using cmake presets and vscode extension
 cmake --build build/Debug/
 ```
-**Flashing the target board**   
-I'm using the nucleo-l432kc board but this application could easily be extended to other boards with the proper 
-linking of the stm32 HAL for your target board
+**Flashing the target board**
+I'm using the nucleo-l432kc board but this application could easily be extended to other boards with the proper linking of the stm32 HAL for your target board
 
-You can flash the board using STM32CubeProgrammer CLI directly, or automate this step using VS Code Tasks. I've provided the tasks.json configuration below. 
+You can flash the board using STM32CubeProgrammer CLI directly, or automate this step using VS Code Tasks. I've provided the tasks.json configuration below.
 ```json
 {
     "version": "2.0.0",
@@ -164,4 +164,3 @@ You can flash the board using STM32CubeProgrammer CLI directly, or automate this
     ]
 }
 ```
-

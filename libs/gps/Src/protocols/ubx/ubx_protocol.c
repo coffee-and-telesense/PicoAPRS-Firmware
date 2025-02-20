@@ -6,7 +6,22 @@
 /*******************************************************************************
  * Private Function Prototypes
  ******************************************************************************/
+/**
+ * @brief Parses ACK/NACK response from the u-blox module. An ACK/NACK response is
+ *      expected after sending a Configurate Message. See in interface description pg.
+ *      124
+ * @param proto Pointer to UBX protocol structure
+ * @return gps_status_e UBLOX_OK if ACK received, UBLOX_ERROR if NACK or invalid response
+ */
 static gps_status_e parse_ack_response(ubx_protocol_t* proto);
+
+
+/**
+ * @brief Retrieves navigation PVT data from the GNSS module which has a large array of
+ *        useful data; this function alone should provide any type of data needed.
+ * @param proto Pointer to UBX protocol structure
+ * @return Returns UBLOX_OK if request successful; else UBLOX_ERROR_XX
+ */
 static gps_status_e ubx_get_pvt(ubx_protocol_t* proto);
 
 /*******************************************************************************
@@ -45,9 +60,8 @@ gps_status_e send_ubx_command(ubx_protocol_t* proto, bool ack_only){
         return UBLOX_ERROR;
     }
 
-    // After sending command always clear the valid bits since we expect a
-    // response from the module so this frame is not valid yet
-    proto->valid = false;
+    // After sending command, mark frame as processed since it's no longer needed
+    proto->frame_state = UBX_FRAME_PROCESSED;
 
     #ifdef DEBUG
         debug_print("Sent UBX command...\r\n");
@@ -146,8 +160,7 @@ static gps_status_e ubx_get_pvt(ubx_protocol_t* proto){
     if (status != UBLOX_OK) {
         return status;
     }
-    proto->valid = true;
-    proto->processed = false;
+    proto->frame_state = UBX_FRAME_IN_USE;
 
     return UBLOX_OK;
 }
@@ -163,22 +176,29 @@ gps_status_e ubx_extract_pvt_data(ubx_protocol_t* proto, gps_data_type_e type, g
     if (!proto || !data) {
         return UBLOX_ERROR;
     }
+    // Check if new data is needed
+    bool need_new_data = false;
 
-    if(!proto->valid || proto->processed) {
+    if(proto->frame_state == UBX_FRAME_EMPTY) {
+        need_new_data = true;
+    } else if(proto->frame_state == UBX_FRAME_PROCESSED) {
+        need_new_data = true;
+    } else if(proto->frame_state == UBX_FRAME_RECEIVED || proto->frame_state == UBX_FRAME_IN_USE) {
+        if(proto->frame.cls == UBX_CLASS_NAV || proto->frame.id == UBX_NAV_PVT) {
+            need_new_data = false; // Already have the data
+        }
+        else{
+            // Different message is currently in use
+            return UBLOX_FRAME_IN_USE;
+        }
+    }
+
+    if(need_new_data) {
         gps_status_e status = ubx_get_pvt(proto);
         if(status != UBLOX_OK) {
             return status;
         }
-        proto->processed = false;
     }
-
-    if((proto->frame.cls != UBX_CLASS_NAV) && (proto->frame.id != UBX_NAV_PVT)) {
-        #ifdef DEBUG
-            debug_print("Invalid UBX packet for data extraction\r\n");
-        #endif
-        return UBLOX_ERROR;
-    }
-
 
     switch (type) {
         case GPS_DATA_POSITION:
@@ -210,12 +230,12 @@ gps_status_e ubx_extract_pvt_data(ubx_protocol_t* proto, gps_data_type_e type, g
     return UBLOX_OK;
 }
 
-gps_status_e ubx_mark_processed(ubx_protocol_t* proto) {
+gps_status_e ubx_free_frame(ubx_protocol_t* proto) {
     if(!proto) {
         return UBLOX_ERROR;
     }
-    proto->processed = true;
-    proto->valid = false;
+    memset(&proto->frame, 0, sizeof(proto->frame));
+    proto->frame_state = UBX_FRAME_EMPTY;
     return UBLOX_OK;
 }
 
@@ -374,8 +394,7 @@ gps_status_e ubx_reset(ubx_protocol_t* proto) {
     status = send_ubx_command(proto, false);
 
     // Reset protocol state
-    proto->valid = false;
-    proto->processed = true;
+    status = ubx_free_frame(proto);
 
     return status;
 }

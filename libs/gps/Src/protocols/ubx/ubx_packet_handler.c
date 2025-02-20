@@ -93,6 +93,7 @@ gps_status_e packet_copy_payload(ubx_frame_t *packet, const uint8_t *buffer,
     }
 
     memcpy(&packet->payload.raw[0], &buffer[UBX_HEADER_LENGTH], payload_len);
+
     return UBLOX_OK;
 }
 

@@ -81,7 +81,7 @@ gps_status_e max_m10s_get_time(gps_time_t *time);
  * @brief Mark current frame as processed
  *
  */
-gps_status_e max_m10s_invalidate_frame(void);
+gps_status_e max_m10s_free_frame(void);
 
 /**
  * @brief Reset the GPS module

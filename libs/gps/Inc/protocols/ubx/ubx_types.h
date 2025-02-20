@@ -38,10 +38,16 @@ typedef struct __attribute__((packed)) {
     uint8_t checksumB;
 } ubx_frame_t;
 
+typedef enum {
+    UBX_FRAME_EMPTY,      // No data received yet
+    UBX_FRAME_RECEIVED,   // Fresh data from device
+    UBX_FRAME_IN_USE,     // Application is processing
+    UBX_FRAME_PROCESSED   // Application is done with frame
+} ubx_frame_state_e;
+
 typedef struct {
     ubx_frame_t frame;
-    bool valid;
-    bool processed; // Application layer can mark packet as processed
+    ubx_frame_state_e frame_state;
     struct {
         uint8_t last_cls;
         uint8_t last_id;

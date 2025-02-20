@@ -10,6 +10,7 @@ typedef enum {
     UBLOX_ERROR = MAKE_ERROR(ERR_SUBSYSTEM_GPS, 0x01, false),         // Generic error
     UBLOX_NOT_INITED = MAKE_ERROR(ERR_SUBSYSTEM_GPS, 0x02, false),    // Module not initialized
     UBLOX_RETRY = MAKE_ERROR(ERR_SUBSYSTEM_GPS, 0x03, false),         // Generic Retry command
+    UBLOX_FRAME_IN_USE = MAKE_ERROR(ERR_SUBSYSTEM_GPS, 0x04, false),  // Frame is currently in use
     // Communication Errors
     UBLOX_TIMEOUT = MAKE_ERROR(ERR_SUBSYSTEM_GPS, 0x10, false),      // I2C/Communication timeout
     UBLOX_I2C_ERROR = MAKE_ERROR(ERR_SUBSYSTEM_GPS, 0x11, true),     // I2C bus error (fatal)

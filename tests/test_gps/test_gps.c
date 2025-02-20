@@ -1,3 +1,37 @@
+/*******************************************************************************
+* @file    test_gps.c
+* @brief   Test application for the MAX-M10S GPS driver
+*
+* @details This application demonstrates proper usage of the MAX-M10S driver API
+*          by providing a simple terminal interface for interacting with the GPS
+*          module. The application supports the following commands:
+*          - Initialize the GPS module
+*          - Check GPS fix status
+*          - Retrieve and display position data (lat/lon/altitude)
+*          - Retrieve and display UTC time
+*          - Reset the module
+*
+*          The application shows proper handling of:
+*          - Driver initialization sequence
+*          - Frame lifecycle management
+*          - Fixed-point coordinate conversion
+*          - Error handling
+*          - Data validation
+*
+* @note    Designed for STM32L432KC Nucleo board with:
+*          - MAX-M10S connected via I2C1
+*          - Debug output via UART2
+*          - LED on PA5 for heartbeat
+*
+* @author  Reece Wayt
+* @date    February 20, 2025
+* @version 1.1
+*
+* @dependencies
+*   - STM32 HAL
+*   - MAX-M10S GPS Driver v1.1
+******************************************************************************/
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
 #include "main.h"
@@ -5,7 +39,6 @@
 #include "i2c.h"
 #include "usart.h"
 #include "logging.h"
-#include <string.h>
 #include <ctype.h>
 #include "max_m10s.h"
 #include <stdlib.h>
@@ -152,6 +185,10 @@ static void process_command(uint8_t cmd) {
             }
 
             print_time_data(&gps_data.time);
+            #ifdef DEBUG
+                debug_print("Time data received successfully, freeing frame\r\n");
+            #endif
+            max_m10s_free_frame();
             break;
 
         case 'R':  // Reset GPS
