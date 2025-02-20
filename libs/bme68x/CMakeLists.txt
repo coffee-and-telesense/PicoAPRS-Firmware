@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(bme68x)
 
 add_library(bme68x STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/bme68x.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/bme68x_driver.c
 )
 
