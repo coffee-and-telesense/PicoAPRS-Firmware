@@ -108,13 +108,32 @@ int main(void)
   bme68x_sensor_t bme;
   // Initialize / begin
   bme_init(&bme, &hi2c1);
-  // Check status
+  // Check status - though I don't know if this can
+  // be anything other than ok at this point, since it
+  // was just initialized...
+  // TODO: Implement bme_status_string function
+  int bme_status = bme_check_status(&bme);
+  {
+    if (bme_status == BME68X_ERROR)
+    {
+      debug_print("Sensor error:" + bme_status);
+      // debug_print("Sensor error:" + bme.statusString());
+      return BME68X_ERROR;
+    }
+    else if (bme_status == BME68X_WARNING)
+    {
+      debug_print("Sensor Warning:" + bme_status);
+      // debug_print("Sensor Warning:" + bme.statusString());
+    }
+  }
   // bme.setTPH (set temp, pressure, humidity config)
+  bme_set_TPH_default(&bme);
   // bme.setHeaterProf(int, int) (set heater profile)
   // Initialize bme data struct (here or in loop??)
   // bme.setOpMode(forced_mode_enum) (here or in loop??)
 
-  uint8_t sensor_id = Read_Register(0xD0);
+  uint8_t sensor_id;
+  bme_read(0xD0, &sensor_id, 4, &hi2c1);
   debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
 
   /* USER CODE END 2 */
@@ -137,12 +156,5 @@ int main(void)
 }
 
 /* USER CODE BEGIN 4 */
-uint8_t Read_Register(uint8_t reg)
-{
-  uint8_t data = 0;
-  HAL_I2C_Master_Transmit(&hi2c1, BME68X_ADDR, &reg, 1, HAL_MAX_DELAY);
-  HAL_I2C_Master_Receive(&hi2c1, BME68X_ADDR, &data, 1, HAL_MAX_DELAY);
-  return data;
-}
 
 /* USER CODE END 4 */
