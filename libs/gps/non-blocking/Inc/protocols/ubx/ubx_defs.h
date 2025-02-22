@@ -19,13 +19,16 @@
 #define UBX_HEADER_LENGTH       6       /**< Header length: 2 sync + 1 class + 1 id + 2 length */
 #define UBX_CHECKSUM_LENGTH     2       /**< Checksum length in bytes */
 #define UBX_MAX_PAYLOAD_LENGTH  256     /**< Maximum payload length (see Integration Manual p.24) */
-#define UBX_PACKET_LENGTH   (UBX_HEADER_LENGTH + UBX_MAX_PAYLOAD_LENGTH + UBX_CHECKSUM_LENGTH)
+#define UBX_MAX_PACKET_LENGTH   (UBX_HEADER_LENGTH + UBX_MAX_PAYLOAD_LENGTH + UBX_CHECKSUM_LENGTH)
 
 /* Payload Length Constants in Bytes*/
 #define UBX_NAV_STATUS_LEN  16    /**< Length of UBX-NAV-STATUS payload */
 #define UBX_ACK_ACK_LEN     2     /**< Length of UBX-ACK-ACK payload */
 #define UBX_CFG_VALSET_LEN  8     /**< Length of UBX-CFG-VALSET payload */
 #define UBX_NAV_PVT_LEN     92    /**< Length of UBX-NAV-PVT payload */
+
+/* Total Packet Lengths*/
+#define UBX_ACK_PACKET_SIZE    (UBX_HEADER_LENGTH + UBX_ACK_ACK_LEN + UBX_CHECKSUM_LENGTH)
 
 /*******************************************************************************
  * Message Classes
@@ -66,8 +69,11 @@
  * Configuration Constants
  ******************************************************************************/
 /* Config Keys (32-bit) - See Interface Description p.124 */
-#define UBX_CFG_L              0x01001000    /**< BBR layer configuration */
-#define UBLOX_CFG_UBX_OUTPUT   0x10720001    /**< UBX protocol output config */
+// Configuration layer definitions
+#define UBX_CFG_LAYER_RAM    0x01
+#define UBX_CFG_LAYER_BBR    0x10
+#define UBX_CFG_LAYER_FLASH  0x20
+
 
 /* I2C Configuration */
 #define UBLOX_I2C_ADDR         (0x42 << 1)   /**< Default u-blox I2C address (shifted for R/W bit) */

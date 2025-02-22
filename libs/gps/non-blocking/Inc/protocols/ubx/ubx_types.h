@@ -1,8 +1,9 @@
-
 #pragma once
 #include "ubx_messages.h"
+#include "ubx_defs.h"
 #include "stdbool.h"
 #include "string.h"
+#include "stdint.h"
 
 /*******************************************************************************
  * @file: ubx_types.h
@@ -17,10 +18,10 @@
 /**
  * @brief Union of all possible UBX message payloads
  * @note This union allows for easy extensibility to add more payload types as needed.
- *       If updating payload types, add a new structure in u-blox_packet_types.h then
+ *       If updating payload types, add a new structure in ubx_messages.h then
  *       add it to the union here.
  */
-typedef union {
+typedef union __attribute__((packed)) {
     ubx_nav_status_s nav_status;
     ubx_nav_pvt_s nav_pvt;
     ubx_ack_ack_s ack_ack;
@@ -38,6 +39,11 @@ typedef struct __attribute__((packed)) {
     uint8_t checksumB;
 } ubx_frame_t;
 
+typedef struct __attribute__((packed)) {
+    ubx_frame_t frame;
+    uint8_t raw[UBX_MAX_PACKET_LENGTH];
+} ubx_frame_wrapper_t;
+
 typedef enum {
     UBX_FRAME_EMPTY,      // No data received yet
     UBX_FRAME_RECEIVED,   // Fresh data from device
@@ -45,11 +51,16 @@ typedef enum {
     UBX_FRAME_PROCESSED   // Application is done with frame
 } ubx_frame_state_e;
 
+typedef enum {
+    UBX_CFG_I2C_UBX_ENABLE = 0x10720001,    // CFG-I2COUTPROT-UBX
+    UBX_CFG_I2C_NMEA_DISABLE = 0x10720002,  // CFG-I2COUTPROT-NMEA
+    // Add other config IDs as needed
+} ubx_cfg_id_e;
+
+// Helper structure for config values
 typedef struct {
-    ubx_frame_t frame;
-    ubx_frame_state_e frame_state;
-    struct {
-        uint8_t last_cls;
-        uint8_t last_id;
-    } state; // State variables for tracking last message sent
-} ubx_protocol_t;
+    uint8_t version;      // Always 0x00 for current version
+    uint8_t layers;       // Configuration layers (RAM, BBR, Flash)
+    uint32_t cfg_key_id;  // Configuration key ID
+    uint8_t value;        // Configuration value
+} ubx_cfg_payload_t;
