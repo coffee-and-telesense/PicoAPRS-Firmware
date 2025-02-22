@@ -37,21 +37,21 @@ typedef enum {
 
 // Flags for GPS driver
 typedef union {
-    uint16_t all;
-    struct {
+    uint16_t all;  // Access all flags at once, I would like to get this down to 8 bits if possible
+    struct { // These are event flags that can be set or cleared to indicate state changes
         uint16_t inited : 1;        // Must specify type (uint16_t in this case)
         uint16_t read_done : 1;
         uint16_t write_done : 1;
+        uint16_t delay_done : 1;    // Delay operation complete
         uint16_t read_error : 1;
         uint16_t write_error : 1;
         uint16_t bus_error : 1;
         uint16_t bus_busy : 1;
         uint16_t bus_timeout : 1;
-        uint16_t delay_done : 1;    // Delay operation complete
         uint16_t config_valid : 1;  // Configuration validation
         uint16_t data_ready : 1;    // New data available
         uint16_t needs_reset : 1;   // Reset required flag
-        uint16_t reserved : 4;
+        uint16_t reserved : 3;
     } bits;
 } gps_flags_t;
 
@@ -63,8 +63,8 @@ typedef struct {
     gps_bus_op_state_e bus_state;
     gps_flags_t flags;
     gps_config_stage_e config_stage;
-    void *protocol;      // Protocol layer
-    void *interface;     // HAL interface
+    gps_protocol_e protocol;      // Protocol layer
+    void *interface;              // HAL interface
     uint8_t tx_buffer[UBX_MAX_PACKET_LENGTH];
     uint8_t rx_buffer[UBX_MAX_PACKET_LENGTH];
 } max_m10s_t;

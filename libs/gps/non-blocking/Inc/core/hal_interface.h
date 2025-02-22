@@ -1,7 +1,10 @@
 #pragma once
 #include "stm32l4xx_hal.h"
+#include "logging.h"
 
 // hal_interface.h
+
+// Forward declarations for generic HAL callbacks using function pointer typedefs
 typedef void (*hal_tx_complete_cb)(void* context);
 typedef void (*hal_rx_complete_cb)(void* context);
 typedef void (*hal_error_cb)(void* context, HAL_StatusTypeDef error);

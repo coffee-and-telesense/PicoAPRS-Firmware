@@ -28,6 +28,9 @@ uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id) {
 
     ubx_frame_t* frame = (ubx_frame_t*)buffer;
 
+    // Clear frame memory to avoid garbage data
+    memset(frame, 0, sizeof(ubx_frame_t));
+
     // Set header
     frame->sync1 = UBX_SYNC_CHAR_1;
     frame->sync2 = UBX_SYNC_CHAR_2;
@@ -36,7 +39,13 @@ uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id) {
     frame->len = 0;  // No payload for basic commands
 
     // Calculate checksum starting from class byte
-    calc_checksum(&frame->cls, frame->len + 4, &frame->checksumA, &frame->checksumB);
+    uint8_t checksumA, checksumB;
+    calc_checksum(&frame->cls, frame->len + 4, &checksumA, &checksumB);
+
+    // After calculating checksum we need to ensure the checksum comes right after the payload
+    // base adress of frame + header + payload = adress of checksum
+    frame->payload.raw[frame->len] = frame->checksumA;
+    frame->payload.raw[frame->len + 1] = frame->checksumB;  // Checksum is 2 bytes long
 
     // Return total packet size
     return UBX_HEADER_LENGTH + frame->len + UBX_CHECKSUM_LENGTH;
@@ -49,6 +58,9 @@ uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t va
     }
 
     ubx_frame_t* frame = (ubx_frame_t*)buffer;
+
+    // Clear frame memory to avoid garbage data
+    memset(frame, 0, sizeof(ubx_frame_t));
 
     // Set header
     frame->sync1 = UBX_SYNC_CHAR_1;
@@ -75,7 +87,13 @@ uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t va
     frame->len = 9;  // Fixed length for config messages
 
     // Calculate checksum starting from class byte
-    calc_checksum(&frame->cls, frame->len + 4, &frame->checksumA, &frame->checksumB);
+    uint8_t checksumA, checksumB;
+    calc_checksum(&frame->cls, frame->len + 4, &checksumA, &checksumB);
+
+    // After calculating checksum we need to ensure the checksum comes right after the payload
+    // base adress of frame + header + payload = adress of checksum
+    frame->payload.raw[frame->len] = checksumA;
+    frame->payload.raw[frame->len + 1] = checksumB;  // Checksum is 2 bytes long
 
     // Return total packet size
     return UBX_HEADER_LENGTH + frame->len + UBX_CHECKSUM_LENGTH;

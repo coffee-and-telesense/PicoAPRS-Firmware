@@ -98,6 +98,8 @@
   * generic buffer. This allows easy access to frame fields while
   * maintaining proper alignment.
   *
+  * @todo: Not currently used, but could be useful for future expansion
+  *
   * @param buffer Pointer to buffer containing UBX data
   * @return ubx_frame_t* Pointer to frame structure
   */

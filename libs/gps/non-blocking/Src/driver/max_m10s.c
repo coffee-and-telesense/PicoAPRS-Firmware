@@ -44,17 +44,23 @@ static void max_m10s_delay_complete_cb(void* context) {
     max_m10s_t* dev = (max_m10s_t*)context;
     if (dev) {
         // We're using write_done as our delay complete flag
-        dev->flags.bits.write_done = 1;
+        dev->flags.bits.delay_done = 1;
         dev->flags.bits.bus_busy = 0;
     }
 }
 
 gps_status_e max_m10s_init(max_m10s_t *dev, hal_interface_t *hal) {
     if (!dev || !hal || !hal->hi2c) {
+        #ifdef DEBUG
+            debug_print("Invalid parameters\n");
+        #endif
         return UBLOX_ERROR;
     }
 
     if(dev->initialized) {
+        #ifdef DEBUG
+            debug_print("Device already initialized\n");
+        #endif
         // Already initialized
         return UBLOX_OK;
     }
@@ -64,10 +70,19 @@ gps_status_e max_m10s_init(max_m10s_t *dev, hal_interface_t *hal) {
     dev->state = GPS_INITING;
     dev->op_mode = GPS_NON_BLOCKING;  // Default to non-blocking mode
     dev->bus_state = GPS_BUS_OP_NONE;
-    dev->flags.all = 0;  // Clear all flags
+    dev->flags.all = 0;  // Clear all flags or event bits
 
     // Store the HAL interface
     dev->interface = hal;
+
+    // Initialize the HAL interface
+    HAL_StatusTypeDef hal_status = hal_interface_init(hal);
+    if (hal_status != HAL_OK) {
+        #ifdef DEBUG
+            debug_print("HAL interface initialization failed\n");
+        #endif
+        return UBLOX_ERROR;
+    }
 
     // Register our callbacks with the HAL interface
     hal->callbacks.context = dev;
@@ -76,15 +91,13 @@ gps_status_e max_m10s_init(max_m10s_t *dev, hal_interface_t *hal) {
     hal->callbacks.error = max_m10s_error_cb;
     hal->callbacks.delay_complete = max_m10s_delay_complete_cb;
 
-    // Initialize the HAL interface
-    HAL_StatusTypeDef hal_status = hal_interface_init(hal);
-    if (hal_status != HAL_OK) {
-        return UBLOX_ERROR;
-    }
 
     // Initialize UBX protocol layer
     dev->protocol = UBX_PROTOCOL;
-    if (!dev->protocol) {
+    if (dev->protocol != UBX_PROTOCOL) {
+        #ifdef DEBUG
+            debug_print("Invalid protocol, NMEA not implmented yet\n");
+        #endif
         return UBLOX_ERROR;
     }
 
@@ -92,7 +105,7 @@ gps_status_e max_m10s_init(max_m10s_t *dev, hal_interface_t *hal) {
     dev->flags.bits.inited = 1;
 
     // The rest of the initialization will be handled by the state machine
-    // in max_m10s_process()
+    // in max_m10s_run()
 
     return UBLOX_OK;
 }
@@ -147,6 +160,9 @@ static gps_status_e handle_init_state(max_m10s_t *dev) {
     if (!dev->flags.bits.inited) {
         // Not initialized yet
         dev->config_stage = GPS_CONFIG_NONE;
+        #ifdef DEBUG
+            debug_print("Device not initialized\n");
+        #endif
         return UBLOX_NOT_INITED;
     }
 
@@ -157,6 +173,9 @@ static gps_status_e handle_init_state(max_m10s_t *dev) {
     if (status == UBLOX_OK && dev->config_stage == GPS_CONFIG_DONE) {
         dev->state = GPS_READY;
     } else if (dev->flags.bits.needs_reset) {
+        #ifdef DEBUG
+            debug_print("Something wrong with init state handle. Device needs reset\n");
+        #endif
         dev->state = GPS_RESETTING;
     }
 
@@ -195,6 +214,9 @@ static gps_status_e handle_init_bus_operations(max_m10s_t *dev) {
                 return UBLOX_ERROR;
             }
             if(start_i2c_transmission(dev, msg_size)) {
+                #ifdef DEBUG
+                    debug_print("Starting I2C transmission\n");
+                #endif
                 dev->bus_state = GPS_BUS_OP_WRITE;
             } else {
                 #ifdef DEBUG
@@ -245,8 +267,8 @@ static gps_status_e handle_init_bus_operations(max_m10s_t *dev) {
                     expected_id
                 );
 
-               if (status == UBLOX_OK) {
-                   // Move to next config state
+                if (status == UBLOX_OK) {
+                    // Move to next config state
                     if (dev->config_stage == GPS_CONFIG_UBX_ENABLE) {
                         dev->config_stage = GPS_CONFIG_NMEA_DISABLE;
                     } else if (dev->config_stage == GPS_CONFIG_NMEA_DISABLE) {
@@ -255,13 +277,19 @@ static gps_status_e handle_init_bus_operations(max_m10s_t *dev) {
                     }
                     dev->bus_state = GPS_BUS_OP_NONE;
 
-               } else {
-                   dev->flags.bits.needs_reset = 1;
-               }
-               dev->flags.bits.read_done = 0;
+                } else {
+                    #ifdef DEBUG
+                        debug_print("ACK validation failed\n");
+                    #endif
+                    dev->flags.bits.needs_reset = 1;
+                }
+                dev->flags.bits.read_done = 0;
             }
             break;
         default:
+            #ifdef DEBUG
+                debug_print("Invalid bus state: %d\n", dev->bus_state);
+            #endif
             return UBLOX_ERROR;
     }
 
@@ -284,6 +312,9 @@ bool start_i2c_transmission(max_m10s_t *dev, uint16_t size) {
         dev->flags.bits.bus_busy = 1;
         return true;
     } else {
+        #ifdef DEBUG
+            debug_print("Error starting I2C transmission\n");
+        #endif
         dev->flags.bits.bus_error = 1;
         return false;
     }
@@ -303,6 +334,9 @@ bool start_i2c_receive(max_m10s_t *dev, uint16_t size) {
         dev->flags.bits.bus_busy = 1;
         return true;
     } else {
+        #ifdef DEBUG
+            debug_print("Error starting I2C receive\n");
+        #endif
         dev->flags.bits.bus_error = 1;
         return false;
     }
