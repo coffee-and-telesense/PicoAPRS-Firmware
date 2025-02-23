@@ -46,7 +46,7 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
   // Typical ambient temperature in Celsius
   bme->device.amb_temp = 25;
   // Assume sensor starts in sleep mode
-  // bme->last_op_mode = BME68X_SLEEP_MODE;
+  bme->last_op_mode = BME68X_SLEEP_MODE;
 }
 
 int8_t bme_check_status(bme68x_sensor_t *bme) {
@@ -90,6 +90,50 @@ void bme_set_heaterprof(bme68x_sensor_t *bme, uint16_t temp, uint16_t dur)
   bme->heatr_conf.heatr_dur = dur;
 
   bme->status = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &bme->heatr_conf, &bme->device);
+}
+
+/**
+ * @brief Function to fetch data from the sensor into the local buffer
+ * @return Number of new data fields
+ */
+uint8_t bme_fetch_data(bme68x_sensor_t *bme) {
+  // TODO: Update with struct members n_fields and i_fields
+  // For now, hardcode
+  // bme->n_fields = 0;
+  uint8_t n_fields = 0;
+  // bme->status = bme68x_get_data(bme->last_op_mode, bme->sensor_data, &bme->n_fields, &bme->device);
+  bme->status = bme68x_get_data(bme->last_op_mode, &bme->sensor_data, &n_fields, &bme->device);
+  // bme->i_fields = 0;
+
+  // return bme->n_fields;
+  return n_fields;
+}
+
+/**
+ * @brief Function to get a single data field
+ * @param data : Structure where the data is to be stored
+ * @return Number of new fields remaining
+ */
+// uint8_t bme_get_data(bme68x_sensor_t *bme, bme68xData &data) {
+
+// }
+
+/**
+ * @brief Function to get whole sensor data
+ * @return Sensor data
+ */
+// bme68xData *bme_get_alldata(bme68x_sensor_t *bme) {
+
+// }
+
+/**
+ * @brief Function to set the operation mode
+ */
+void bme_set_opmode(bme68x_sensor_t *bme, uint8_t opmode)
+{
+  bme->status = bme68x_set_op_mode(opmode, &bme->device);
+  if ((bme->status == BME68X_OK) && (opmode != BME68X_SLEEP_MODE))
+    bme->last_op_mode = opmode;
 }
 
 int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr) {

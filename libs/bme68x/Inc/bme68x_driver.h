@@ -53,7 +53,7 @@ typedef struct
   struct bme68x_data sensor_data;       // Sensor data storage (see bme68x_defs.h, starting with a single value)
   // bme68x_data sensor_data[3];   // Sensor data storage (see bme68x_defs.h, assuming max of 3)
   // uint8_t n_fields, i_fields;   // Used for parallel mode
-  // uint8_t last_op_mode;         // Last operation mode used
+  uint8_t last_op_mode;         // Last operation mode used
 } bme68x_sensor_t;
 
 /********************************************************* */
@@ -71,6 +71,31 @@ void bme_set_TPH(bme68x_sensor_t *bme, uint8_t osTemp, uint8_t osPres, uint8_t o
  * @param dur  : Heating duration in milliseconds
  */
 void bme_set_heaterprof(bme68x_sensor_t *bme, uint16_t temp, uint16_t dur);
+
+/**
+ * @brief Function to set the operation mode
+ * @param opMode : BME68X_SLEEP_MODE, BME68X_FORCED_MODE, BME68X_PARALLEL_MODE, BME68X_SEQUENTIAL_MODE
+ */
+void bme_set_opmode(bme68x_sensor_t *bme, uint8_t opMode);
+
+/**
+ * @brief Function to fetch data from the sensor into the local buffer
+ * @return Number of new data fields
+ */
+uint8_t bme_fetch_data(bme68x_sensor_t *bme);
+
+/**
+ * @brief Function to get a single data field
+ * @param data : Structure where the data is to be stored
+ * @return Number of new fields remaining
+ */
+// uint8_t bme_get_data(bme68x_sensor_t *bme, bme68xData &data);
+
+/**
+ * @brief Function to get whole sensor data
+ * @return Sensor data
+ */
+// bme68xData *bme_get_alldata(bme68x_sensor_t *bme);
 
 /**
  * @brief Function that implements the default I2C write transaction

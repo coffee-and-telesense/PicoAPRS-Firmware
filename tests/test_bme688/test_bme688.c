@@ -138,6 +138,7 @@ int main(void)
   bme_read(0xD0, &sensor_id, 4, &hi2c1);
   debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
 
+  debug_print("TimeStamp(ms), Temperature(deg C), Pressure(Pa), Humidity(%), Gas resistance(ohm), Status");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,8 +147,19 @@ int main(void)
   {
     /* USER CODE END WHILE */
     // (maybe, if not done above): bme data and setOpMode
-    // (maybe) bme.getMeasDur()
+    bme_set_opmode(&bme, BME68X_FORCED_MODE);
+    // (maybe) bme.getMeasDur() and delay_microseconds
     // bme.fetchData() retrieve data from sensor
+    int fetch_success = bme_fetch_data(&bme);
+    if (fetch_success) {
+      // debug_print(millis());
+      debug_print("millis()?, ");
+      debug_print("%d, ", bme.sensor_data.temperature);
+      debug_print("%d, ", bme.sensor_data.pressure);
+      debug_print("%d, ", bme.sensor_data.humidity);
+      debug_print("%d, ", bme.sensor_data.gas_resistance);
+      debug_print("%X, \r\n", bme.sensor_data.status);
+    }
     // bme.getData() get data
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
     HAL_Delay(1000);
