@@ -66,6 +66,13 @@ void bme_set_TPH_default(bme68x_sensor_t *bme);
 void bme_set_TPH(bme68x_sensor_t *bme, uint8_t osTemp, uint8_t osPres, uint8_t osHum);
 
 /**
+ * @brief Function to set the heater profile for Forced mode
+ * @param temp : Heater temperature in degree Celsius
+ * @param dur  : Heating duration in milliseconds
+ */
+void bme_set_heaterprof(bme68x_sensor_t *bme, uint16_t temp, uint16_t dur);
+
+/**
  * @brief Function that implements the default I2C write transaction
  * @param reg_addr : Register address of the sensor
  * @param reg_data : Pointer to the data to be written to the sensor

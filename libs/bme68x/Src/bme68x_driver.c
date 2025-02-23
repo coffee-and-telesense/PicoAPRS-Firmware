@@ -83,6 +83,14 @@ void bme_set_TPH(bme68x_sensor_t *bme, uint8_t osTemp, uint8_t osPres, uint8_t o
   }
 }
 
+void bme_set_heaterprof(bme68x_sensor_t *bme, uint16_t temp, uint16_t dur)
+{
+  bme->heatr_conf.enable = BME68X_ENABLE;
+  bme->heatr_conf.heatr_temp = temp;
+  bme->heatr_conf.heatr_dur = dur;
+
+  bme->status = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &bme->heatr_conf, &bme->device);
+}
 
 int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr) {
   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr; // Cast it back to the correct type
