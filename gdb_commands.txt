@@ -1,0 +1,28 @@
+openocd:
+openocd -f interface/stlink.cfg -f target/stm32f4x.cfg
+or
+openocd -f <config file>
+
+minicom:
+sudo minicom -D /dev/ttyACM0 -b 115200
+
+gdb:
+arm-none-eabi-gdb build/Debug/test_bme688.elf
+
+target remote localhost:3333
+
+monitor reset halt
+load
+break main
+or
+break test_bme688.c:<line num>
+continue
+
+next is one line at a time without stepping into function calls
+stepi to step through one instruction at a time
+step to step through function calls
+
+interrupt to stop program execution
+quit to exit gdb
+load flashes new firmware without restarting gdb
+monitor reset init <- full reset
