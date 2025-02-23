@@ -39,6 +39,7 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
   // - TODO? variant ID
   bme->device.read = &bme_read;
   bme->device.write = &bme_write;
+  bme->device.delay_us = bme_delay_us;
   // - TODO? delay_us delay function pointer
   bme->status = BME68X_OK;
   // bme->n_fields = 0;
@@ -69,17 +70,18 @@ void bme_set_TPH_default(bme68x_sensor_t *bme)
   bme_set_TPH(bme, BME68X_OS_2X, BME68X_OS_16X, BME68X_OS_1X);
 }
 
-void bme_set_TPH(bme68x_sensor_t *bme, uint8_t osTemp, uint8_t osPres, uint8_t osHum)
+void bme_set_TPH(bme68x_sensor_t *bme, uint8_t os_temp, uint8_t os_pres, uint8_t os_hum)
 {
   bme->status = bme68x_get_conf(&bme->conf, &bme->device);
 
   if (bme->status == BME68X_OK)
   {
-    bme->conf.os_hum = osHum;
-    bme->conf.os_temp = osTemp;
-    bme->conf.os_pres = osPres;
+    bme->conf.os_hum = os_hum;
+    bme->conf.os_temp = os_temp;
+    bme->conf.os_pres = os_pres;
 
     bme->status = bme68x_set_conf(&bme->conf, &bme->device);
+    debug_print("in set_TPH after set_conf\r\n");
   }
 }
 
@@ -100,6 +102,7 @@ uint8_t bme_fetch_data(bme68x_sensor_t *bme) {
   // TODO: Update with struct members n_fields and i_fields
   // For now, hardcode
   // bme->n_fields = 0;
+  debug_print("In bme_fetch_data with opmode: %d\r\n", bme->last_op_mode);
   uint8_t n_fields = 0;
   // bme->status = bme68x_get_data(bme->last_op_mode, bme->sensor_data, &bme->n_fields, &bme->device);
   bme->status = bme68x_get_data(bme->last_op_mode, &bme->sensor_data, &n_fields, &bme->device);
@@ -134,6 +137,28 @@ void bme_set_opmode(bme68x_sensor_t *bme, uint8_t opmode)
   bme->status = bme68x_set_op_mode(opmode, &bme->device);
   if ((bme->status == BME68X_OK) && (opmode != BME68X_SLEEP_MODE))
     bme->last_op_mode = opmode;
+}
+
+uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode)
+{
+  // TODO: May need to fixup this "default" to BME68X_SLEEP_MODE
+  // if (opmode == NULL) {
+  //   opmode = BME68X_SLEEP_MODE;
+  // }
+  if (opmode == BME68X_SLEEP_MODE)
+    opmode = bme->last_op_mode;
+
+  return bme68x_get_meas_dur(opmode, &bme->conf, &bme->device);
+}
+
+/**
+ * @brief Function that implements the default microsecond delay callback
+ */
+void bme_delay_us(uint32_t period_us, void *intf_ptr)
+{
+  (void)intf_ptr;
+  // TODO? May need to replace this HAL_Delay
+  HAL_Delay(period_us);
 }
 
 int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr) {

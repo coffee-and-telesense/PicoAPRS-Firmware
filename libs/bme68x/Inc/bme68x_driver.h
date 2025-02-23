@@ -98,6 +98,20 @@ uint8_t bme_fetch_data(bme68x_sensor_t *bme);
 // bme68xData *bme_get_alldata(bme68x_sensor_t *bme);
 
 /**
+ * @brief Function to get the measurement duration in microseconds
+ * @param opMode : Operation mode of the sensor. Attempts to use the last one if nothing is set
+ * @return Temperature, Pressure, Humidity measurement time in microseconds
+ */
+uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode);
+
+/**
+ * @brief Function that implements the default microsecond delay callback
+ * @param periodUs : Duration of the delay in microseconds
+ * @param intfPtr  : Pointer to the interface descriptor
+ */
+void bme_delay_us(uint32_t period_us, void *intf_ptr);
+
+/**
  * @brief Function that implements the default I2C write transaction
  * @param reg_addr : Register address of the sensor
  * @param reg_data : Pointer to the data to be written to the sensor
