@@ -86,11 +86,19 @@ void bme_set_TPH(bme68x_sensor_t *bme, uint8_t osTemp, uint8_t osPres, uint8_t o
 
 int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr) {
   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr; // Cast it back to the correct type
-  HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, &reg_addr, 1, HAL_MAX_DELAY);
-  // TODO: Confirm casting away the const for reg-data will be ok, i.e. ensure the HAL
-  // transmit will not modify this value
-  HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, (uint8_t *)reg_data, 1, HAL_MAX_DELAY);
-  return 0;
+
+  // Create a buffer to store the register address followed by the data
+  uint8_t buffer[length + 1];
+  buffer[0] = reg_addr;                 // First byte is the register address
+  memcpy(&buffer[1], reg_data, length); // Copy the data after the register address
+
+  // Transmit register address + data
+  if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, buffer, length + 1, HAL_MAX_DELAY) != HAL_OK)
+  {
+    return -1; // Error in transmission
+  }
+
+  return 0; // Success
 }
 
 /**
@@ -104,8 +112,19 @@ int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, voi
 
 int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr) {
   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr; // Cast it back to the correct type
-  HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, &reg_addr, 1, HAL_MAX_DELAY);
-  HAL_I2C_Master_Receive(i2c_handle, BME68X_ADDR, reg_data, 1, HAL_MAX_DELAY);
-  return 0;
+
+  // Send the register address (1 byte)
+  if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, &reg_addr, 1, HAL_MAX_DELAY) != HAL_OK)
+  {
+    return -1; // Error in transmitting register address
+  }
+
+  // Read the requested number of bytes
+  if (HAL_I2C_Master_Receive(i2c_handle, BME68X_ADDR, reg_data, length, HAL_MAX_DELAY) != HAL_OK)
+  {
+    return -1; // Error in reading data
+  }
+
+  return 0; // Success
 }
 
