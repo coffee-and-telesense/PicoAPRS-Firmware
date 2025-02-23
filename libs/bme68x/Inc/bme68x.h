@@ -45,6 +45,10 @@
 #ifndef BME68X_H_
 #define BME68X_H_
 
+#ifdef DEBUG
+#include "logging.h"
+#endif
+
 #include "bme68x_defs.h"
 
 /* CPP guard */

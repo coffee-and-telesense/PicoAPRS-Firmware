@@ -318,7 +318,13 @@ int8_t bme68x_set_conf(struct bme68x_conf *conf, struct bme68x_dev *dev)
   uint8_t reg_array[BME68X_LEN_CONFIG] = {0x71, 0x72, 0x73, 0x74, 0x75};
   uint8_t data_array[BME68X_LEN_CONFIG] = {0};
 
+  debug_print("in set_conf\r\n");
+
   rslt = bme68x_get_op_mode(&current_op_mode, dev);
+  debug_print("in set_conf after get_op\r\n");
+  // debug_print("rslt: %d\r\n", rslt);
+  // TODO: This maybe fails somewhere now when it was
+  // fine before???
   if (rslt == BME68X_OK)
   {
     /* Configure only in the sleep mode */
@@ -332,6 +338,7 @@ int8_t bme68x_set_conf(struct bme68x_conf *conf, struct bme68x_dev *dev)
   else if (rslt == BME68X_OK)
   {
     /* Read the whole configuration and write it back once later */
+    debug_print("in set_conf about to get_regs\r\n");
     rslt = bme68x_get_regs(reg_array[0], data_array, BME68X_LEN_CONFIG, dev);
     dev->info_msg = BME68X_OK;
     if (rslt == BME68X_OK)
@@ -554,9 +561,11 @@ int8_t bme68x_get_data(uint8_t op_mode, struct bme68x_data *data, uint8_t *n_dat
     /* Reading the sensor data in forced mode only */
     if (op_mode == BME68X_FORCED_MODE)
     {
+      debug_print("Made it to bme68x_get_data function\r\n");
       rslt = read_field_data(0, data, dev);
       if (rslt == BME68X_OK)
       {
+        debug_print("bme68x_get_data: with result BME OK\r\n");
         if (data->status & BME68X_NEW_DATA_MSK)
         {
           new_fields = 1;
@@ -1205,6 +1214,8 @@ static int8_t read_field_data(uint8_t index, struct bme68x_data *data, struct bm
   uint16_t adc_hum;
   uint16_t adc_gas_res_low, adc_gas_res_high;
   uint8_t tries = 5;
+
+  debug_print("Made it to read_field_data function\r\n");
 
   while ((tries) && (rslt == BME68X_OK))
   {
