@@ -130,3 +130,9 @@ int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, voi
  * @return 0 if successful, non-zero otherwise
  */
 int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
+
+// Enable DWT and start the cycle counter
+void DWT_Delay_Init(void);
+
+// Microsecond delay using DWT cycle counter
+void DWT_Delay_us(uint32_t us);
