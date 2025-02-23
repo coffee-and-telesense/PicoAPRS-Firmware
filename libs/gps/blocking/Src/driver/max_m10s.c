@@ -1,22 +1,5 @@
-/*******************************************************************************
- * @file: max_m10s.c
- * @brief: Implementation of the u-blox MAX-M10S GNSS module driver using UBX protocol
- *         Provides initialization and communication functions for configuring and
- *         retrieving data from the GPS module over I2C.
- *
- * @note: This implementation focuses on UBX protocol support and I2C communication.
- *        NMEA protocol support may be added in future versions.
- *
- * @author: Reece Wayt
- * @date: Feb, 17 2025
- * @version: 1.1
- *
- * @dependencies:
- *   - STM32 HAL I2C driver
- *   - STM32 HAL UART driver (for debug output)
- ******************************************************************************/
 
- #include "max_m10s.h"
+#include "max_m10s.h"
 
 /*******************************************************************************
  * Private Type Definition

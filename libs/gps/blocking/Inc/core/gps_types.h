@@ -47,16 +47,6 @@ typedef enum {
 } gps_data_type_e;
 
 
-/**
- * @brief Operation Modes of driver
- *
- */
-typedef enum {
-    GPS_MODE_BLOCKING,
-    GPS_MODE_INTERRUPT
-    // TODO: Could add GPS_MODE_DMA if needed
-} gps_op_mode_e;
-
 // Generic position structure that any protocol can fill
 typedef struct {
     int32_t latitude;     // Degrees
@@ -77,12 +67,6 @@ typedef struct {
     uint8_t second;
     bool valid;
 } gps_time_t;
-
-// Add new structure for velocity
-typedef struct {
-    int32_t speed;         // Ground speed in m/s
-    bool valid;
-} gps_velocity_t;
 
 // Add new structure for heading
 /**
@@ -107,6 +91,5 @@ typedef struct {
 typedef union {
     gps_position_t position;
     gps_time_t     time;
-    gps_velocity_t velocity;
     gps_heading_t  heading;
 } gps_data_t;

@@ -1,4 +1,4 @@
-# Library: ublox_gps_driver
+# Library: gps_driver_blocking
 cmake_minimum_required(VERSION 3.22)
 project(gps_driver_blocking)
 
@@ -8,11 +8,11 @@ add_library(gps_driver_blocking STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/protocols/ubx/ubx_protocol.c
 )
 
-target_compile_definitions(ublox_gps_driver PUBLIC
+target_compile_definitions(gps_driver_blocking PUBLIC
     $<$<CONFIG:Debug>:DEBUG>
 )
 
-target_include_directories(ublox_gps_driver PUBLIC
+target_include_directories(gps_driver_blocking PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/core
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/driver
@@ -22,7 +22,7 @@ target_include_directories(ublox_gps_driver PUBLIC
 )
 
 # Link against the stm32cubemx INTERFACE Library
-target_link_libraries(ublox_gps_driver PUBLIC
+target_link_libraries(gps_driver_blocking PUBLIC
     common
     stm32cubemx
 )

@@ -1,6 +1,7 @@
 /*******************************************************************************
  * @file: u-blox_packet_handler.h
- * @brief: Packet handling and validation for u-blox GNSS module
+ * @brief: Packet handling and validation for u-blox GNSS module. It is a helper
+ *        library for the ubx protocol.
  ******************************************************************************/
 #pragma once
 #include "ubx_types.h"

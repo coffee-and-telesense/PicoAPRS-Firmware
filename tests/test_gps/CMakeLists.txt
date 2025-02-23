@@ -14,6 +14,10 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
+## Set options for the gps lib
+set(BUILD_BLOCKING_GPS_LIB ON CACHE BOOL "Build the blocking GPS library" FORCE)
+set(BUILD_NON_BLOCKING_GPS_LIB OFF CACHE BOOL "Build the non-blocking GPS library" FORCE)
+
 # Configure target-specific paths and settings
 configure_target(${TARGET_MCU})
 

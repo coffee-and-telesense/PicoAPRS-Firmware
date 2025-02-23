@@ -1,10 +1,10 @@
 /*******************************************************************************
 * @file    test_gps.c
-* @brief   Test application for the MAX-M10S GPS driver
+* @brief   Test application for the MAX-M10S GPS blocking driver
 *
-* @details This application demonstrates proper usage of the MAX-M10S driver API
-*          by providing a simple terminal interface for interacting with the GPS
-*          module. The application supports the following commands:
+* @details The application uses a serial of commands to interact with the MAX-M10S; see
+*          print_help() for a list of available commands. The application demonstrates
+*          how to:
 *          - Initialize the GPS module
 *          - Check GPS fix status
 *          - Retrieve and display position data (lat/lon/altitude)
@@ -22,6 +22,7 @@
 *          - MAX-M10S connected via I2C1
 *          - Debug output via UART2
 *          - LED on PA5 for heartbeat
+*          - Coordinates are in fixed-point format (degrees * 10^7)
 *
 * @author  Reece Wayt
 * @date    February 20, 2025
@@ -29,7 +30,7 @@
 *
 * @dependencies
 *   - STM32 HAL
-*   - MAX-M10S GPS Driver v1.1
+*   - MAX-M10S GPS Blocking Driver
 ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
@@ -67,7 +68,7 @@ int main(void)
     HAL_Init();
     SystemClock_Config();
     MX_GPIO_Init();
-    MX_USART1_UART_Init();
+    //MX_USART1_UART_Init(); // Uncomment if using UART1
     MX_USART2_UART_Init();
     MX_I2C1_Init();  // Make sure I2C is initialized before GPS
 

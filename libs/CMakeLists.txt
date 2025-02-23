@@ -48,14 +48,18 @@ Dependencies:
 
 cmake_minimum_required(VERSION 3.22)
 
+# Build options for the GPS libraries
 option(BUILD_BLOCKING_GPS_LIB "Build the blocking GPS library" OFF)
+option(BUILD_NON_BLOCKING_GPS_LIB "Build the non-blocking GPS library" OFF)
 
 # Add the common and gps subdirectories
 add_subdirectory(common)
 
+# Conditional blocks for building the GPS libraries
 if(BUILD_BLOCKING_GPS_LIB)
     add_subdirectory(gps/blocking)
 endif()
 
-add_subdirectory(gps/non-blocking)
-# Add more subdirectories here as needed
+if(BUILD_NON_BLOCKING_GPS_LIB)
+    add_subdirectory(gps/non-blocking)
+endif()

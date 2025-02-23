@@ -34,7 +34,6 @@ static gps_status_e ubx_get_pvt(ubx_protocol_t* proto);
   *          and handles I2C transmission
   */
 gps_status_e send_ubx_command(ubx_protocol_t* proto, bool ack_only){
-    uint32_t delay_ms;
     #ifdef DEBUG
         debug_print("Sending UBX command...\r\n");
     #endif
@@ -55,7 +54,6 @@ gps_status_e send_ubx_command(ubx_protocol_t* proto, bool ack_only){
     buff[size-1] = proto->frame.checksumB;
 
     // Send the data on bus
-    // TODO: Removed all HAL functions eventually
     if(HAL_I2C_Master_Transmit(&hi2c1, UBLOX_I2C_ADDR, buff, size, I2C_TIMEOUT) != HAL_OK){
         return UBLOX_ERROR;
     }
@@ -67,36 +65,22 @@ gps_status_e send_ubx_command(ubx_protocol_t* proto, bool ack_only){
         debug_print("Sent UBX command...\r\n");
     #endif
 
-    if(proto->frame.cls == UBX_CLASS_CFG) {
-        delay_ms = 1000;
-    } else if (proto->frame.cls == proto->state.last_cls && proto->frame.id == proto->state.last_id) {
-        // If the same message is sent twice in a row, decrease delay
-        delay_ms = 1000; // TODO: I don't think we can go less than 1000 ms
-    } else {
-        delay_ms = 1000;
-    }
-
 
     // Update state variables
     proto->state.last_cls = proto->frame.cls;
     proto->state.last_id = proto->frame.id;
 
-    HAL_Delay(delay_ms);  // IMPORTANT: A small delay is needed to allow the module to process the command
+    HAL_Delay(1000);   // IMPORTANT: A small delay is needed to allow the module to process the command
                           // before the requestor can read the response. I tried 100 ms and adjusted until
                           // finding that 1000 ms was the sweet spot and allowed the module enough time to process
-                          // a command. Sequential commands to the same class and ID can be read a bit faster.
+                          // a command.
 
-    if(ack_only) {
-        // Parse the ACK/NACK response
-        return parse_ack_response(proto);
-    }
-    return UBLOX_OK;
+    // If ACK is expected, verify response
+    return ack_only ? parse_ack_response(proto) : UBLOX_OK;
 }
 
 /**
   * @brief Parses ACK/NACK response from the u-blox module
-  * @param rx_buff Pointer to received data buffer
-  * @param rx_len Length of received data
   * @return gps_status_e UBX_OK if ACK received, UBX_ERROR if NACK or invalid response
   */
 static gps_status_e parse_ack_response(ubx_protocol_t* proto) {
@@ -116,8 +100,7 @@ static gps_status_e parse_ack_response(ubx_protocol_t* proto) {
  * @param packet Pointer to UBX packet structure to store response
  * @return Returns UBLOX_OK if request successful; else UBLOX_ERROR_XX
  */
-// TODO: make private
-static gps_status_e ubx_get_pvt(ubx_protocol_t* proto){
+gps_status_e ubx_get_pvt(ubx_protocol_t* proto){
 
     gps_status_e status = packet_prepare_command(&proto->frame,
                                                 UBX_CLASS_NAV,
