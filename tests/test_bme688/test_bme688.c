@@ -131,10 +131,10 @@ int main(void)
   // bme.setHeaterProf(int, int) (set heater profile)
   /* Set the heater configuration to 300 deg C for 100ms for Forced mode */
   bme_set_heaterprof(&bme, 300, 100);
-      // Initialize bme data struct (here or in loop??)
-      // bme.setOpMode(forced_mode_enum) (here or in loop??)
+  // Initialize bme data struct (here or in loop??)
+  // bme.setOpMode(forced_mode_enum) (here or in loop??)
 
-      uint8_t sensor_id;
+  uint8_t sensor_id;
   bme_read(0xD0, &sensor_id, 4, &hi2c1);
   debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
 
