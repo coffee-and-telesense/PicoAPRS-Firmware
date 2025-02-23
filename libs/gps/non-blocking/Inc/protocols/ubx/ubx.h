@@ -1,26 +1,41 @@
+/**
+ * @file ubx.h
+ * @brief UBX Protocol Implementation for u-blox GPS Modules
+ *
+ * @details This module provides a stateless implementation of the UBX protocol
+ *          used in u-blox GPS modules. It handles packet formatting, checksum
+ *          calculation, and validation while working directly with provided
+ *          buffers to minimize memory usage.
+ *
+ * The UBX protocol uses a binary packet format:
+ * +-------+-------+-------+-----+--------+---------+-------+-------+
+ * | SYNC1 | SYNC2 | CLASS | ID  | LENGTH | PAYLOAD | CK_A  | CK_B  |
+ * | 0xB5  | 0x62  |  1B   | 1B  |   2B   |   NB    |  1B   |  1B   |
+ * +-------+-------+-------+-----+--------+---------+-------+-------+
+ *
+ * Features:
+ * - Packet preparation for command and configuration messages
+ * - Checksum calculation using Fletcher algorithm
+ * - Packet validation including size, structure, and checksum
+ * - Special handling for ACK/NACK responses
+ * - Helper functions for packet size calculation and frame access
+ *
+ * @note This implementation follows a stateless design where all state
+ *       management is handled by the driver layer. The protocol layer
+ *       focuses purely on packet handling.
+ *
+ * @see u-blox MAX-M10 Interface Manual v5.10 for protocol details
+ *      https://www.u-blox.com/en/product/max-m10-series#Documentation-&-resources
+ *
+ * @author Reece Wayt
+ */
+
 #pragma once
 
 #include "ubx_types.h"
 #include "ubx_defs.h"
 #include "gps_types.h"
 #include "logging.h"
-
-
-/**
- * @file ubx.h
- * @brief UBX protocol handling for u-blox GPS modules
- *
- * This header defines the interface for handling UBX protocol messages.
- * It provides functions for preparing UBX commands and validating responses
- * while working directly with provided buffers. The protocol layer is
- * stateless, with all state management handled by the driver layer.
- */
-
- #pragma once
-
- #include "ubx_types.h"
- #include "ubx_defs.h"
- #include "gps_types.h"
 
  /**
   * @brief Prepares a generic UBX command in the provided buffer

@@ -2,7 +2,8 @@
 #include "error_types.h"
 
 /**
- * @brief gps_types.h: Error and status codes for u-blox module
+ * @brief GPS Status codes
+ * @note: These are the status codes that can be returned by the GPS driver.
  *
  */
 typedef enum {
@@ -34,10 +35,8 @@ typedef enum {
 } gps_protocol_e;
 
 /**
- * @brief Data types that can be requested from a protocol layer
- *      (e.g. position, time, velocity, etc). This creates type safety and
- *      extensibility for future data types.
- *
+ * @todo: Not currently used but could be useful when implementing
+ *       other function of the GPS driver.
  */
 typedef enum {
     GPS_DATA_POSITION,
@@ -47,19 +46,20 @@ typedef enum {
     // Add more data types as needed
 } gps_data_type_e;
 
-
-
 /**
- * @brief Operation Modes of driver
+ * @todo: Not currenlty used but if we need to mesh together
+ *      blocking and non-blocking modes, we could use this.
  *
- */
 typedef enum {
     GPS_MODE_BLOCKING,
     GPS_MODE_INTERRUPT
     // TODO: Could add GPS_MODE_DMA if needed
 } gps_op_mode_e;
+*/
 
 // Generic position structure that any protocol can fill
+// @todo: Not used yet but could be useful when implementing
+//       other functions of the non-blocking GPS driver.
 typedef struct {
     int32_t latitude;     // Degrees
     int32_t longitude;    // Degrees

@@ -39,28 +39,9 @@ typedef struct __attribute__((packed)) {
     uint8_t checksumB;
 } ubx_frame_t;
 
-typedef struct __attribute__((packed)) {
-    ubx_frame_t frame;
-    uint8_t raw[UBX_MAX_PACKET_LENGTH];
-} ubx_frame_wrapper_t;
-
-typedef enum {
-    UBX_FRAME_EMPTY,      // No data received yet
-    UBX_FRAME_RECEIVED,   // Fresh data from device
-    UBX_FRAME_IN_USE,     // Application is processing
-    UBX_FRAME_PROCESSED   // Application is done with frame
-} ubx_frame_state_e;
 
 typedef enum {
     UBX_CFG_I2C_UBX_ENABLE = 0x10720001,    // CFG-I2COUTPROT-UBX
     UBX_CFG_I2C_NMEA_DISABLE = 0x10720002,  // CFG-I2COUTPROT-NMEA
     // Add other config IDs as needed
 } ubx_cfg_id_e;
-
-// Helper structure for config values
-typedef struct {
-    uint8_t version;      // Always 0x00 for current version
-    uint8_t layers;       // Configuration layers (RAM, BBR, Flash)
-    uint32_t cfg_key_id;  // Configuration key ID
-    uint8_t value;        // Configuration value
-} ubx_cfg_payload_t;

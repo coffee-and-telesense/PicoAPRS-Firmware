@@ -48,6 +48,8 @@ uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id) {
     frame->payload.raw[frame->len + 1] = frame->checksumB;  // Checksum is 2 bytes long
 
     // Return total packet size
+    // TODO: Maybe delete the pointer to the frame and just return the size since
+    // this will always be the same size
     return UBX_HEADER_LENGTH + frame->len + UBX_CHECKSUM_LENGTH;
 }
 

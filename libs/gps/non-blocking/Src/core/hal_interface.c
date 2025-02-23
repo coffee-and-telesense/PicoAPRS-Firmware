@@ -1,6 +1,26 @@
 /**
- * @file hal_interface.c
- * @brief Simplified HAL interface implementation for single I2C and Timer instance
+ * @file hal_interface.h
+ * @brief Hardware Abstraction Layer (HAL) interface for gps module
+ *
+ * @details This interface provides a hardware-independent layer between device drivers
+ *          and microcontroller-specific code. It primarily supports I2C communication
+ *          and timer-based delays.
+ *
+ * This layer allows flexibility to how I've written the driver code, as it can be use function pointers
+ * to register callbacks defined by the driver. This allows the driver to be non-blocking and
+ * to handle errors and completion events in a more flexible way.
+ *
+ * Key features:
+ * - Non-blocking I2C operations with completion callbacks
+ * - Timer-based delay operations
+ *
+ * @sources:
+ *      - https://medium.com/@kasra_mp/implementing-callback-functions-using-function-pointers-in-c-3e12838ef222
+ *      - https://medium.com/@khimaja3127/how-to-design-interfaces-in-c-that-work-for-you-e3f509b188dd
+ *
+ *
+ * @note This implementation currently supports a single interface instance through
+ *       a global variable. It could be extended to support multiple instances if needed.
  */
 
 #include "hal_interface.h"
@@ -8,10 +28,16 @@
 #include "stm32l4xx_hal_i2c.h"
 #include "stm32l4xx_hal_tim.h"
 
-// Single global interface instance - much simpler than tracking multiple instances but could be expanded
-// to support multiple interfaces if needed.
-// Example:
-// -> static hal_interface_t g_hal_interfaces[MAX_INTERFACES];
+/**
+ * @brief Global interface instance
+ *
+ * This pointer stores the active interface instance, allowing HAL callbacks
+ * to route events to the correct driver callbacks. A more complex implementation
+ * could support multiple instances using an array or linked list.
+ *
+ * Example:
+ *  ---> static hal_interface_t g_hal_interfaces[MAX_INTERFACES];
+ */
 static hal_interface_t* g_hal_interface = NULL;
 
 /**
@@ -27,7 +53,6 @@ static HAL_StatusTypeDef hal_delay_it(TIM_HandleTypeDef *htim, uint32_t delay_ms
 
  /**
   * @brief Initialize the HAL interface
-  *
   * This simplified version manages a single interface instance, making it
   * easier to track state and handle callbacks. We store the interface in a
   * global variable so HAL callbacks can access it.
@@ -57,7 +82,7 @@ HAL_StatusTypeDef hal_interface_init(hal_interface_t *hal) {
 
     // Wire up the HAL function pointers - these map directly to STM32 HAL functions
     // TODO: This interface should only wire up the functions that are actually used
-    // by the driver, rather than all of them. For now we'll just wire up everything.
+    // by the driver, rather than all of them. For now wire up everything.
     hal->ops.transmit_blocking = HAL_I2C_Master_Transmit;
     hal->ops.receive_blocking = HAL_I2C_Master_Receive;
     hal->ops.transmit_it = HAL_I2C_Master_Transmit_IT;
@@ -88,7 +113,6 @@ HAL_StatusTypeDef hal_delay_it(TIM_HandleTypeDef *htim, uint32_t delay_ms) {
      htim->Instance->ARR = period;
      htim->Instance->CNT = 0;  // Reset counter
     */
-
     return HAL_TIM_Base_Start_IT(htim);
  }
 
@@ -107,17 +131,16 @@ HAL_StatusTypeDef hal_delay_it(TIM_HandleTypeDef *htim, uint32_t delay_ms) {
  /*
   * HAL Callback Implementations
   *
-  * These functions are called by the STM32 HAL when operations complete.
-  * Since we only have one interface, we can directly use our global variable
-  * instead of searching through an array of instances.
+  * These functions are called by the STM32 HAL when operations complete. The magic of this
+  * is that these callbacks are registered with the HAL interface, so the driver doesn't need to
+  * know about them. The driver just needs to implement,and set the appropriate callbacks for its own use.
   */
-
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {
     (void)hi2c;  // Unused parameter for now since we only have one interface
     #ifdef DEBUG
         debug_print("HAL_I2C_MasterTxCpltCallback Tx complete\n");
     #endif
-    if(g_hal_interface && g_hal_interface->callbacks.tx_complete) {
+    if(g_hal_interface && g_hal_interface->callbacks.tx_complete) { // Check if the callback is set
         g_hal_interface->callbacks.tx_complete(g_hal_interface->callbacks.context);
     }
 }
@@ -156,17 +179,3 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         #endif
     }
 }
-
- /**
-  * @brief Check if the current transaction has timed out
-  *
-  * A simple utility function that compares the elapsed time against
-  * the transaction's timeout value.
-
-bool hal_interface_check_timeout(hal_interface_t *hal) {
-    if(!hal) return false;
-
-    uint32_t current_time = HAL_GetTick();
-    return (current_time - hal->transaction.start_time) > hal->transaction.timeout;
-}
-*/
