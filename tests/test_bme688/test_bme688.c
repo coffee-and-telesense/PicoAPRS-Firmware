@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 #include "logging.h"
@@ -94,7 +95,10 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
+  // Start the timer
+  HAL_TIM_Base_Start(&htim6);
   // debug_print_inline("Printing with macro: %d\r\n", 5);
   // debug_print("Printing with function: %d\r\n", 10);
 
@@ -148,7 +152,9 @@ int main(void)
     /* USER CODE END WHILE */
     // (maybe, if not done above): bme data and setOpMode
     bme_set_opmode(&bme, BME68X_FORCED_MODE);
-    HAL_Delay(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE));
+    // HAL_Delay(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE));
+    // DWT_Delay_us(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE));?
+    // HAL_Delay(1);
     // (maybe) bme.getMeasDur() and delay_microseconds
     // bme.fetchData() retrieve data from sensor
     int fetch_success = bme_fetch_data(&bme);
@@ -163,7 +169,8 @@ int main(void)
     }
     // bme.getData() get data
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-    HAL_Delay(1000);
+    // DWT_Delay_us(1000);
+    // HAL_Delay(1);
 
     /* USER CODE BEGIN 3 */
   }
