@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "u-blox_gnss_MAX-M10S.h"
-
+// hi
 /* Private variables ---------------------------------------------------------*/
-uint8_t rx_char;
+
 ublox_status_e status;
 char debug_buff[100];  // Buffer for debug messages
 
