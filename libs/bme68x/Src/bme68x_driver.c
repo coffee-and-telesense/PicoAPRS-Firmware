@@ -150,6 +150,12 @@ void bme_delay_us(uint32_t period_us, void *intf_ptr)
   // so cast to void to avoid compiler warning
   (void)intf_ptr;
   /** @todo: Implement a microsecond delay here, possibly with a DWT cycle counter, or an actual hardware timer */
+  // FIXME: Short-term implementation of a blocking delay
+  volatile uint32_t cycles = period_us * 20;
+  while (cycles--)
+  {
+    __NOP();
+  }
 }
 
 /** Implements the default microsecond delay callback */
