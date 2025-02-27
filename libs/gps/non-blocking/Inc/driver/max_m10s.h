@@ -51,7 +51,7 @@ typedef union {
         uint16_t config_valid : 1;  // Configuration validation
         uint16_t data_ready : 1;    // New data available
         uint16_t needs_reset : 1;   // Reset required flag
-        uint16_t reserved : 3;
+        uint16_t reserved : 4;
     } bits;
 } gps_flags_t;
 

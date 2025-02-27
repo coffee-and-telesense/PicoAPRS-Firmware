@@ -124,24 +124,28 @@ gps_status_e max_m10s_run(max_m10s_t *dev) {
                 debug_print("GPS Ready\n");
             #endif
             return UBLOX_OK;
+            //@todo: Implment this branch
             //return handle_ready_state(dev);
         case GPS_CONFIGURING:
             #ifdef DEBUG
                 debug_print("GPS Configuring\n");
             #endif
             return UBLOX_OK;
+            // @todo: Implement this branch
             //return handle_config_state(dev);
         case GPS_GETTING_DATA:
             #ifdef DEBUG
                 debug_print("GPS Getting Data\n");
             #endif
             return UBLOX_OK;
+            // @todo: Implement this branch
             //return handle_data_state(dev);
         case GPS_RESETTING:
             #ifdef DEBUG
                 debug_print("GPS Resetting\n");
             #endif
             return UBLOX_OK;
+            // @todo: Implement this branch
             //return handle_reset_state(dev);
         default:
             #ifdef DEBUG
