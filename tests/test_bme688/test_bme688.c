@@ -133,7 +133,6 @@ int main(void)
   // bme_read(0xD0, &sensor_id, 4, &hi2c1);
   // debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
 
-  debug_print("Temperature(deg C), Pressure(Pa), Humidity(%), Gas resistance(ohm), Status\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -148,11 +147,17 @@ int main(void)
     int fetch_success = bme_fetch_data(&bme);
     if (fetch_success)
     {
-      debug_print("%d, ", bme.sensor_data.temperature);
-      debug_print("%d, ", bme.sensor_data.pressure);
-      debug_print("%d, ", bme.sensor_data.humidity);
-      debug_print("%d, ", bme.sensor_data.gas_resistance);
-      debug_print("%X, \r\n", bme.sensor_data.status);
+      debug_print("Temperature: %d.%02d°C, ",
+                  bme.sensor_data.temperature / 100,
+                  (bme.sensor_data.temperature % 100));
+      debug_print("Pressure: %d Pa, ", bme.sensor_data.pressure);
+      debug_print("Humidity: %d.%03d%%, ",
+                  bme.sensor_data.humidity / 1000,
+                  (bme.sensor_data.humidity % 1000));
+      debug_print("Gas Resistance: %d.%03d kΩ, ",
+                  bme.sensor_data.gas_resistance / 1000,
+                  (bme.sensor_data.gas_resistance % 1000));
+      debug_print("Status: 0x%X\r\n", bme.sensor_data.status);
     }
 
     // The "blink" code is a simple verification of program execution,

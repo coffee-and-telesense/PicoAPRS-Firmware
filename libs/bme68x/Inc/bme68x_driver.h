@@ -69,6 +69,12 @@ typedef struct
 
   /** Structure to store sensor measurement data. */
   /** @todo: May modify this to be an array in order to support parallel mode */
+  /** @note: Since we're not using floating point, the data will be as follows:
+   *  - Temperature in degrees celsius x100
+   *  - Pressure in Pascal
+   *  - Humidity in % relative humidity x1000
+   *  - Gas resistance in Ohms
+   */
   struct bme68x_data sensor_data;
 
   // /** Array to store multiple sensor data values (for parallel mode). */
