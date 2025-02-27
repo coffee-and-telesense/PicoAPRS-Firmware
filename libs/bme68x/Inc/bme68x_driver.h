@@ -23,17 +23,14 @@
  * @todo: Alternatively, we could include an "i2c.h" file under the assumption that one will be created within the application code.
  */
 #include "stm32l4xx_hal_i2c.h"
-
-/* ========================== MACROS ========================== */
-
-/**
- * @brief Used fixed point in the Bosch library
- * @todo: This can be removed when / if the Bosch library is reduced to only the necessary functionality
+/** @note: As currently written, the Bosch library needs BME68X_DO_NOT_USE_FPU
+ * to be set in order to prevent floating point code from being used. This is currently
+ * set in the CMakeLists.txt file for this driver.
  */
-#define BME68X_DO_NOT_USE_FPU
-
 #include "bme68x_defs.h"
 #include "bme68x.h"
+
+/* ========================== MACROS ========================== */
 
 /**
  * @brief Basic error macro
