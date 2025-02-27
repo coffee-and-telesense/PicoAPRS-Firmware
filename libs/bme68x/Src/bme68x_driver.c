@@ -137,7 +137,7 @@ uint8_t bme_fetch_data(bme68x_sensor_t *bme)
 /** Get the measurement duration in microseconds*/
 uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode)
 {
-  if (opmode == NULL || opmode == BME68X_SLEEP_MODE)
+  if (opmode == BME68X_SLEEP_MODE)
     opmode = bme->last_opmode;
 
   return bme68x_get_meas_dur(opmode, &bme->conf, &bme->device);
