@@ -63,3 +63,7 @@ endif()
 if(BUILD_NON_BLOCKING_GPS_LIB)
     add_subdirectory(gps/non-blocking)
 endif()
+
+add_subdirectory(bme68x)
+# Add more subdirectories here as needed
+
