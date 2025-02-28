@@ -1,9 +1,9 @@
 /*******************************************************************************
  * @file: logging.h
  * @brief: Simple debug printing utility for STM32 projects
- * 
+ *
  * @note: Requires UART to be initialized before use
- * 
+ *
  * @todo: This utility is very basic and could be expanded to include more features
  ******************************************************************************/
 
@@ -11,6 +11,7 @@
 
 #include "stm32l4xx_hal.h"
 #include "usart.h"
+
 extern UART_HandleTypeDef huart2;
 
 // The following macro may be used when inlining the code is preferable for

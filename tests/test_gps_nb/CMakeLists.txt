@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 # Set project name first
-set(PROJECT_NAME "test_gps")
+set(PROJECT_NAME "test_gps_nb")
 
 # Include project configuration
 include(${CMAKE_SOURCE_DIR}/../../cmake/test_config.cmake)
@@ -15,8 +15,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
 ## Set options for the gps lib
-set(BUILD_BLOCKING_GPS_LIB ON CACHE BOOL "Build the blocking GPS library" FORCE)
-set(BUILD_NON_BLOCKING_GPS_LIB OFF CACHE BOOL "Build the non-blocking GPS library" FORCE)
+set(BUILD_BLOCKING_GPS_LIB OFF CACHE BOOL "Build the blocking GPS library" FORCE)
+set(BUILD_NON_BLOCKING_GPS_LIB ON CACHE BOOL "Build the non-blocking GPS library" FORCE)
 
 # Configure target-specific paths and settings
 configure_target(${TARGET_MCU})
@@ -45,7 +45,7 @@ add_executable(${PROJECT_NAME})
 
 # Add test sources
 target_sources(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/test_gps.c
+    ${CMAKE_SOURCE_DIR}/test_gps_nb.c
 )
 
 # Add include paths
@@ -66,6 +66,6 @@ add_subdirectory(
 
 target_link_libraries(${PROJECT_NAME}
     stm32cubemx
-    gps_driver_blocking
+    gps_driver_nb
     common
 )

@@ -3,7 +3,7 @@
 Root Level CMake Configuration for Libraries
 ********************************************************************************
 
-This CMakeLists.txt manages all libraries in the project. It establishes build 
+This CMakeLists.txt manages all libraries in the project. It establishes build
 order and handles interdependencies between libraries.
 
 --------------------------------------------------------------------------------
@@ -17,18 +17,18 @@ Adding a New Library:
        └── Src/
 
 2. Create your library's CMakeLists.txt:
-example: 
+example:
    cmake_minimum_required(VERSION 3.22)
    project(your_library)
-   
+
    add_library(your_library STATIC
        ${CMAKE_CURRENT_SOURCE_DIR}/Src/your_source.c
    )
-   
+
    target_include_directories(your_library PUBLIC
        ${CMAKE_CURRENT_SOURCE_DIR}/Inc
    )
-   
+
    # If your library needs common utilities:
    target_link_libraries(your_library PUBLIC
        common   # Link your library against the common library if needed
@@ -48,8 +48,22 @@ Dependencies:
 
 cmake_minimum_required(VERSION 3.22)
 
+# Build options for the GPS libraries
+option(BUILD_BLOCKING_GPS_LIB "Build the blocking GPS library" OFF)
+option(BUILD_NON_BLOCKING_GPS_LIB "Build the non-blocking GPS library" OFF)
+
 # Add the common and gps subdirectories
 add_subdirectory(common)
-add_subdirectory(gps)
+
+# Conditional blocks for building the GPS libraries
+if(BUILD_BLOCKING_GPS_LIB)
+    add_subdirectory(gps/blocking)
+endif()
+
+if(BUILD_NON_BLOCKING_GPS_LIB)
+    add_subdirectory(gps/non-blocking)
+endif()
+
 add_subdirectory(bme68x)
 # Add more subdirectories here as needed
+

@@ -55,5 +55,5 @@
 
 #define MAKE_ERROR(subsystem, component, fatal) \
     (((fatal) ? ERR_FATAL_MASK : 0) | \
-    (((subsystem) & ERR_SUBSYSTEM_MASK) << 8) | \
+    (((subsystem << 8) & ERR_SUBSYSTEM_MASK)) | \
     ((component) & ERR_COMPONENT_MASK))
