@@ -18,6 +18,7 @@
 set(SUPPORTED_TARGETS
     "STM32L432KC"
     "STM32L476RG"
+    "STM32U083RC"
     # TODO: Add more targets as needed
 )
 
@@ -27,6 +28,9 @@ set(STM32L432KC_CUBEMX_PATH "${STM32L432KC_PATH}/cmake/stm32cubemx")
 
 set(STM32L476RG_PATH "${CMAKE_SOURCE_DIR}/../../targets/stm32L4xx/L476RG")
 set(STM32L476RG_CUBEMX_PATH "${STM32L476RG_PATH}/cmake/stm32cubemx")
+
+set(STM32U083RC_PATH "${CMAKE_SOURCE_DIR}/../../targets/stm32U0xx/U083RC")
+set(STM32U083RC_CUBEMX_PATH "${STM32U083RC_PATH}/cmake/stm32cubemx")
 # TODO: Add more target specific paths as needed
 
 # Function to validate target selection
