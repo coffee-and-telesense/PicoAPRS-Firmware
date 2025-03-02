@@ -305,14 +305,6 @@
 /* Sequential operation mode */
 #define BME68X_SEQUENTIAL_MODE UINT8_C(3)
 
-/* SPI page macros */
-
-/* SPI memory page 0 */
-#define BME68X_MEM_PAGE0 UINT8_C(0x10)
-
-/* SPI memory page 1 */
-#define BME68X_MEM_PAGE1 UINT8_C(0x00)
-
 /* Coefficient index macros */
 
 /* Length for all coefficients */
@@ -572,15 +564,6 @@
 /* Mask for heater stability */
 #define BME68X_HEAT_STAB_MSK UINT8_C(0x10)
 
-/* Mask for SPI memory page */
-#define BME68X_MEM_PAGE_MSK UINT8_C(0x10)
-
-/* Mask for reading a register in SPI */
-#define BME68X_SPI_RD_MSK UINT8_C(0x80)
-
-/* Mask for writing a register in SPI */
-#define BME68X_SPI_WR_MSK UINT8_C(0x7f)
-
 /* Mask for the H1 calibration coefficient */
 #define BME68X_BIT_H1_DATA_MSK UINT8_C(0x0f)
 
@@ -699,17 +682,6 @@ typedef void (*bme68x_delay_us_fptr_t)(uint32_t period, void *intf_ptr);
  * @param[in,out] reg_data: Data array to read/write
  * @param[in] len: Length of the data array
  */
-
-/*
- * @brief Interface selection Enumerations
- */
-enum bme68x_intf
-{
-  /*! SPI interface */
-  BME68X_SPI_INTF,
-  /*! I2C interface */
-  BME68X_I2C_INTF
-};
 
 /* Structure definitions */
 
@@ -939,9 +911,6 @@ struct bme68x_dev
    * ----------------------------------------
    */
   uint32_t variant_id;
-
-  /*! SPI/I2C interface */
-  enum bme68x_intf intf;
 
   /*! Memory page used */
   uint8_t mem_page;

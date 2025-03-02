@@ -96,12 +96,6 @@ static int8_t read_field_data(uint8_t index, struct bme68x_data *data, struct bm
 /* This internal API is used to read all data fields of the sensor */
 static int8_t read_all_field_data(struct bme68x_data *const data[], struct bme68x_dev *dev);
 
-/* This internal API is used to switch between SPI memory pages */
-static int8_t set_mem_page(uint8_t reg_addr, struct bme68x_dev *dev);
-
-/* This internal API is used to get the current SPI memory page */
-static int8_t get_mem_page(struct bme68x_dev *dev);
-
 /* This internal API is used to check the bme68x_dev for null pointers */
 static int8_t null_ptr_check(const struct bme68x_dev *dev);
 
@@ -191,17 +185,7 @@ int8_t bme68x_set_regs(const uint8_t *reg_addr, const uint8_t *reg_data, uint32_
       /* Interleave the 2 arrays */
       for (index = 0; index < len; index++)
       {
-        if (dev->intf == BME68X_SPI_INTF)
-        {
-          /* Set the memory page */
-          rslt = set_mem_page(reg_addr[index], dev);
-          tmp_buff[(2 * index)] = reg_addr[index] & BME68X_SPI_WR_MSK;
-        }
-        else
-        {
-          tmp_buff[(2 * index)] = reg_addr[index];
-        }
-
+        tmp_buff[(2 * index)] = reg_addr[index];
         tmp_buff[(2 * index) + 1] = reg_data[index];
       }
 
@@ -239,16 +223,6 @@ int8_t bme68x_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, struct
   rslt = null_ptr_check(dev);
   if ((rslt == BME68X_OK) && reg_data)
   {
-    if (dev->intf == BME68X_SPI_INTF)
-    {
-      /* Set the memory page */
-      rslt = set_mem_page(reg_addr, dev);
-      if (rslt == BME68X_OK)
-      {
-        reg_addr = reg_addr | BME68X_SPI_RD_MSK;
-      }
-    }
-
     dev->intf_rslt = dev->read(reg_addr, reg_data, len, dev->intf_ptr);
     if (dev->intf_rslt != 0)
     {
@@ -278,11 +252,6 @@ int8_t bme68x_soft_reset(struct bme68x_dev *dev)
   rslt = null_ptr_check(dev);
   if (rslt == BME68X_OK)
   {
-    if (dev->intf == BME68X_SPI_INTF)
-    {
-      rslt = get_mem_page(dev);
-    }
-
     /* Reset the device */
     if (rslt == BME68X_OK)
     {
@@ -292,12 +261,6 @@ int8_t bme68x_soft_reset(struct bme68x_dev *dev)
       {
         /* Wait for 5ms */
         dev->delay_us(BME68X_PERIOD_RESET, dev->intf_ptr);
-
-        /* After reset get the memory page */
-        if (dev->intf == BME68X_SPI_INTF)
-        {
-          rslt = get_mem_page(dev);
-        }
       }
     }
   }
@@ -742,7 +705,6 @@ int8_t bme68x_selftest_check(const struct bme68x_dev *dev)
     t_dev.amb_temp = 25;
     t_dev.read = dev->read;
     t_dev.write = dev->write;
-    t_dev.intf = dev->intf;
     t_dev.delay_us = dev->delay_us;
     t_dev.intf_ptr = dev->intf_ptr;
 
@@ -1355,75 +1317,6 @@ static int8_t read_all_field_data(struct bme68x_data *const data[], struct bme68
     else
     {
       data[i]->gas_resistance = calc_gas_resistance_low(adc_gas_res_low, gas_range_l, dev);
-    }
-  }
-
-  return rslt;
-}
-
-/* This internal API is used to switch between SPI memory pages */
-static int8_t set_mem_page(uint8_t reg_addr, struct bme68x_dev *dev)
-{
-  int8_t rslt;
-  uint8_t reg;
-  uint8_t mem_page;
-
-  /* Check for null pointers in the device structure*/
-  rslt = null_ptr_check(dev);
-  if (rslt == BME68X_OK)
-  {
-    if (reg_addr > 0x7f)
-    {
-      mem_page = BME68X_MEM_PAGE1;
-    }
-    else
-    {
-      mem_page = BME68X_MEM_PAGE0;
-    }
-
-    if (mem_page != dev->mem_page)
-    {
-      dev->mem_page = mem_page;
-      dev->intf_rslt = dev->read(BME68X_REG_MEM_PAGE | BME68X_SPI_RD_MSK, &reg, 1, dev->intf_ptr);
-      if (dev->intf_rslt != 0)
-      {
-        rslt = BME68X_E_COM_FAIL;
-      }
-
-      if (rslt == BME68X_OK)
-      {
-        reg = reg & (~BME68X_MEM_PAGE_MSK);
-        reg = reg | (dev->mem_page & BME68X_MEM_PAGE_MSK);
-        dev->intf_rslt = dev->write(BME68X_REG_MEM_PAGE & BME68X_SPI_WR_MSK, &reg, 1, dev->intf_ptr);
-        if (dev->intf_rslt != 0)
-        {
-          rslt = BME68X_E_COM_FAIL;
-        }
-      }
-    }
-  }
-
-  return rslt;
-}
-
-/* This internal API is used to get the current SPI memory page */
-static int8_t get_mem_page(struct bme68x_dev *dev)
-{
-  int8_t rslt;
-  uint8_t reg;
-
-  /* Check for null pointer in the device structure*/
-  rslt = null_ptr_check(dev);
-  if (rslt == BME68X_OK)
-  {
-    dev->intf_rslt = dev->read(BME68X_REG_MEM_PAGE | BME68X_SPI_RD_MSK, &reg, 1, dev->intf_ptr);
-    if (dev->intf_rslt != 0)
-    {
-      rslt = BME68X_E_COM_FAIL;
-    }
-    else
-    {
-      dev->mem_page = reg & BME68X_MEM_PAGE_MSK;
     }
   }
 
