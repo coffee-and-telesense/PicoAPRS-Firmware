@@ -269,12 +269,11 @@ int8_t bme68x_soft_reset(struct bme68x_dev *dev)
 }
 
 /*
- * @brief This API is used to set the oversampling, filter and odr configuration
+ * @brief This API is used to set the oversampling, and filter configuration
  */
 int8_t bme68x_set_conf(struct bme68x_conf *conf, struct bme68x_dev *dev)
 {
   int8_t rslt;
-  uint8_t odr20 = 0, odr3 = 1;
   uint8_t current_op_mode;
 
   /* Register data starting from BME68X_REG_CTRL_GAS_1(0x71) up to BME68X_REG_CONFIG(0x75) */
@@ -319,23 +318,10 @@ int8_t bme68x_set_conf(struct bme68x_conf *conf, struct bme68x_dev *dev)
 
     if (rslt == BME68X_OK)
     {
-      rslt = boundary_check(&conf->odr, BME68X_ODR_NONE, dev);
-    }
-
-    if (rslt == BME68X_OK)
-    {
       data_array[4] = BME68X_SET_BITS(data_array[4], BME68X_FILTER, conf->filter);
       data_array[3] = BME68X_SET_BITS(data_array[3], BME68X_OST, conf->os_temp);
       data_array[3] = BME68X_SET_BITS(data_array[3], BME68X_OSP, conf->os_pres);
       data_array[1] = BME68X_SET_BITS_POS_0(data_array[1], BME68X_OSH, conf->os_hum);
-      if (conf->odr != BME68X_ODR_NONE)
-      {
-        odr20 = conf->odr;
-        odr3 = 0;
-      }
-
-      data_array[4] = BME68X_SET_BITS(data_array[4], BME68X_ODR20, odr20);
-      data_array[0] = BME68X_SET_BITS(data_array[0], BME68X_ODR3, odr3);
     }
   }
 
@@ -353,7 +339,7 @@ int8_t bme68x_set_conf(struct bme68x_conf *conf, struct bme68x_dev *dev)
 }
 
 /*
- * @brief This API is used to get the oversampling, filter and odr
+ * @brief This API is used to get the oversampling, filter
  */
 int8_t bme68x_get_conf(struct bme68x_conf *conf, struct bme68x_dev *dev)
 {
@@ -374,14 +360,6 @@ int8_t bme68x_get_conf(struct bme68x_conf *conf, struct bme68x_dev *dev)
     conf->filter = BME68X_GET_BITS(data_array[4], BME68X_FILTER);
     conf->os_temp = BME68X_GET_BITS(data_array[3], BME68X_OST);
     conf->os_pres = BME68X_GET_BITS(data_array[3], BME68X_OSP);
-    if (BME68X_GET_BITS(data_array[0], BME68X_ODR3))
-    {
-      conf->odr = BME68X_ODR_NONE;
-    }
-    else
-    {
-      conf->odr = BME68X_GET_BITS(data_array[4], BME68X_ODR20);
-    }
   }
 
   return rslt;
@@ -526,40 +504,6 @@ int8_t bme68x_get_data(uint8_t op_mode, struct bme68x_data *data, uint8_t *n_dat
           new_fields = 0;
           rslt = BME68X_W_NO_NEW_DATA;
         }
-      }
-    }
-    else if (op_mode == BME68X_SEQUENTIAL_MODE)
-    {
-      /* Read the 3 fields and count the number of new data fields */
-      rslt = read_all_field_data(field_ptr, dev);
-
-      new_fields = 0;
-      for (i = 0; (i < 3) && (rslt == BME68X_OK); i++)
-      {
-        if (field_ptr[i]->status & BME68X_NEW_DATA_MSK)
-        {
-          new_fields++;
-        }
-      }
-
-      /* Sort the sensor data in sequential mode*/
-      for (i = 0; (i < 2) && (rslt == BME68X_OK); i++)
-      {
-        for (j = i + 1; j < 3; j++)
-        {
-          sort_sensor_data(i, j, field_ptr);
-        }
-      }
-
-      /* Copy the sorted data */
-      for (i = 0; ((i < 3) && (rslt == BME68X_OK)); i++)
-      {
-        data[i] = *field_ptr[i];
-      }
-
-      if (new_fields == 0)
-      {
-        rslt = BME68X_W_NO_NEW_DATA;
       }
     }
     else
@@ -1380,24 +1324,6 @@ static int8_t set_conf(const struct bme68x_heatr_conf *conf, uint8_t op_mode, ui
     gw_reg_data[0] = calc_gas_wait(conf->heatr_dur);
     (*nb_conv) = 0;
     write_len = 1;
-    break;
-  case BME68X_SEQUENTIAL_MODE:
-    if ((!conf->heatr_dur_prof) || (!conf->heatr_temp_prof))
-    {
-      rslt = BME68X_E_NULL_PTR;
-      break;
-    }
-
-    for (i = 0; i < conf->profile_len; i++)
-    {
-      rh_reg_addr[i] = BME68X_REG_RES_HEAT0 + i;
-      rh_reg_data[i] = calc_res_heat(conf->heatr_temp_prof[i], dev);
-      gw_reg_addr[i] = BME68X_REG_GAS_WAIT0 + i;
-      gw_reg_data[i] = calc_gas_wait(conf->heatr_dur_prof[i]);
-    }
-
-    (*nb_conv) = conf->profile_len;
-    write_len = conf->profile_len;
     break;
   default:
     rslt = BME68X_W_DEFINE_OP_MODE;
