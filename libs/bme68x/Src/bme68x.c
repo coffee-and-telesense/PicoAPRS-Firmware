@@ -485,10 +485,7 @@ uint32_t bme68x_get_meas_dur(const uint8_t op_mode, struct bme68x_conf *conf, st
       meas_dur += UINT32_C(477 * 4); /* TPH switching duration */
       meas_dur += UINT32_C(477 * 5); /* Gas measurement duration */
 
-      if (op_mode != BME68X_PARALLEL_MODE)
-      {
-        meas_dur += UINT32_C(1000); /* Wake up duration of 1ms */
-      }
+      meas_dur += UINT32_C(1000); /* Wake up duration of 1ms */
     }
   }
 
@@ -531,7 +528,7 @@ int8_t bme68x_get_data(uint8_t op_mode, struct bme68x_data *data, uint8_t *n_dat
         }
       }
     }
-    else if ((op_mode == BME68X_PARALLEL_MODE) || (op_mode == BME68X_SEQUENTIAL_MODE))
+    else if (op_mode == BME68X_SEQUENTIAL_MODE)
     {
       /* Read the 3 fields and count the number of new data fields */
       rslt = read_all_field_data(field_ptr, dev);
@@ -545,7 +542,7 @@ int8_t bme68x_get_data(uint8_t op_mode, struct bme68x_data *data, uint8_t *n_dat
         }
       }
 
-      /* Sort the sensor data in parallel & sequential modes*/
+      /* Sort the sensor data in sequential mode*/
       for (i = 0; (i < 2) && (rslt == BME68X_OK); i++)
       {
         for (j = i + 1; j < 3; j++)
@@ -1401,35 +1398,6 @@ static int8_t set_conf(const struct bme68x_heatr_conf *conf, uint8_t op_mode, ui
 
     (*nb_conv) = conf->profile_len;
     write_len = conf->profile_len;
-    break;
-  case BME68X_PARALLEL_MODE:
-    if ((!conf->heatr_dur_prof) || (!conf->heatr_temp_prof))
-    {
-      rslt = BME68X_E_NULL_PTR;
-      break;
-    }
-
-    if (conf->shared_heatr_dur == 0)
-    {
-      rslt = BME68X_W_DEFINE_SHD_HEATR_DUR;
-    }
-
-    for (i = 0; i < conf->profile_len; i++)
-    {
-      rh_reg_addr[i] = BME68X_REG_RES_HEAT0 + i;
-      rh_reg_data[i] = calc_res_heat(conf->heatr_temp_prof[i], dev);
-      gw_reg_addr[i] = BME68X_REG_GAS_WAIT0 + i;
-      gw_reg_data[i] = (uint8_t)conf->heatr_dur_prof[i];
-    }
-
-    (*nb_conv) = conf->profile_len;
-    write_len = conf->profile_len;
-    shared_dur = calc_heatr_dur_shared(conf->shared_heatr_dur);
-    if (rslt == BME68X_OK)
-    {
-      rslt = bme68x_set_regs(&heater_dur_shared_addr, &shared_dur, 1, dev);
-    }
-
     break;
   default:
     rslt = BME68X_W_DEFINE_OP_MODE;

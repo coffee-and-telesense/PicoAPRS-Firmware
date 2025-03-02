@@ -299,9 +299,6 @@
 /* Forced operation mode */
 #define BME68X_FORCED_MODE UINT8_C(1)
 
-/* Parallel operation mode */
-#define BME68X_PARALLEL_MODE UINT8_C(2)
-
 /* Sequential operation mode */
 #define BME68X_SEQUENTIAL_MODE UINT8_C(3)
 
@@ -877,12 +874,6 @@ struct bme68x_heatr_conf
 
   /*! Variable to store the length of the heating profile */
   uint8_t profile_len;
-
-  /*!
-   * Variable to store heating duration for parallel mode
-   * in milliseconds
-   */
-  uint16_t shared_heatr_dur;
 };
 
 /*
