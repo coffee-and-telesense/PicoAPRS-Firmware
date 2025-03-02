@@ -478,13 +478,7 @@ uint32_t bme68x_get_meas_dur(const uint8_t op_mode, struct bme68x_conf *conf, st
 int8_t bme68x_get_data(uint8_t op_mode, struct bme68x_data *data, uint8_t *n_data, struct bme68x_dev *dev)
 {
   int8_t rslt;
-  uint8_t i = 0, j = 0, new_fields = 0;
-  struct bme68x_data *field_ptr[3] = {0};
-  struct bme68x_data field_data[3] = {{0}};
-
-  field_ptr[0] = &field_data[0];
-  field_ptr[1] = &field_data[1];
-  field_ptr[2] = &field_data[2];
+  uint8_t new_fields = 0;
 
   rslt = null_ptr_check(dev);
   if ((rslt == BME68X_OK) && (data != NULL))
@@ -1306,10 +1300,7 @@ static int8_t null_ptr_check(const struct bme68x_dev *dev)
 static int8_t set_conf(const struct bme68x_heatr_conf *conf, uint8_t op_mode, uint8_t *nb_conv, struct bme68x_dev *dev)
 {
   int8_t rslt = BME68X_OK;
-  uint8_t i;
-  uint8_t shared_dur;
   uint8_t write_len = 0;
-  uint8_t heater_dur_shared_addr = BME68X_REG_SHD_HEATR_DUR;
   uint8_t rh_reg_addr[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   uint8_t rh_reg_data[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   uint8_t gw_reg_addr[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};

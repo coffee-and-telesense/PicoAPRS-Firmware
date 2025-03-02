@@ -68,7 +68,6 @@ typedef struct
   struct bme68x_heatr_conf heatr_conf;
 
   /** Structure to store sensor measurement data. */
-  /** @todo: May modify this to be an array in order to support parallel mode */
   /** @note: Since we're not using floating point, the data will be as follows:
    *  - Temperature in degrees celsius x100
    *  - Pressure in Pascal
@@ -76,16 +75,6 @@ typedef struct
    *  - Gas resistance in Ohms
    */
   struct bme68x_data sensor_data;
-
-  // /** Array to store multiple sensor data values (for parallel mode). */
-  // struct bme68x_data sensor_data[3];
-
-  /** @todo: Similar to a sensor_data array, n_fields and i_fields are for parallel mode support */
-  // /** Number of data fields in parallel mode. */
-  // uint8_t n_fields;
-
-  // /** Index for tracking sensor data fields. */
-  // uint8_t i_fields;
 
   /** Last operation mode used by the sensor. */
   uint8_t last_opmode;
@@ -146,22 +135,18 @@ void bme_set_TPH(bme68x_sensor_t *bme, uint8_t os_temp, uint8_t os_pres, uint8_t
  * @param[in] bme Pointer to bme68x sensor interface
  * @param[in] temp Heater temperature in degree Celsius
  * @param[in] dur Heating duration in milliseconds
- * @todo: Implement similar functions for sequential and parallel modes, as needed.
  */
 void bme_set_heaterprof(bme68x_sensor_t *bme, uint16_t temp, uint16_t dur);
 
 /**
  * @brief Set the operation mode
  *
- * Set the desired operation mode.
- * @todo: Initially, we will only support forced mode, which performs a single measurement
- * and allows for automatically returning to sleep mode. The gas sensor heater only operates
- * during measurement in this mode.
- * In parallel mode, multiple TPHG cycles are performed, the sensor does not return to sleep
- * mode automatically, and the gas sensor heater operates in parallel to TPH measurement.
+ * Set the desired operation mode. Currently supports sleep mode and forced mode for
+ * a single, low-power measurment which may automatically return to sleep mode.
+ * The gas sensor heater only operates during measurement in this mode.
  *
  * @param[in] bme Pointer to bme68x sensor interface
- * @param[in] opmode BME68X_SLEEP_MODE, BME68X_FORCED_MODE, BME68X_PARALLEL_MODE, BME68X_SEQUENTIAL_MODE
+ * @param[in] opmode BME68X_SLEEP_MODE, BME68X_FORCED_MODE
  */
 void bme_set_opmode(bme68x_sensor_t *bme, uint8_t opmode);
 
@@ -178,32 +163,11 @@ void bme_set_opmode(bme68x_sensor_t *bme, uint8_t opmode);
 uint8_t bme_fetch_data(bme68x_sensor_t *bme);
 
 /**
- * @brief Get a single data field
- *
- * @todo: Implement as needed
- *
- * @param[in] bme Pointer to bme68x sensor interface
- * @param[out] data Structure where the data is to be stored
- * @return Number of new fields remaining
- */
-// uint8_t bme_get_data(bme68x_sensor_t *bme, bme68x_data &data);
-
-/**
- * @brief Function to get whole sensor data
- *
- * @todo: Implement as needed
- *
- * @param[in] bme Pointer to bme68x sensor interface
- * @return Sensor data
- */
-// bme68x_data *bme_get_alldata(bme68x_sensor_t *bme);
-
-/**
  * @brief Get the measurement duration in microseconds
  *
  * Calls bme68x_get_meas_dur, which calculates the total measurement duration
  * based on the total number of samples to be taken, as determined by the oversampling
- * for each value; if not operating in parallel mode, a wake-up duration of 1ms is added.
+ * for each value; a wake-up duration of 1ms is added.
  *
  * @param[in] bme Pointer to bme68x sensor interface
  * @param[in] opmode Operation mode of the sensor. Attempts to use the last one if nothing is set
