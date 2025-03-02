@@ -32,7 +32,6 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
   //
   // Set default values
   //
-  bme->device.intf = BME68X_I2C_INTF;
   bme->device.intf_ptr = i2c_handle;
   /** @todo (maybe) Assign variant ID on bme struct */
   bme->device.read = &bme_read;
