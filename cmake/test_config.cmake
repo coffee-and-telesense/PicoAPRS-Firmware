@@ -1,5 +1,8 @@
 # /cmake/test_config.cmake
 #
+# IMPORTANT: This file will become deprecated in the future. It is recommended to
+# use cmake presets to configure test projects. See the README for more information.
+#
 # This file provides configuration and utility functions for building individual
 # test projects targeting specific STM32 microcontrollers. It handles:
 #

@@ -3,8 +3,12 @@
     "configurePresets": [
         {
             "name": "l432kc-base",
+            "hidden" : true,
+            "generator": "Ninja",
             "toolchainFile": "${sourceDir}/targets/stm32L4xx/L432KC/cmake/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
+                "LINKER_SCRIPT": "${sourceDir}/targets/stm32L4xx/L432KC/stm32l432kcux_flash.ld",
+                "CUBEMX_PATH": "${sourceDir}/targets/stm32L4xx/L432KC/cmake/stm32cubemx"
             }
         }
     ],

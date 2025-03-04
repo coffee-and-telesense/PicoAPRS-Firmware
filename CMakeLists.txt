@@ -13,14 +13,27 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
+# Checks for required variables, these should be defined in a preset file
+if(NOT DEFINED LINKER_SCRIPT)
+    message(FATAL_ERROR
+        "ERROR: LINKER_SCRIPT is not defined. This should be set in your CMake preset.\n"
+        "See example in preset file cmake/presets/l432kc-presets.json\n"
+    )
+endif()
+
+if(NOT DEFINED CUBEMX_PATH)
+    message(FATAL_ERROR
+        "ERROR: CUBEMX_PATH is not defined. This should be set in your CMake preset.\n"
+        "See example in preset file cmake/presets/l432kc-presets.json):\n"
+    )
+endif()
+
+
 # Print basic configuration information
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 if(DEFINED TARGET_MCU)
     message(STATUS "Target MCU: ${TARGET_MCU}")
 endif()
-
-# Always add the libraries directory
-#add_subdirectory(libs)
 
 # Check for specific test selections
 if(DEFINED BUILD_TEST_GPS AND BUILD_TEST_GPS)

@@ -8,15 +8,7 @@ set(PROJECT_NAME "test_gps")
 
 # Set the target MCU - this is the only line users need to change
 set(TARGET_MCU "STM32L432KC")
-
-# Configure target-specific paths and settings
-configure_target(${TARGET_MCU})
-
-# Set linker script path for toolchain
-set(LINKER_SCRIPT_PATH ${LINKER_SCRIPT} CACHE STRING "Path to linker script")
-
-# Include the target's toolchain file
-#include(${TARGET_PATH}/cmake/gcc-arm-none-eabi.cmake)
+add_compile_definitions(TARGET_MCU=${TARGET_MCU})
 
 # Setup compiler settings
 set(CMAKE_C_STANDARD 11)

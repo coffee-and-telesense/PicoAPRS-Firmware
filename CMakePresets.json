@@ -14,6 +14,16 @@
         "cacheVariables": {
           "BUILD_TEST_GPS": "ON"
         }
+      },
+      {
+        "name" : "test-gps-nb-debug",
+        "displayName": "GPS Driver Test Application (Non-blocking) (Debug)",
+        "description": "Builds the GPS driver test application in non-blocking mode in debug mode",
+        "inherits": ["Debug", "l432kc-base"],
+        "binaryDir": "${sourceDir}/build/${presetName}",
+        "cacheVariables": {
+          "BUILD_TEST_GPS_NB": "ON"
+        }
       }
     ],
     "buildPresets": [
@@ -21,6 +31,11 @@
         "name": "test-gps-debug",
         "displayName": "Build GPS Test (Debug)",
         "configurePreset": "test-gps-debug"
+      },
+      {
+        "name": "test-gps-nb-debug",
+        "displayName": "Build GPS Test (Non-blocking) (Debug)",
+        "configurePreset": "test-gps-nb-debug"
       }
     ]
   }
