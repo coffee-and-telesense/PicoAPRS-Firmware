@@ -7,6 +7,7 @@ add_library(bme68x STATIC
 )
 
 target_compile_definitions(bme68x PUBLIC
+    BME68X_DO_NOT_USE_FPU
     $<$<CONFIG:Debug>:DEBUG>
 )
 
