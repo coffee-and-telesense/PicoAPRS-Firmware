@@ -1,0 +1,13 @@
+{
+    "version": 4,
+    "configurePresets": [
+        {
+            "name": "l432kc-base",
+            "toolchainFile": "${sourceDir}/targets/stm32L4xx/L432KC/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {
+            }
+        }
+    ],
+    "buildPresets": [
+    ]
+}

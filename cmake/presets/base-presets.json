@@ -1,12 +1,10 @@
 {
-    "version": 3,
+    "version": 4,
     "configurePresets": [
         {
             "name": "default",
             "hidden": true,
             "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-		    "toolchainFile": "${sourceDir}/../../targets/stm32L4xx/L432KC/cmake/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
             }
         },
