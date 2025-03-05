@@ -233,14 +233,16 @@ int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf
  *     while (1)
  *     {
  *         bme_set_opmode(&bme, BME68X_FORCED_MODE);
+ *         // @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur
+ *         bme_delay_us(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
  *         int fetch_success = bme_fetch_data(&bme);
  *         if (fetch_success) {
-             debug_print("%d, ", bme.sensor_data.temperature);
-             debug_print("%d, ", bme.sensor_data.pressure);
-             debug_print("%d, ", bme.sensor_data.humidity);
-             debug_print("%d, ", bme.sensor_data.gas_resistance);
-             debug_print("%X, \r\n", bme.sensor_data.status);
-           }
+ *           debug_print("%d, ", bme.sensor_data.temperature);
+ *           debug_print("%d, ", bme.sensor_data.pressure);
+ *           debug_print("%d, ", bme.sensor_data.humidity);
+ *           debug_print("%d, ", bme.sensor_data.gas_resistance);
+ *           debug_print("%X, \r\n", bme.sensor_data.status);
+ *         }
  *     }
  * }
  * @endcode
