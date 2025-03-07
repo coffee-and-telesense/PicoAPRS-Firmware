@@ -196,7 +196,6 @@ static void buildAndSendAPRSTelemetry(uint16_t lightVal, float tempVal,
         printf(", ");
     }
     printf("\n");
-
     // Free the telemetry data
     free(infoResult.nrziBinHdlcFrame);
     free(frame);
