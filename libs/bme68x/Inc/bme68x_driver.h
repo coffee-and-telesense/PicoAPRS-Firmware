@@ -22,7 +22,7 @@
  * @todo: This will need to be updated for the target MCU (e.g. the U0)
  * @todo: Alternatively, we could include an "i2c.h" file under the assumption that one will be created within the application code.
  */
-#include "stm32l4xx_hal_i2c.h"
+#include "stm32U0xx_hal_i2c.h"
 
 /* ========================== MACROS ========================== */
 

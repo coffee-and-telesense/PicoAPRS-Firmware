@@ -18,13 +18,13 @@
 
 /* STM32L4 Series Configuration */
 #if (TARGET_MCU == STM32L432KC) || (TARGET_MCU == STM32L476RG) // @TODO: Add more MCUs as needed
-    //L4 Family HAL
-    #include "stm32l4xx_hal.h"
+    //U0 Family HAL
+    #include "stm32U0xx_hal.h"
 
-    /* L4 Series Defines*/
-    #define MCU_FAMILY_L4
+    /* U0 Series Defines*/
+    #define MCU_FAMILY_U0
 
-    #if defined(STM32L432KC)
+    #if defined(STM32U083RC)
         //@todo: Add more granularity to the L432KC as needed
     #endif
 

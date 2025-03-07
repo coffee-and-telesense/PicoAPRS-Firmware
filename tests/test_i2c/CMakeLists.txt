@@ -13,6 +13,10 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
+## Set options for the gps lib
+set(BUILD_BLOCKING_GPS_LIB ON CACHE BOOL "Build the blocking GPS library" FORCE)
+set(BUILD_NON_BLOCKING_GPS_LIB OFF CACHE BOOL "Build the non-blocking GPS library" FORCE)
+
 # Configure target-specific paths and settings
 configure_target(${TARGET_MCU})
 
@@ -53,7 +57,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     # Add user defined include paths here
     # Example: ${CMAKE_SOURCE_DIR}/../../Src/Sensors/Inc
     ${CMAKE_SOURCE_DIR}/../../Config/Inc
+    ${CMAKE_SOURCE_DIR}/../../gps/blocking/driver
 )
+
+
 
 # Add project symbols (macros)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
@@ -67,12 +74,13 @@ add_subdirectory(
 )
 
 add_subdirectory(
-    ${CMAKE_SOURCE_DIR}/../../libs/common
-    ${CMAKE_BINARY_DIR}/libs/common
+    ${CMAKE_SOURCE_DIR}/../../libs
+    ${CMAKE_BINARY_DIR}/libs
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME} 
     stm32cubemx
+    gps_driver_blocking    
     common
 )
 
