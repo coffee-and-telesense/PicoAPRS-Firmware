@@ -50,6 +50,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     # Add user sources here
     # Example: ${CMAKE_SOURCE_DIR}/test_gps.c
     ${CMAKE_SOURCE_DIR}/test_i2c.c
+    ${CMAKE_SOURCE_DIR}/aprs.c
+    ${CMAKE_SOURCE_DIR}/ax25.c
 )
 
 # Add include paths
@@ -58,6 +60,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     # Example: ${CMAKE_SOURCE_DIR}/../../Src/Sensors/Inc
     ${CMAKE_SOURCE_DIR}/../../Config/Inc
     ${CMAKE_SOURCE_DIR}/../../gps/blocking/driver
+    ${CMAKE_SOURCE_DIR}/
 )
 
 
