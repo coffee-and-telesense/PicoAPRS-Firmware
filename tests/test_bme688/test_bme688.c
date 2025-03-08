@@ -142,7 +142,8 @@ int main(void)
     /* USER CODE END WHILE */
     // Set to forced mode, which takes a single sample and returns to sleep mode
     bme_set_opmode(&bme, BME68X_FORCED_MODE);
-    /** @todo: Add a delay here for bme_get_meas_dur(&bme, BME68X_SLEEP_MODE) microseconds*/
+    /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
+    bme_delay_us(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
     // Fetch data
     int fetch_success = bme_fetch_data(&bme);
     if (fetch_success)

@@ -32,16 +32,12 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
   //
   // Set default values
   //
-  bme->device.intf = BME68X_I2C_INTF;
   bme->device.intf_ptr = i2c_handle;
   /** @todo (maybe) Assign variant ID on bme struct */
   bme->device.read = &bme_read;
   bme->device.write = &bme_write;
   bme->device.delay_us = bme_delay_us;
   bme->status = BME68X_OK;
-  /** @todo If supporting parallel mode, initialize n_fields and i_fields on bme struct */
-  // bme->n_fields = 0;
-  // bme->i_fields = 0;
   // Typical ambient temperature in Celsius
   bme->device.amb_temp = 25;
   // Assume sensor starts in sleep mode
@@ -109,30 +105,10 @@ void bme_set_opmode(bme68x_sensor_t *bme, uint8_t opmode)
 /** Fetch data from the sensor into the struct's sensor_data buffer */
 uint8_t bme_fetch_data(bme68x_sensor_t *bme)
 {
-  /** @todo: For now, hardcoding the n_fields value to reflect usage of forced mode.
-   * This may be changed to reflect usage of alternate modes.
-   */
-  // bme->n_fields = 0;
   uint8_t n_fields = 0;
-  // bme->status = bme68x_get_data(bme->last_opmode, bme->sensor_data, &bme->n_fields, &bme->device);
   bme->status = bme68x_get_data(bme->last_opmode, &bme->sensor_data, &n_fields, &bme->device);
-  // bme->i_fields = 0;
-
-  // return bme->n_fields;
   return n_fields;
 }
-
-/** @todo: Implement bme_get_data as needed */
-/** Get a single data field */
-// uint8_t bme_get_data(bme68x_sensor_t *bme, bme68x_data &data) {
-
-// }
-
-/** @todo: Implement bme_get_alldata as needed */
-/** Get whole sensor data */
-// bme68x_data *bme_get_alldata(bme68x_sensor_t *bme) {
-
-// }
 
 /** Get the measurement duration in microseconds*/
 uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode)

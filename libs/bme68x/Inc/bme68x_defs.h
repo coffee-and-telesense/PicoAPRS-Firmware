@@ -262,35 +262,6 @@
 /* Filter coefficient of 128 */
 #define BME68X_FILTER_SIZE_127 UINT8_C(7)
 
-/* ODR/Standby time macros */
-
-/* Standby time of 0.59ms */
-#define BME68X_ODR_0_59_MS UINT8_C(0)
-
-/* Standby time of 62.5ms */
-#define BME68X_ODR_62_5_MS UINT8_C(1)
-
-/* Standby time of 125ms */
-#define BME68X_ODR_125_MS UINT8_C(2)
-
-/* Standby time of 250ms */
-#define BME68X_ODR_250_MS UINT8_C(3)
-
-/* Standby time of 500ms */
-#define BME68X_ODR_500_MS UINT8_C(4)
-
-/* Standby time of 1s */
-#define BME68X_ODR_1000_MS UINT8_C(5)
-
-/* Standby time of 10ms */
-#define BME68X_ODR_10_MS UINT8_C(6)
-
-/* Standby time of 20ms */
-#define BME68X_ODR_20_MS UINT8_C(7)
-
-/* No standby time */
-#define BME68X_ODR_NONE UINT8_C(8)
-
 /* Operating mode macros */
 
 /* Sleep operation mode */
@@ -298,20 +269,6 @@
 
 /* Forced operation mode */
 #define BME68X_FORCED_MODE UINT8_C(1)
-
-/* Parallel operation mode */
-#define BME68X_PARALLEL_MODE UINT8_C(2)
-
-/* Sequential operation mode */
-#define BME68X_SEQUENTIAL_MODE UINT8_C(3)
-
-/* SPI page macros */
-
-/* SPI memory page 0 */
-#define BME68X_MEM_PAGE0 UINT8_C(0x10)
-
-/* SPI memory page 1 */
-#define BME68X_MEM_PAGE1 UINT8_C(0x00)
 
 /* Coefficient index macros */
 
@@ -527,12 +484,6 @@
 /* Mask for IIR filter */
 #define BME68X_FILTER_MSK UINT8_C(0X1c)
 
-/* Mask for ODR[3] */
-#define BME68X_ODR3_MSK UINT8_C(0x80)
-
-/* Mask for ODR[2:0] */
-#define BME68X_ODR20_MSK UINT8_C(0xe0)
-
 /* Mask for temperature oversampling */
 #define BME68X_OST_MSK UINT8_C(0Xe0)
 
@@ -572,15 +523,6 @@
 /* Mask for heater stability */
 #define BME68X_HEAT_STAB_MSK UINT8_C(0x10)
 
-/* Mask for SPI memory page */
-#define BME68X_MEM_PAGE_MSK UINT8_C(0x10)
-
-/* Mask for reading a register in SPI */
-#define BME68X_SPI_RD_MSK UINT8_C(0x80)
-
-/* Mask for writing a register in SPI */
-#define BME68X_SPI_WR_MSK UINT8_C(0x7f)
-
 /* Mask for the H1 calibration coefficient */
 #define BME68X_BIT_H1_DATA_MSK UINT8_C(0x0f)
 
@@ -594,12 +536,6 @@
 
 /* Pressure oversampling bit position */
 #define BME68X_OSP_POS UINT8_C(2)
-
-/* ODR[3] bit position */
-#define BME68X_ODR3_POS UINT8_C(7)
-
-/* ODR[2:0] bit position */
-#define BME68X_ODR20_POS UINT8_C(5)
 
 /* Run gas bit position */
 #define BME68X_RUN_GAS_POS UINT8_C(4)
@@ -699,17 +635,6 @@ typedef void (*bme68x_delay_us_fptr_t)(uint32_t period, void *intf_ptr);
  * @param[in,out] reg_data: Data array to read/write
  * @param[in] len: Length of the data array
  */
-
-/*
- * @brief Interface selection Enumerations
- */
-enum bme68x_intf
-{
-  /*! SPI interface */
-  BME68X_SPI_INTF,
-  /*! I2C interface */
-  BME68X_I2C_INTF
-};
 
 /* Structure definitions */
 
@@ -859,7 +784,7 @@ struct bme68x_calib_data
 };
 
 /*
- * @brief BME68X sensor settings structure which comprises of ODR,
+ * @brief BME68X sensor settings structure which comprises of
  * over-sampling and filter settings.
  */
 struct bme68x_conf
@@ -875,12 +800,6 @@ struct bme68x_conf
 
   /*! Filter coefficient. Refer @ref filter*/
   uint8_t filter;
-
-  /*!
-   * Standby time between sequential mode measurement profiles.
-   * Refer @ref odr
-   */
-  uint8_t odr;
 };
 
 /*
@@ -905,12 +824,6 @@ struct bme68x_heatr_conf
 
   /*! Variable to store the length of the heating profile */
   uint8_t profile_len;
-
-  /*!
-   * Variable to store heating duration for parallel mode
-   * in milliseconds
-   */
-  uint16_t shared_heatr_dur;
 };
 
 /*
@@ -939,9 +852,6 @@ struct bme68x_dev
    * ----------------------------------------
    */
   uint32_t variant_id;
-
-  /*! SPI/I2C interface */
-  enum bme68x_intf intf;
 
   /*! Memory page used */
   uint8_t mem_page;

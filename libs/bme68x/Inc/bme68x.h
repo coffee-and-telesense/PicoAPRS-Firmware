@@ -238,7 +238,7 @@ extern "C"
    * \code
    * int8_t bme68x_set_conf(struct bme68x_conf *conf, struct bme68x_dev *dev);
    * \endcode
-   * @details This API is used to set the oversampling, filter and odr configuration
+   * @details This API is used to set the oversampling and filter configuration
    *
    * @param[in] conf    : Desired sensor configuration.
    * @param[in,out] dev : Structure instance of bme68x_dev.
@@ -255,8 +255,7 @@ extern "C"
    * \code
    * int8_t bme68x_get_conf(struct bme68x_conf *conf, struct bme68x_dev *dev);
    * \endcode
-   * @details This API is used to get the oversampling, filter and odr
-   * configuration
+   * @details This API is used to get the oversampling and filter configuration
    *
    * @param[out] conf   : Present sensor configuration.
    * @param[in,out] dev : Structure instance of bme68x_dev.
