@@ -113,6 +113,7 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 /** Example implementation for a microsecond delay callback */
 void delay_us_timer(uint32_t us, void *intf_ptr)
 {
+  (void)intf_ptr;
   /* Reset completion flag */
   delay_complete = 0;
 

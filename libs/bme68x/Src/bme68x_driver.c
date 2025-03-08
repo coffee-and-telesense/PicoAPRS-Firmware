@@ -16,7 +16,7 @@
 /* ========================== FUNCTION IMPLEMENTATIONS ========================== */
 
 /** Initializes the BME68x sensor interface */
-void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, bme68x_delay_us_fptr_t delay_fn)
 {
   if (bme == NULL)
   {
@@ -36,7 +36,7 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
   /** @todo (maybe) Assign variant ID on bme struct */
   bme->device.read = &bme_read;
   bme->device.write = &bme_write;
-  bme->device.delay_us = bme_delay_us;
+  bme->device.delay_us = delay_fn;
   bme->status = BME68X_OK;
   // Typical ambient temperature in Celsius
   bme->device.amb_temp = 25;
@@ -117,21 +117,6 @@ uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode)
     opmode = bme->last_opmode;
 
   return bme68x_get_meas_dur(opmode, &bme->conf, &bme->device);
-}
-
-/** Implements the default microsecond delay callback */
-void bme_delay_us(uint32_t period_us, void *intf_ptr)
-{
-  // intf_ptr is not used, but it is part of the standard function signature
-  // so cast to void to avoid compiler warning
-  (void)intf_ptr;
-  /** @todo: Implement a microsecond delay here, possibly with a DWT cycle counter, or an actual hardware timer */
-  // FIXME: Short-term implementation of a blocking delay
-  volatile uint32_t cycles = period_us * 20;
-  while (cycles--)
-  {
-    __NOP();
-  }
 }
 
 /** Implements the default microsecond delay callback */

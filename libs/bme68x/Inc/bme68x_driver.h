@@ -90,7 +90,7 @@ typedef struct
  * @param[in,out] bme Pointer to newly initialized bme68x sensor interface
  * @param[in] i2c_handle Pointer to I2C handle.
  */
-void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle);
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, bme68x_delay_us_fptr_t delay_fn);
 
 /**
  * @brief Returns basic status check
@@ -174,18 +174,6 @@ uint8_t bme_fetch_data(bme68x_sensor_t *bme);
  * @return Temperature, Pressure, Humidity measurement time in microseconds
  */
 uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode);
-
-/**
- * @brief Implements the default microsecond delay callback
- *
- * Sets the delay_us function pointer on the bme68x_dev device struct.
- * This callback is used throughout the Bosch library whenever a microsecond
- * delay is necessary for proper device functioning.
- *
- * @param[in] period_us Duration of the delay in microseconds
- * @param[in] intf_ptr Pointer to the interface descriptor
- */
-void bme_delay_us(uint32_t period_us, void *intf_ptr);
 
 /**
  * @brief Implements the default I2C write transaction
