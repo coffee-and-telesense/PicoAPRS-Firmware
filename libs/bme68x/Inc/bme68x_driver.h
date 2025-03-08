@@ -47,6 +47,13 @@
 /* ========================== TYPE DEFINITIONS ========================== */
 
 /**
+ * @brief Pointer to a delay function that will be called by the library
+ *
+ * @param[in] period_us Duration of the delay in microseconds
+ */
+typedef void (*delay_func_ptr)(uint32_t);
+
+/**
  * @struct bme68x_sensor_t
  * @brief Structure to store necessary configuration and data to interact with the sensor over I2C.
  */
@@ -60,6 +67,9 @@ typedef struct
 
   /** BME68X device structure. See `bme68x_defs.h` for details. */
   struct bme68x_dev device;
+
+  /** Pointer to a function which will be used for a microsecond delay */
+  delay_func_ptr delay_fn;
 
   /** Sensor configuration settings, including oversampling and filter coefficients. */
   struct bme68x_conf conf;

@@ -16,7 +16,7 @@
 /* ========================== FUNCTION IMPLEMENTATIONS ========================== */
 
 /** Initializes the BME68x sensor interface */
-void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, delay_func_ptr *delay_fn)
 {
   if (bme == NULL)
   {
@@ -28,6 +28,8 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle)
 
   // Assign the I2C handle
   bme->i2c_handle = i2c_handle;
+
+  bme->delay_fn = delay_fn;
 
   //
   // Set default values
@@ -125,13 +127,9 @@ void bme_delay_us(uint32_t period_us, void *intf_ptr)
   // intf_ptr is not used, but it is part of the standard function signature
   // so cast to void to avoid compiler warning
   (void)intf_ptr;
-  /** @todo: Implement a microsecond delay here, possibly with a DWT cycle counter, or an actual hardware timer */
-  // FIXME: Short-term implementation of a blocking delay
-  volatile uint32_t cycles = period_us * 20;
-  while (cycles--)
-  {
-    __NOP();
-  }
+  // FIXME: Need to access bme pointer here
+  // delay_us_timer(period_us);
+  bme->delay_fn(period_us);
 }
 
 /** Implements the default microsecond delay callback */
