@@ -43,7 +43,7 @@ void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
-void delay_us_timer(uint32_t us);
+void delay_us_timer(uint32_t us, void *intf_ptr);
 
 /* USER CODE END Prototypes */
 

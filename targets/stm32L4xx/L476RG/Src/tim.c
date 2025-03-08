@@ -110,8 +110,9 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 
-void delay_us_timer(uint32_t us)
+void delay_us_timer(uint32_t us, void *intf_ptr)
 {
+  (void)intf_ptr;
   /* Reset completion flag */
   delay_complete = 0;
 

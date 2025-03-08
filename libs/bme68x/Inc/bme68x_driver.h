@@ -51,7 +51,7 @@
  *
  * @param[in] period_us Duration of the delay in microseconds
  */
-typedef void (*delay_func_ptr)(uint32_t);
+// typedef void (*delay_func_ptr)(uint32_t);
 
 /**
  * @struct bme68x_sensor_t
@@ -69,7 +69,7 @@ typedef struct
   struct bme68x_dev device;
 
   /** Pointer to a function which will be used for a microsecond delay */
-  delay_func_ptr delay_fn;
+  // delay_func_ptr delay_fn;
 
   /** Sensor configuration settings, including oversampling and filter coefficients. */
   struct bme68x_conf conf;
@@ -100,7 +100,7 @@ typedef struct
  * @param[in,out] bme Pointer to newly initialized bme68x sensor interface
  * @param[in] i2c_handle Pointer to I2C handle.
  */
-void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle);
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, bme68x_delay_us_fptr_t *delay_fn);
 
 /**
  * @brief Returns basic status check

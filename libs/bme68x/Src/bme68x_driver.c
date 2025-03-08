@@ -16,7 +16,7 @@
 /* ========================== FUNCTION IMPLEMENTATIONS ========================== */
 
 /** Initializes the BME68x sensor interface */
-void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, delay_func_ptr *delay_fn)
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, bme68x_delay_us_fptr_t *delay_fn)
 {
   if (bme == NULL)
   {
@@ -29,7 +29,7 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, delay_func_pt
   // Assign the I2C handle
   bme->i2c_handle = i2c_handle;
 
-  bme->delay_fn = delay_fn;
+  // bme->delay_fn = delay_fn;
 
   //
   // Set default values
@@ -38,7 +38,8 @@ void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, delay_func_pt
   /** @todo (maybe) Assign variant ID on bme struct */
   bme->device.read = &bme_read;
   bme->device.write = &bme_write;
-  bme->device.delay_us = bme_delay_us;
+  // bme->device.delay_us = bme_delay_us;
+  bme->device.delay_us = *delay_fn;
   bme->status = BME68X_OK;
   // Typical ambient temperature in Celsius
   bme->device.amb_temp = 25;
@@ -129,7 +130,7 @@ void bme_delay_us(uint32_t period_us, void *intf_ptr)
   (void)intf_ptr;
   // FIXME: Need to access bme pointer here
   // delay_us_timer(period_us);
-  bme->delay_fn(period_us);
+  // bme->delay_fn(period_us);
 }
 
 /** Implements the default microsecond delay callback */
