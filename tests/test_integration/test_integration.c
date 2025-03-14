@@ -263,19 +263,26 @@ void BLINK_LED2(int input_sec) {
 
 /* --- Initialize system and peripherals --- */
 void INIT() {
+  printf("Initializing HAL...\n");
   HAL_Init();
-  
+  printf("Initializing RTC...\n");
+  MX_RTC_Init();
   /* Disable Wakeup Timer before setting */
   printf("Disabling RTC Timer.\n\n");
   HAL_RTCEx_DeactivateWakeUpTimer(&hrtc); // Has to be before clock gets configured
 
   SystemClock_Config();
+  printf("Initializing GPIO Ports...\n");
   MX_GPIO_Init();
+  printf("Initializing ADC...\n");
   MX_ADC1_Init();
+  printf("Initializing USART...\n");
   MX_USART2_UART_Init();
+  printf("Initializing I2C...\n");
   MX_I2C1_Init();        
   HAL_Delay(50);
   HAL_GPIO_ALL_LED_OFF();
+  
   printf("\n--- System Booting Up ---\n");
   HAL_Delay(50);
   printf("Initializing Values...\n\n");
@@ -374,9 +381,8 @@ void RTC_TEST() {
 
 /* --- Enter standby mode with RTC wake-up --- */
 void Enter_Standby_Mode() {
-  printf("Initializing RTC...\n");
-  MX_RTC_Init();
-  printf("RTC Initialized.\n");
+  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20, RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
+  printf("Wakeup Timer Set.\n");
   printf("Configuring Timer to %ds...\n", sec);
   printf("Entering Standby Mode...\n");
   HAL_PWR_EnterSTANDBYMode();
