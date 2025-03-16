@@ -90,7 +90,7 @@ typedef struct
  * @param[in,out] bme Pointer to newly initialized bme68x sensor interface
  * @param[in] i2c_handle Pointer to I2C handle.
  */
-void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle);
+void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, bme68x_delay_us_fptr_t delay_fn);
 
 /**
  * @brief Returns basic status check
@@ -176,18 +176,6 @@ uint8_t bme_fetch_data(bme68x_sensor_t *bme);
 uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode);
 
 /**
- * @brief Implements the default microsecond delay callback
- *
- * Sets the delay_us function pointer on the bme68x_dev device struct.
- * This callback is used throughout the Bosch library whenever a microsecond
- * delay is necessary for proper device functioning.
- *
- * @param[in] period_us Duration of the delay in microseconds
- * @param[in] intf_ptr Pointer to the interface descriptor
- */
-void bme_delay_us(uint32_t period_us, void *intf_ptr);
-
-/**
  * @brief Implements the default I2C write transaction
  *
  * Sets the write function pointer on the bme68x_dev device struct.
@@ -221,20 +209,21 @@ int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf
  * Example usage of the BME68x sensor driver.
  * @note: Requires HAL peripheral drivers and initialization, specifically for i2c.
  * @note: Assumes an I2C_HandleTypeDef hi2c1 instance exists.
+ * @note: Requires a microsecond delay function implemented in the application.
  *
  * @code
  * #include "bme68x_driver.h"
  *
  * int main(void) {
  *     bme68x_sensor_t bme;
- *     bme_init(&bme, &hi2c1);
+ *     bme_init(&bme, &hi2c1, &delay_us_timer);
  *     bme_set_TPH_default(&bme);
  *     bme_set_heaterprof(&bme, 300, 100);
  *     while (1)
  *     {
  *         bme_set_opmode(&bme, BME68X_FORCED_MODE);
  *         // @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur
- *         bme_delay_us(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
+ *         delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
  *         int fetch_success = bme_fetch_data(&bme);
  *         if (fetch_success) {
  *           debug_print("%d, ", bme.sensor_data.temperature);

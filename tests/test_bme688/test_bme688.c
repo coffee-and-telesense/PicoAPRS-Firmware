@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 #include "logging.h"
@@ -94,6 +95,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   if (HAL_I2C_IsDeviceReady(&hi2c1, BME68X_ADDR, 3, HAL_MAX_DELAY) == HAL_OK)
@@ -107,7 +109,7 @@ int main(void)
 
   // Create bme interface struct and initialize it
   bme68x_sensor_t bme;
-  bme_init(&bme, &hi2c1);
+  bme_init(&bme, &hi2c1, &delay_us_timer);
   // Check status, should be 0 for OK
   int bme_status = bme_check_status(&bme);
   {
@@ -143,7 +145,7 @@ int main(void)
     // Set to forced mode, which takes a single sample and returns to sleep mode
     bme_set_opmode(&bme, BME68X_FORCED_MODE);
     /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
-    bme_delay_us(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
+    delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
     // Fetch data
     int fetch_success = bme_fetch_data(&bme);
     if (fetch_success)

@@ -16,18 +16,18 @@ In addition, the Bosch library github repo contained an Arduino library written 
 
 ### Example Usage
 
-The following example shows creation and initialization of a `bme68x_sensor_t` struct, which contains a pointer to an I2C handle previously initialized in application code. The struct also contains status, a BME68x device struct, configuration, sensor data, and the last operation mode.
+The following example shows creation and initialization of a `bme68x_sensor_t` struct, which contains a pointer to an I2C handle previously initialized in application code, in addition to a pointer to a function from the application that should be used when a microsecond delay is needed. The struct also contains status, a BME68x device struct, configuration, sensor data, and the last operation mode.
 
 After initialization, configuration is performed, using default oversampling values for the temperature, pressure, and humidity measurements, and a heater configuration of 300 deg C for 100ms in forced mode.
 
-Data is then fetched from the sensor repeatedly in a loop. The specific delay function may be adjusted to use a hardware timer, but the microsecond delay should still be based on the return value from the `bme_get_meas_dur` function.
+Data is then fetched from the sensor repeatedly in a loop. As noted above, the delay function should be implemented in application code, for example using a hardware timer and function defined in `tim.c`, but the microsecond delay should still be based on the return value from the `bme_get_meas_dur` function.
 
 ```c
 #include "bme68x_driver.h"
 
 int main(void) {
   bme68x_sensor_t bme;
-  bme_init(&bme, &hi2c1);
+  bme_init(&bme, &hi2c1, &delay_us_timer);
   bme_set_TPH_default(&bme);
   bme_set_heaterprof(&bme, 300, 100);
 
@@ -35,7 +35,7 @@ int main(void) {
   {
     bme_set_opmode(&bme, BME68X_FORCED_MODE);
     /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
-    bme_delay_us(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
+    delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
     int fetch_success = bme_fetch_data(&bme);
     if (fetch_success) {
           debug_print("%d, ", bme.sensor_data.temperature);
@@ -53,7 +53,9 @@ int main(void) {
 
 ### `bme68x_sensor_t` struct
 
-Structure to store necessary configuration and data to interact with the sensor over I2C. Contains as members the structs `bme68x_dev`, `bme68x_conf`, `bme68x_heatr_conf`, and `bme68x_data`, which are defined in `bme68x_defs.h`. Also contains an `I2C_HandleTypeDef` pointer to allow I2C communication using STM32 HAL I2C functions.
+Structure to store necessary configuration and data to interact with the sensor over I2C. Contains as members the structs `bme68x_dev`, `bme68x_conf`, `bme68x_heatr_conf`, and `bme68x_data`, which are defined in `bme68x_defs.h`. Also contains an `I2C_HandleTypeDef` pointer to allow I2C communication using STM32 HAL I2C functions, and a pointer to a microsecond delay function defined by the application.
+
+**NOTE**: The delay function signature is currently determined by the original one used by the Bosch library developers. The function signature is fairly simple (it accepts a `uint32_t` microsecond delay value and a `void *` interface pointer), but if desired, the Bosch library code may be modified to accommodate an alternate signature.
 
 ### `bme_init()`
 
@@ -62,6 +64,7 @@ Configures the sensor with default settings.
 **Parameters:**
 - `bme`: Pointer to newly initialized bme68x sensor interface
 - `i2c_handle`: Pointer to I2C handle
+- `delay_fn`: Pointer to a microsecond delay function
 
 ### `bme_check_status()`
 
@@ -128,14 +131,6 @@ Get the measurement duration in microseconds. This is the total measurement dura
 **Returns:**
 - `uint32_t`: Measurement duration in microseconds
 
-### `bme_delay_us()`
-
-Implements the default microsecond delay callback, as called from the Bosch library. **NOTE**: This function signature is currently determined by the original one used by the Bosch library developers. We may wish to modify it in the future to better accommodate our usage of the STM32 HAL timing functions.
-
-**Parameters:**
-- `period_us`: Duration of the delay in microseconds
-- `intf_ptr`: Pointer to the interface descriptor for I2C
-
 ### `bme_write()`
 
 Implements the default I2C write transaction. This is leveraged by the Bosch library to perform writes to the device over I2C. It should typically not be necessary for application code to call this function directly, though it may be useful in troubleshooting.
@@ -196,15 +191,9 @@ There are a few functions from the Bosch library that are not currently in use, 
 
 ## Next Steps
 
-**Update delay function**
-
-The current delay function was added to allow for retrieval of data in a prototyping context. It should be replaced, probably with a hardware timer. Usage of the `HAL_Delay` function was attempted, but that function provides millisecond delays, rather that the microsecond delays required by this driver.
-
-Other alternatives might be using the DWT as a cycle counter, or modifying the Bosch library callback signature to be more specific to our needs.
-
 **Validate humidity measurements**
 
-The humidity measurements currently appear to be returning the max value consistently. This may be the result of the above prototyping-level delay function, or possibly an individual sensor-specific problem. First steps to resolve are to update the above delay function, test on additional sensors, and adjust the oversampling setting.
+The humidity measurements currently appear to be returning the max value consistently. This may be an individual sensor-specific problem, it could be related to a timing issue, or possibly an oversampling setting. First steps to resolve are to test on additional sensors, adjust the oversampling setting, or simply step through the code with a debugger and see if it's possible to retrieve a valid humidity measurement at any stage.
 
 **Create non-blocking version**
 
