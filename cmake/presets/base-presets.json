@@ -1,18 +1,17 @@
 {
-    "version": 3,
+    "version": 4,
     "configurePresets": [
         {
             "name": "default",
             "hidden": true,
             "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-		    "toolchainFile": "${sourceDir}/../../targets/stm32L4xx/L432KC/cmake/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
             }
         },
         {
             "name": "Debug",
             "inherits": "default",
+            "hidden" : true,
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
@@ -20,6 +19,7 @@
         {
             "name": "RelWithDebInfo",
             "inherits": "default",
+            "hidden" : true,
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
@@ -27,6 +27,7 @@
         {
             "name": "Release",
             "inherits": "default",
+            "hidden" : true,
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
@@ -34,6 +35,7 @@
         {
             "name": "MinSizeRel",
             "inherits": "default",
+            "hidden" : true,
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "MinSizeRel"
             }
