@@ -33,12 +33,12 @@
 #include <string.h>
 
 //  // APRSlib stuff
-//  #include "aprs.h"
-//  #include "aprsConfig.h"
-//  #include "ax25.h"
+ #include "aprs.h"
+ #include "aprsConfig.h"
+ #include "ax25.h"
  
 //  // Include GNSS driver for MAX-M10S
-//  #include "max_m10s.h"
+ #include "max_m10s.h"
 
 /* USER CODE END Includes */
 
@@ -294,18 +294,18 @@ void SensorINIT() {
   /* Initialize sensors */
   printf("Starting I2C sensor test...\r\n");
   LTR329_Init();
-  // MCP9808_Init();
+  MCP9808_Init();
 
   /* Initialize the GNSS module (MAX-M10S)
     * Note: The default I2C address for the MAX-M10S is 0x42.
     * Ensure that your max_m10s driver is configured accordingly.
     */
-  // if (max_m10s_init() != UBLOX_OK) {
-  //   printf("GPS initialization failed!\r\n");
-  // } 
-  // else {
-  //   printf("GPS initialized successfully\r\n");
-  // }
+  if (max_m10s_init() != UBLOX_OK) {
+    printf("GPS initialization failed!\r\n");
+  } 
+  else {
+    printf("GPS initialized successfully\r\n");
+  }
 
 }
 
@@ -416,21 +416,21 @@ void ADC_READ_TEST() {
 
 void ReadSensor() {
   lightVal = LTR329_ReadALS();
-  // float tempVal = MCP9808_ReadTemp();
+  float tempVal = MCP9808_ReadTemp();
 
   // Commented out until GPS module is created
   // Retrieve GNSS position
-  // gps_position_t gps_pos;
+  gps_position_t gps_pos;
   
-  // if ((max_m10s_get_position(&gps_pos) == UBLOX_OK) && gps_pos.valid) {
-  //     // Convert fixed-point format (degrees * 10^7) to float degrees
-  //     latitude  = (float)gps_pos.latitude  / 10000000.0f;
-  //     longitude = (float)gps_pos.longitude / 10000000.0f;
-  // } else {
-  //     // If no valid GPS data, use default dummy coordinates (or handle as needed)
+  if ((max_m10s_get_position(&gps_pos) == UBLOX_OK) && gps_pos.valid) {
+      // Convert fixed-point format (degrees * 10^7) to float degrees
+      latitude  = (float)gps_pos.latitude  / 10000000.0f;
+      longitude = (float)gps_pos.longitude / 10000000.0f;
+  } else {
+      // If no valid GPS data, use default dummy coordinates (or handle as needed)
       latitude  = 49.05833f;   // Example dummy latitude
       longitude = -72.02916f;  // Example dummy longitude
-  // }
+  }
 }
 
 void Read_APRS() {
@@ -504,13 +504,10 @@ int main(void) {
   // Indicate the system has woken up from standby
   printf("System Successfully Booted!\n\n");
   HAL_Delay(500);
-  // while(1) {
-  //   RTC_TEST();
-  // }
+
   // Run LED test sequence to verify all LEDs are functional
   LED_TEST();
-  
-  //ButtonTest();
+
   // Read initial ADC value to check battery/capacitor voltage
   printf("Starting ADC Calibration.\n");
   ADC_READ_TEST();
@@ -537,9 +534,6 @@ int main(void) {
       }
     }
 
-    // After button confirmation, turn off all LEDs
-    HAL_GPIO_ALL_LED_OFF();
-
     // Initializes and reads the sensors
     SensorINIT();
     ReadSensor(); 
@@ -558,14 +552,10 @@ int main(void) {
   // If ADC voltage is too low (bad capacitor voltage), turn on user LED
   // Run LED step sequence to provide visual feedback
   HAL_Delay(500);
-  UserLED_ON();
   printf("Bad voltage!\n\n");
   
   // Hold warning state for 5 seconds
   HAL_Delay(2000);
-  
-  // Turn off all LEDs before entering standby mode
-  HAL_GPIO_ALL_LED_OFF();
   
   // Indicate system is entering standby due to low voltage
   Enter_Standby_Mode();
