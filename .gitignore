@@ -4,3 +4,4 @@
 *.cmake
 *.o
 *compile_commands.json
+*CmakeFiles
