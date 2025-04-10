@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "stm32l4xx_hal.h"
+#include "stm32u0xx_hal.h" // Include the HAL header for STM32U0xx
 #include "usart.h"
 
 extern UART_HandleTypeDef huart2;
