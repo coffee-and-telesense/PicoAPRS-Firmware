@@ -1,0 +1,2 @@
+C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/CMakeFiles/edit_cache.dir
+C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/CMakeFiles/rebuild_cache.dir
