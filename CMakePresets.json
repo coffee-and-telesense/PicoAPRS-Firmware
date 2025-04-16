@@ -6,9 +6,8 @@
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
-		    "toolchainFile": "${sourceDir}/CubeMX/cmake/gcc-arm-none-eabi.cmake",
-            "cacheVariables": {
-            }
+            "toolchainFile": "${sourceDir}/CubeMX/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {}
         },
         {
             "name": "Debug",
@@ -55,6 +54,18 @@
         {
             "name": "MinSizeRel",
             "configurePreset": "MinSizeRel"
+        },
+
+        {
+            "name": "gps_simple_test",
+            "description": "",
+            "displayName": ""
+        },
+
+        {
+            "name": "test_bme688",
+            "description": "",
+            "displayName": ""
         }
     ]
 }
