@@ -7,4 +7,5 @@ target_sources(test_bme688 PRIVATE
 target_link_libraries(test_bme688 PRIVATE 
     stm32cubemx
     bme68x
+    common
 )

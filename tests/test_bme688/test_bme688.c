@@ -19,7 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
-#include "tim.h"
+#include "stm32u0xx_hal_tim.h"
 #include "usart.h"
 #include "gpio.h"
 #include "logging.h"
