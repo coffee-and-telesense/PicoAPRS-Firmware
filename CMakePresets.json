@@ -66,6 +66,12 @@
             "name": "test_bme688",
             "description": "",
             "displayName": ""
+        },
+
+        {
+            "name": "test_integration",
+            "description": "",
+            "displayName": ""
         }
     ]
 }

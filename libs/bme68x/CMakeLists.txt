@@ -2,10 +2,11 @@
 cmake_minimum_required(VERSION 3.22)
 project(bme68x)
 
-# Create the GPS library
+# Create the BME68X library
 add_library(bme68x STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/driver/max_m10s.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/protocols/ubx/ubx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/bme68x_driver.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/bme68x.c
 )
 
 # Define include directories

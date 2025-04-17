@@ -156,7 +156,7 @@
   *        HAL drivers code
   */
 
-/* #define USE_FULL_ASSERT    1U */
+ #define USE_FULL_ASSERT    1U
 
 /* ################## Register callback feature configuration ############### */
 /**

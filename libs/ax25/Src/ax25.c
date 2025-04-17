@@ -199,7 +199,7 @@ void makeCRC(iFrame *frame) {
     uint32_t data;
 
 
-     for(int i = 0; i<size; i++) {
+     for(int i = 0; i < size; i++) {
 	crc = (crc>>8)^crc16_table[(crc^(uint16_t)*buf++)&0x00ff];
 	
     }
@@ -230,7 +230,7 @@ void bitStuff(iFrame *frame) {
 
   memset(zeroPos, 0, (size / 6) * sizeof(uint8_t));
 
-  for (int i = 8; i < size - 8; i++) {
+  for (int i = 8; i < size  - 8; i++) {
 
     if (data[i] == 1) {
       sum = sum + 1;
@@ -281,7 +281,7 @@ void concatCrcFrame(iFrame *frame) {
   if (crcFrame == NULL) {
     return;
   }
-  printf("CRC Frame Size: %ld\n", frame->crcFrameSize);
+  printf("CRC Frame Size: %zu\n", frame->crcFrameSize);
 
   memmove(crcFrame, frame->dest, 6);
   crcFrame[6] = frame->ssidDest;

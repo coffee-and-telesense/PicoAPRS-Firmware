@@ -5,6 +5,7 @@ project(aprs)
 # Create the GPS library
 add_library(aprs STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Src
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/aprs.c
 )
 
 # Define include directories
@@ -15,6 +16,7 @@ target_include_directories(aprs PUBLIC
 # Link with required dependencies
 target_link_libraries(aprs PUBLIC
     stm32cubemx
+    ax25
     # Add dependencies here
 )
 

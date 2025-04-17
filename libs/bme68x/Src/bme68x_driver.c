@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 #include "bme68x_driver.h"
-
+#include <string.h>
 /* ========================== FUNCTION IMPLEMENTATIONS ========================== */
 
 /** Initializes the BME68x sensor interface */

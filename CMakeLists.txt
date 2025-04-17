@@ -21,6 +21,7 @@ option(GPS_NON_BLOCKING "Enable GPS Blocking/Non-Blocking Feature" ON)
 add_subdirectory(CubeMX/cmake/stm32cubemx)
 add_subdirectory(libs/gps)
 add_subdirectory(libs/common)
+add_subdirectory(libs/bme68x)
 add_subdirectory(libs/aprs)
 add_subdirectory(libs/ax25)
 
