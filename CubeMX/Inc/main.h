@@ -57,6 +57,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define COM_POLL_TIMEOUT 1000
 #define User_button_Pin GPIO_PIN_13
 #define User_button_GPIO_Port GPIOC
 #define OSC32_IN_Pin GPIO_PIN_14
@@ -71,8 +72,10 @@ void Error_Handler(void);
 #define USART2_TX_GPIO_Port GPIOA
 #define USART2_RX_Pin GPIO_PIN_3
 #define USART2_RX_GPIO_Port GPIOA
-#define User_LED_Pin GPIO_PIN_5
-#define User_LED_GPIO_Port GPIOA
+#define UserLED_Pin GPIO_PIN_5
+#define UserLED_GPIO_Port GPIOA
+#define Cap_Intr_Pin GPIO_PIN_4
+#define Cap_Intr_GPIO_Port GPIOC
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14

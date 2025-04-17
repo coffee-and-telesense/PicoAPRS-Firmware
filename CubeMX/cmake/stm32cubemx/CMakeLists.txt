@@ -23,15 +23,16 @@ target_include_directories(stm32cubemx INTERFACE
 target_sources(stm32cubemx INTERFACE
     ../../Src/main.c
     ../../Src/gpio.c
+    ../../Src/adc.c
     ../../Src/i2c.c
+    ../../Src/rtc.c
     ../../Src/spi.c
     ../../Src/usart.c
     ../../Src/stm32u0xx_it.c
     ../../Src/stm32u0xx_hal_msp.c
-    ../../Src/stm32u0xx_hal_timebase_tim.c
-    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_tim.c
-    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_tim_ex.c
-    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_cortex.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_adc.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_adc_ex.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_ll_adc.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_rcc.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_rcc_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_flash.c
@@ -41,11 +42,14 @@ target_sources(stm32cubemx INTERFACE
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_dma_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_pwr.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_pwr_ex.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_cortex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_exti.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_i2c.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_i2c_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_ll_i2c.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_rtc.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_rtc_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_spi.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_spi_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_uart.c
