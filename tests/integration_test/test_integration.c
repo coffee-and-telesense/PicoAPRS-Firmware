@@ -91,7 +91,7 @@ void SystemClock_Config(void);
 // void BLINK_LED2(int input_sec);
 // void BLINK_UserLED(int input_sec);
 void i2c_scan(void);
-int max_m10s_init(void);
+// int max_m10s_init(void);
 // void LED_OFF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 // void LED_ON(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 
@@ -281,7 +281,7 @@ void INIT() {
   printf("Initializing I2C...\n");
   MX_I2C1_Init();        
   HAL_Delay(50);
-  HAL_GPIO_ALL_LED_OFF();
+  // HAL_GPIO_ALL_LED_OFF();
   
   printf("\n--- System Booting Up ---\n");
   HAL_Delay(50);
