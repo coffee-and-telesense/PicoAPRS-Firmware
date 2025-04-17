@@ -12,14 +12,6 @@ target_include_directories(ax25 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
 )
 
-# Add the NON_BLOCKING definition if the option is enabled
-if(AX25_NON_BLOCKING)
-    target_compile_definitions(ax25 PUBLIC NON_BLOCKING)
-    message(STATUS "Building ax25 library in non-blocking mode")
-else()
-    message(STATUS "Building ax25 library in blocking mode")
-endif()
-
 # Link with required dependencies
 target_link_libraries(ax25 PUBLIC
     stm32cubemx

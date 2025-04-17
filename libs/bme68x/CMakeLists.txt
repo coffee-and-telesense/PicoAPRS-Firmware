@@ -16,14 +16,6 @@ target_include_directories(bme68x PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/protocols/ubx
 )
 
-# Add the NON_BLOCKING definition if the option is enabled
-if(GPS_NON_BLOCKING)
-    target_compile_definitions(bme68x PUBLIC NON_BLOCKING)
-    message(STATUS "Building BME68x library in non-blocking mode")
-else()
-    message(STATUS "Building BME68x library in blocking mode")
-endif()
-
 # Link with required dependencies
 target_link_libraries(bme68x PUBLIC
     stm32cubemx
