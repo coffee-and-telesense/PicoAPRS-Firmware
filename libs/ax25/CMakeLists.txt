@@ -1,17 +1,29 @@
+# AX25 Library CMakeLists.txt
 cmake_minimum_required(VERSION 3.22)
-project(common)
+project(AX25)
 
-add_library(common STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/logging.c
+# Create the ax25 library
+add_library(ax25 STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src
 )
 
-target_include_directories(common PUBLIC
+# Define include directories
+target_include_directories(ax25 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
 )
 
-target_compile_definitions(common PUBLIC DEBUG)
+# Add the NON_BLOCKING definition if the option is enabled
+if(AX25_NON_BLOCKING)
+    target_compile_definitions(ax25 PUBLIC NON_BLOCKING)
+    message(STATUS "Building ax25 library in non-blocking mode")
+else()
+    message(STATUS "Building ax25 library in blocking mode")
+endif()
 
-# Link against the stm32cubemx INTERFACE Library
-target_link_libraries(common PUBLIC
+# Link with required dependencies
+target_link_libraries(ax25 PUBLIC
     stm32cubemx
+    # Add dependencies here
 )
+
+message(STATUS "Added ax25 library")

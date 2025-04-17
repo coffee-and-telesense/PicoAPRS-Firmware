@@ -1,10 +1,14 @@
-add_executable(gps_simple_test test_gps.c)
+add_executable(integration_test test_integration.c)
 
-target_sources(gps_simple_test PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_gps.c
+target_sources(integration_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_integration.c
 )
 
-target_link_libraries(gps_simple_test PRIVATE 
+target_link_libraries(integration_test PRIVATE 
     stm32cubemx
     gps
+    bme688
+    aprs
+    ax25
+    common
 )
