@@ -87,13 +87,13 @@ char aprsFrame[100];                 // APRS Frame array
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void BLINK_LED1(int input_sec);
-void BLINK_LED2(int input_sec);
-void BLINK_UserLED(int input_sec);
+// void BLINK_LED1(int input_sec);
+// void BLINK_LED2(int input_sec);
+// void BLINK_UserLED(int input_sec);
 void i2c_scan(void);
 int max_m10s_init(void);
-void LED_OFF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
-void LED_ON(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
+// void LED_OFF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
+// void LED_ON(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 
 /* USER CODE END PFP */
 
@@ -111,13 +111,13 @@ PUTCHAR_PROTOTYPE {
   return ch;
 }
 
-void LED_OFF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
-  HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
-}
+// void LED_OFF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
+//   HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
+// }
 
-void LED_ON(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
-  HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
-}
+// void LED_ON(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
+//   HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
+// }
 
 /* ================================ */
 /*       LTR-329 Sensor Functions   */
@@ -178,54 +178,54 @@ static float MCP9808_ReadTemp(void) {
 /*       LED Control Functions      */
 /* ================================ */
 
-/* --- Functions to turn individual LEDs ON --- */
-void LED1_ON() { LED_ON(LED1_GPIO_Port, LED1_Pin); }
-void LED2_ON() { LED_ON(LED2_GPIO_Port, LED2_Pin); }
-void UserLED_ON() { LED_ON(UserLED_GPIO_Port, UserLED_Pin); }
+// /* --- Functions to turn individual LEDs ON --- */
+// void LED1_ON() { LED_ON(LED1_GPIO_Port, LED1_Pin); }
+// void LED2_ON() { LED_ON(LED2_GPIO_Port, LED2_Pin); }
+// void UserLED_ON() { LED_ON(UserLED_GPIO_Port, UserLED_Pin); }
 
-/* --- Functions to turn individual LEDs OFF --- */
-void LED1_OFF() { LED_OFF(LED1_GPIO_Port, LED1_Pin); }
-void LED2_OFF() { LED_OFF(LED2_GPIO_Port, LED2_Pin); }
-void UserLED_OFF() { LED_OFF(UserLED_GPIO_Port, UserLED_Pin); }
+// /* --- Functions to turn individual LEDs OFF --- */
+// void LED1_OFF() { LED_OFF(LED1_GPIO_Port, LED1_Pin); }
+// void LED2_OFF() { LED_OFF(LED2_GPIO_Port, LED2_Pin); }
+// void UserLED_OFF() { LED_OFF(UserLED_GPIO_Port, UserLED_Pin); }
 
-/* --- Turn off all LEDs --- */
-void HAL_GPIO_ALL_LED_OFF() {
-  UserLED_OFF();
-  LED2_OFF();
-  LED1_OFF();
-}
+// /* --- Turn off all LEDs --- */
+// void HAL_GPIO_ALL_LED_OFF() {
+//   UserLED_OFF();
+//   LED2_OFF();
+//   LED1_OFF();
+// }
 
-/* --- Turn on all LEDs --- */
-void HAL_GPIO_ALL_LED_ON() {
-  UserLED_ON();
-  LED2_ON();
-  LED1_ON();
-}
+// /* --- Turn on all LEDs --- */
+// void HAL_GPIO_ALL_LED_ON() {
+//   UserLED_ON();
+//   LED2_ON();
+//   LED1_ON();
+// }
 
-/* --- Sequentially blink LEDs and then turn all on briefly --- */ 
-void HAL_GPIO_LED_STEP() {
-  int input_sec = 1;  // Duration for each blink
+// /* --- Sequentially blink LEDs and then turn all on briefly --- */ 
+// void HAL_GPIO_LED_STEP() {
+//   int input_sec = 1;  // Duration for each blink
 
-  // Sequentially blink each LED
-  BLINK_LED2(input_sec);
-  BLINK_LED1(input_sec);
-  BLINK_UserLED(input_sec);
+//   // Sequentially blink each LED
+//   BLINK_LED2(input_sec);
+//   BLINK_LED1(input_sec);
+//   BLINK_UserLED(input_sec);
 
-  // Turn all LEDs on together, hold for a second, then turn all off
-  HAL_GPIO_ALL_LED_ON();
-  HAL_Delay(input_sec * 1000);
-  HAL_GPIO_ALL_LED_OFF();
-  HAL_Delay(input_sec * 1000);
-}
+//   // Turn all LEDs on together, hold for a second, then turn all off
+//   HAL_GPIO_ALL_LED_ON();
+//   HAL_Delay(input_sec * 1000);
+//   HAL_GPIO_ALL_LED_OFF();
+//   HAL_Delay(input_sec * 1000);
+// }
 
-/* --- Tests LEDs to make sure they all work --- */
-void LED_TEST() {
-  printf("- - - - - - - - - - - - - -\n");
-  printf("Making Sure All LEDs work.\n");
-  printf("- - - - - - - - - - - - - -\n");
-  HAL_GPIO_LED_STEP();
-  HAL_Delay(1000);
-}
+// /* --- Tests LEDs to make sure they all work --- */
+// void LED_TEST() {
+//   printf("- - - - - - - - - - - - - -\n");
+//   printf("Making Sure All LEDs work.\n");
+//   printf("- - - - - - - - - - - - - -\n");
+//   HAL_GPIO_LED_STEP();
+//   HAL_Delay(1000);
+// }
 
 
 
@@ -233,29 +233,29 @@ void LED_TEST() {
 /*       LED Blinking Functions     */
 /* ================================ */
 
-/* --- Blink the User LED for a given number of seconds --- */
-void BLINK_UserLED(int input_sec) {
-  UserLED_ON();
-  HAL_Delay(input_sec * 1000);
-  UserLED_OFF();
-  HAL_Delay(input_sec * 1000);
-}
+// /* --- Blink the User LED for a given number of seconds --- */
+// void BLINK_UserLED(int input_sec) {
+//   UserLED_ON();
+//   HAL_Delay(input_sec * 1000);
+//   UserLED_OFF();
+//   HAL_Delay(input_sec * 1000);
+// }
 
-/* --- Blink LED1 for a given number of seconds --- */
-void BLINK_LED1(int input_sec) {
-  LED1_ON();
-  HAL_Delay(input_sec * 1000);
-  LED1_OFF();
-  HAL_Delay(input_sec * 1000);
-}
+// /* --- Blink LED1 for a given number of seconds --- */
+// void BLINK_LED1(int input_sec) {
+//   LED1_ON();
+//   HAL_Delay(input_sec * 1000);
+//   LED1_OFF();
+//   HAL_Delay(input_sec * 1000);
+// }
 
-/* --- Blink LED2 for a given number of seconds --- */
-void BLINK_LED2(int input_sec) {
-  LED2_ON();
-  HAL_Delay(input_sec * 1000);
-  LED2_OFF();
-  HAL_Delay(input_sec * 1000);
-}
+// /* --- Blink LED2 for a given number of seconds --- */
+// void BLINK_LED2(int input_sec) {
+//   LED2_ON();
+//   HAL_Delay(input_sec * 1000);
+//   LED2_OFF();
+//   HAL_Delay(input_sec * 1000);
+// }
 
 /* ================================ */
 /*       System Initialization      */
@@ -311,7 +311,7 @@ void SensorINIT() {
 
 // External interrupt callback function (called when rising edge detected on button pin)
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == PushButton_Pin) {  // Check if the triggered pin is the push button
+  if (GPIO_Pin == Cap_Intr_Pin) {  // Check if the triggered pin is the push button
     buttonPressed = 1;               // Set flag to indicate button press
   }
 }
@@ -390,12 +390,12 @@ void Enter_Standby_Mode() {
 }
 
 /* --- Displays LEDs for when there's good ADC Value */
-void Display_Good_ADC() {
-  LED1_ON();
-  HAL_Delay(1000);
-  LED2_ON();
-  HAL_Delay(5000);  // Hold LEDs on for 5 seconds
-}
+// void Display_Good_ADC() {
+//   LED1_ON();
+//   HAL_Delay(1000);
+//   LED2_ON();
+//   HAL_Delay(5000);  // Hold LEDs on for 5 seconds
+// }
 
 // Reads a single ADC value
 // Test function to read and print ADC value to UART
@@ -499,14 +499,14 @@ int main(void) {
   HAL_Delay(50);
   HAL_ADCEx_Calibration_Start(&hadc1);  // Calibrate ADC1 (recommended after power-up)
   // Ensure all LEDs are off at the start
-  HAL_GPIO_ALL_LED_OFF();
+  //HAL_GPIO_ALL_LED_OFF();
   
   // Indicate the system has woken up from standby
   printf("System Successfully Booted!\n\n");
   HAL_Delay(500);
 
   // Run LED test sequence to verify all LEDs are functional
-  LED_TEST();
+  // LED_TEST();
 
   // Read initial ADC value to check battery/capacitor voltage
   printf("Starting ADC Calibration.\n");
