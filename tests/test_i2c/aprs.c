@@ -68,7 +68,7 @@ void concatTelemData(telemetryInfoFrame *tFrame)
     printf("Concatenated Telemetry Data: %.*s\n",
            (int)tFrame->tDataSize, buf);
     printTFrameStructMembers(tFrame);
-    free(buf); // optional, but keep tFrame->tData separately if needed
+    //free(buf); // optional, but keep tFrame->tData separately if needed
 }
 
 // --- Telemetry Parameter Frame ---
@@ -122,7 +122,7 @@ void concatParamData(telemetryParamFrame *f)
              f->A1,f->A2,f->A3,f->A4,f->A5,
              f->B1,f->B2,f->B3,f->B4,f->B5,f->B6,f->B7,f->B8);
     printf("Concatenated Param Data: %.*s\n", (int)f->paramFrameSize, buf);
-    free(buf);
+    //free(buf);
 }
 
 // --- Telemetry Unit Frame ---
@@ -175,7 +175,7 @@ void concatUnitData(telemetryUnitFrame *u)
              u->AU1,u->AU2,u->AU3,u->AU4,u->AU5,
              u->BU1,u->BU2,u->BU3,u->BU4,u->BU5,u->BU6,u->BU7,u->BU8);
     printf("Concatenated Unit Data: %.*s\n", (int)u->unitFrameSize, buf);
-    free(buf);
+    //free(buf);
 }
 
 // --- Message Frame ---
@@ -207,7 +207,7 @@ void concatMessageData(messageFrame *m)
     snprintf(buf,total,"%c%s%c%s",
              m->typeIdentifier,m->addressee,m->endOfHeader,m->message);
     printf("Concatenated Message Data: %.*s\n", (int)m->messageSize, buf);
-    free(buf);
+    //free(buf);
 }
 
 // --- Position Frame ---
@@ -239,7 +239,7 @@ void concatPositionData(positionFrame *p)
              p->capability,p->time,p->tableID,
              p->lat,p->SymCode,p->lon,p->SymCode,p->comment? p->comment:"");
     printf("Concatenated Position Data: %.*s\n",(int)p->positionFrameSize,buf);
-    free(buf);
+    //free(buf);
 }
 
 // --- Print Struct Members ---
