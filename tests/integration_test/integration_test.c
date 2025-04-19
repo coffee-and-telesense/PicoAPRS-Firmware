@@ -31,6 +31,8 @@
 
 //  // Include GNSS driver for MAX-M10S
 #include "max_m10s.h"
+#include "gps_types.h"
+#include "ubx.h"
 
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 // Macro defining the prototype for the function that redirects printf output to UART
