@@ -109,7 +109,7 @@ int main(void)
 
   // Create bme interface struct and initialize it
   bme68x_sensor_t bme;
-  bme_init(&bme, &hi2c1, &delay_us_timer);
+  bme_init(&bme, &hi2c1, delay_us_timer);
   // Check status, should be 0 for OK
   int bme_status = bme_check_status(&bme);
   {
@@ -165,7 +165,7 @@ int main(void)
 
     // The "blink" code is a simple verification of program execution,
     // separate from the BME68x sensor testing above
-    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+    HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
     HAL_Delay(1000);
 
     /* USER CODE BEGIN 3 */
