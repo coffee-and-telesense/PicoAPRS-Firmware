@@ -30,8 +30,8 @@
 #include "ax25.h"
 
 //  // Include GNSS driver for MAX-M10S
-#include "max_m10s.h"
 #include "gps_types.h"
+#include "max_m10s.h"
 #include "ubx.h"
 
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
@@ -51,13 +51,17 @@
 
 /* USER CODE BEGIN PV */
 volatile uint8_t buttonPressed = 0;  // Flag to indicate if the button has been pressed (1 = pressed, 0 = not pressed)
-volatile uint32_t Threshold = 2854;  // ADC threshold value corresponding to 2.3V (calculated using Vin/Vref * (2^n - 1))
+volatile uint32_t Threshold = 1000;  // ADC threshold value corresponding to 2.3V (calculated using Vin/Vref * (2^n - 1))
 volatile uint32_t value_adc = 0;     // Variable to store the ADC conversion result (raw digital value)
 volatile float latitude = 0.0f;
 volatile float longitude = 0.0f;
 volatile float tempVal = 0.0f;
 volatile uint16_t lightVal = 0;
 char aprsFrame[100];  // APRS Frame array
+
+// GPS Static variables
+static max_m10s_dev_s gps_dev;
+static max_m10s_init_s gps_init;
 
 /* ================================ */
 /*          Helper Functions        */
@@ -66,7 +70,7 @@ char aprsFrame[100];  // APRS Frame array
 /* --- Retarget printf to UART2 --- */
 /* Overrides putchar to send characters through UART2, allowing printf debugging */
 PUTCHAR_PROTOTYPE {
-    HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, COM_POLL_TIMEOUT);
+    HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, COM_POLL_TIMEOUT);
     return ch;
 }
 
@@ -123,6 +127,103 @@ static float MCP9808_ReadTemp(void) {
 /* ================================ */
 
 /* ================================ */
+/*       MAX10s GPS Functions       */
+/* ================================ */
+static void print_status(const char* message, gps_status_e status) {
+    const char* status_str;
+    switch (status) {
+        case UBLOX_OK:
+            status_str = "OK";
+            break;
+        case UBLOX_ERROR:
+            status_str = "ERROR";
+            break;
+        case UBLOX_TIMEOUT:
+            status_str = "TIMEOUT";
+            break;
+        case UBLOX_INVALID_PARAM:
+            status_str = "INVALID PARAM";
+            break;
+        case UBLOX_CHECKSUM_ERR:
+            status_str = "CHECKSUM ERROR";
+            break;
+        case UBLOX_I2C_ERROR:
+            status_str = "I2C ERROR";
+            break;
+        default:
+            status_str = "UNKNOWN";
+            break;
+    }
+    printf("%s: %s (0x%02X)\r\n", message, status_str, status);
+}
+// === 1) Define a one‐shot GPS read function ===
+// void GPS_ReadOnce(void) {
+//     gps_status_e status;
+
+//     // 1a) send the PVT command
+//     status = max_m10s_command(&gps_dev, GPS_CMD_PVT);
+//     print_status("PVT cmd", status);
+//     if (status != UBLOX_OK) return;
+
+//     // 1b) small pause to let the module prep its data
+//     HAL_Delay(100);
+
+//     // 1c) read the response
+//     status = max_m10s_read(&gps_dev);
+//     print_status("PVT read", status);
+//     if (status != UBLOX_OK) return;
+
+//     // 1d) validate it
+//     status = max_m10s_validate_response(&gps_dev, GPS_CMD_PVT);
+//     print_status("PVT validate", status);
+//     if (status != UBLOX_OK) return;
+
+//     // 1e) parse UBX‐PVT into a struct
+//     gps_pvt_data_t pvt;
+//     if (ubx_parse_gps_pvt(gps_dev.rx_buffer, gps_dev.rx_size, &pvt) == UBLOX_OK) {
+//         float lat = pvt.lat / 1e7f;
+//         float lon = pvt.lon / 1e7f;
+//         printf("↳ GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
+//     } else {
+//         printf("↳ PVT parse error\r\n");
+//     }
+// }
+void GPS_ReadOnce(void) {
+    gps_status_e status;
+
+    // — send the PVT command —
+    status = max_m10s_command(&gps_dev, GPS_CMD_PVT);
+    print_status("PVT cmd", status);
+    if (status != UBLOX_OK) return;
+
+    HAL_Delay(100);
+
+    // — read & validate —
+    status = max_m10s_read(&gps_dev);
+    print_status("PVT read", status);
+    if (status != UBLOX_OK) return;
+    status = max_m10s_validate_response(&gps_dev, GPS_CMD_PVT);
+    print_status("PVT validate", status);
+    if (status != UBLOX_OK) return;
+
+    // — manual parse of lon/lat —
+    uint8_t* buf = gps_dev.rx_buffer;
+    // Note: payload starts at index 6 of buf.
+    int32_t lon_raw = (int32_t)((buf[6 + 24]) |
+                                (buf[6 + 25] << 8) |
+                                (buf[6 + 26] << 16) |
+                                (buf[6 + 27] << 24));
+    int32_t lat_raw = (int32_t)((buf[6 + 28]) |
+                                (buf[6 + 29] << 8) |
+                                (buf[6 + 30] << 16) |
+                                (buf[6 + 31] << 24));
+    float lon = lon_raw / 1e7f;
+    float lat = lat_raw / 1e7f;
+
+    printf("GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
+}
+
+/* ================================ */
 /*       System Initialization      */
 /* ================================ */
 
@@ -145,6 +246,25 @@ void INIT() {
     MX_USART2_UART_Init();
     printf("Initializing I2C...\n");
     MX_I2C1_Init();
+    //  --- GPS init ---
+    printf("Initializing GPS...\r\n");
+    gps_init.hi2c = &hi2c1;
+    gps_init.device_address = MAX_M10S_DEFAULT_ADDR;
+    gps_init.timeout_ms = 1000;
+    gps_init.transmit = HAL_I2C_Master_Transmit;
+    gps_init.receive = HAL_I2C_Master_Receive;
+    gps_init.delay_blocking = HAL_Delay;
+
+    if (max_m10s_init(&gps_dev, &gps_init) != UBLOX_OK) {
+        printf("GPS init failed!\r\n");
+    } else {
+        print_status("GPS init", UBLOX_OK);
+        // 10 Hz PVT rate = 100 ms
+        if (max_m10s_config_meas_rate(&gps_dev, 100) == UBLOX_OK) {
+            print_status("Set meas rate", UBLOX_OK);
+        }
+    }
+
     HAL_Delay(50);
     // HAL_GPIO_ALL_LED_OFF();
 
@@ -175,7 +295,7 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
 }
 
 /* RTC Wakeup Timer Interrupt Handler ----------------------------------------*/
-void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef* hrtc) {
     __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(hrtc, RTC_FLAG_WUTF);  // Clear RTC wakeup flag
 }
 
@@ -242,7 +362,7 @@ int main(void) {
     // Check if the ADC value is above a pre-defined threshold (good power check)
     if (value_adc > Threshold) {
         // If the voltage is good
-
+        GPS_ReadOnce();
         // Loop waiting for user interaction (button press) to confirm system is ready
         while (1) {
             printf("Waiting for good ADC value (aka button) \n\n");
