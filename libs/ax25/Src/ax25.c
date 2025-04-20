@@ -40,7 +40,7 @@ uint16_t crc16_table[] = {
 };
 
 
-hdlcFrame processFrame(iFrame *frame) {
+encodedAx25Frame processFrame(ax25Frame *frame) {
 
   // Shift bits for destination and source addresses
   shiftBits(frame);
@@ -66,7 +66,7 @@ hdlcFrame processFrame(iFrame *frame) {
   uint8_t *nrziBinHdlcFrame = genNRZI(frame);
 
   // Create NRZIFrame structure to hold the NRZI bitstream and its size
-  hdlcFrame result;
+  encodedAx25Frame result;
   result.nrziBinHdlcFrame = nrziBinHdlcFrame;
   result.size = frame->nrziBinHdlcFrameSize;
 
@@ -77,7 +77,7 @@ hdlcFrame processFrame(iFrame *frame) {
   return result;
 }
 
-hdlcFrame processFrameVerbose(iFrame *frame) {
+encodedAx25Frame processFrameVerbose(ax25Frame *frame) {
 
   shiftBits(frame);
   printHex("Destination", frame->dest, CALL_LEN);
@@ -101,7 +101,7 @@ hdlcFrame processFrameVerbose(iFrame *frame) {
   uint8_t *nrziBinHdlcFrame = genNRZI(frame);
   printBin("NRZI Bitstream", nrziBinHdlcFrame, frame->nrziBinHdlcFrameSize);
 
-  hdlcFrame result;
+  encodedAx25Frame result;
   result.nrziBinHdlcFrame = nrziBinHdlcFrame;
   result.size = frame->nrziBinHdlcFrameSize;
 
@@ -109,8 +109,8 @@ hdlcFrame processFrameVerbose(iFrame *frame) {
 
   return result;
 }
-iFrame *initFrame(uint8_t *info, size_t infoSize) {
-  iFrame *frame = (iFrame *)malloc(sizeof(iFrame));
+ax25Frame *initFrame(uint8_t *info, size_t infoSize) {
+  ax25Frame *frame = (ax25Frame *)malloc(sizeof(ax25Frame));
   if (frame == NULL) {
     return NULL;
   }
@@ -140,7 +140,7 @@ iFrame *initFrame(uint8_t *info, size_t infoSize) {
   return frame;
 }
 
-void shiftBits(iFrame *frame) {
+void shiftBits(ax25Frame *frame) {
 
   for (size_t i = 0; i < CALL_LEN; i++) {
     frame->dest[i] <<= 1;
@@ -153,27 +153,27 @@ void shiftBits(iFrame *frame) {
 
 void printHex(const char *label, uint8_t *data, size_t len) {
   int newLineIndex = 0;
-  printf("%s:\n", label);
-  printf("--------------------------------------------\n");
+  printf("%s:\r\n", label);
+  printf("--------------------------------------------\r\n");
   for (size_t i = 0; i < len; i++) {
     printf("%x", data[i]);
     if ((i + 1) % 2 == 0) {
       printf(" ");
      }
      if ((i+1)%16 == 15) {
-      printf("\n");
+      printf("\r\n");
       newLineIndex = 0;
     } else {
       newLineIndex++;
     }
    }
   if ((newLineIndex < 15)&&(newLineIndex != 0)) { 
-    printf("\n");
+    printf("\r\n");
   } 
-  printf("--------------------------------------------\n");
+  printf("--------------------------------------------\r\n");
 } 
 
-void hextobin_rev(iFrame *frame) {
+void hextobin_rev(ax25Frame *frame) {
     size_t size = frame->ax25FrameSize;
     uint8_t *bin = (uint8_t *)malloc((size * 8) * sizeof(uint8_t));
     if (bin == NULL) {
@@ -192,7 +192,7 @@ void hextobin_rev(iFrame *frame) {
 }  
 
 
-void makeCRC(iFrame *frame) {
+void makeCRC(ax25Frame *frame) {
     size_t size = frame->crcFrameSize;
     uint8_t *buf = frame->crcFrame;
     uint16_t crc = 0xFFFF;
@@ -214,7 +214,7 @@ void makeCRC(iFrame *frame) {
     frame->fcs[0] = (crc >> 8) & 0xff; // Upper byte
 } 
 
-void bitStuff(iFrame *frame) {
+void bitStuff(ax25Frame *frame) {
 
   uint8_t *data = frame->binAx25Frame;
   size_t size = frame->binAx25FrameSize;
@@ -275,13 +275,12 @@ void bitStuff(iFrame *frame) {
   frame->binHdlcFrame = hdlcFrame;
 }  
 
-void concatCrcFrame(iFrame *frame) {
+void concatCrcFrame(ax25Frame *frame) {
   frame->crcFrameSize = 16 + frame->infoSize;
   uint8_t *crcFrame = (uint8_t *)malloc(frame->crcFrameSize * sizeof(uint8_t));
   if (crcFrame == NULL) {
     return;
   }
-  printf("CRC Frame Size: %zu\n", frame->crcFrameSize);
 
   memmove(crcFrame, frame->dest, 6);
   crcFrame[6] = frame->ssidDest;
@@ -294,7 +293,7 @@ void concatCrcFrame(iFrame *frame) {
   frame->crcFrame = crcFrame;
 }
 
-void concatAx25Frame(iFrame *frame) {
+void concatAx25Frame(ax25Frame *frame) {
   size_t size = frame->crcFrameSize + 4;
   uint8_t *cpltFrame = (uint8_t *)malloc(size * sizeof(uint8_t));
   if (cpltFrame == NULL) {
@@ -311,7 +310,7 @@ void concatAx25Frame(iFrame *frame) {
   frame->ax25Frame = cpltFrame;
 }
 
-uint8_t *genNRZI(iFrame *frame) {
+uint8_t *genNRZI(ax25Frame *frame) {
   bool cur_level = true;
   size_t size = frame->binHdlcFrameSize;
   uint8_t *nrziFrame =
@@ -329,25 +328,25 @@ uint8_t *genNRZI(iFrame *frame) {
 
 void printBin(const char *label, uint8_t *bin, size_t size) {
   int newLineIndex = 0;
-  printf("%s:\n", label);
-  printf("--------------------------------------------\n");
+  printf("%s:\r\n", label);
+  printf("--------------------------------------------\r\n");
   for (size_t i = 0; i < size; i++) {
     printf("%d", bin[i]);
     if ((i + 1) % 8 == 0) { // Print a space after every 8 bits (1 byte)
       printf(" ");
       if (newLineIndex == 7) {
-        printf("\n");
+        printf("\r\n");
         newLineIndex = 0;
       } else {
         newLineIndex++;
       }
     }
   }
-  printf("\n");
-  printf("--------------------------------------------\n");
+  printf("\r\n");
+  printf("--------------------------------------------\r\n");
 }
 
-void cleanFrame(iFrame *frame) {
+void cleanFrame(ax25Frame *frame) {
   if (frame) {
     free(frame->src);
     free(frame->dest);

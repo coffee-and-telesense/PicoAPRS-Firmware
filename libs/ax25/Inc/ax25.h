@@ -38,33 +38,34 @@ typedef struct {
   uint8_t *ax25Frame;
   uint8_t *binAx25Frame;
   uint8_t *binHdlcFrame;
-} iFrame;
+} ax25Frame;
 
 // Structure to hold the NRZI bitstream and its size
 typedef struct {
   uint8_t *nrziBinHdlcFrame;
   size_t size;
-} hdlcFrame;
+} encodedAx25Frame;
 
 // Function prototypes
 //----------------------------------------------------------------
 
 //API User Functions
-iFrame* initFrame(uint8_t *info, size_t infoSize);
-hdlcFrame processFrame(iFrame *frame);
-hdlcFrame processFrameVerbose(iFrame *frame);
+ax25Frame* initFrame(uint8_t *info, size_t infoSize);
+encodedAx25Frame processFrame(ax25Frame *frame);
+encodedAx25Frame processFrameVerbose(ax25Frame *frame);
 
 //----------------------------------------------------------------
 
 
-void cleanFrame(iFrame *frame);
-void shiftBits(iFrame *frame);
+void cleanFrame(ax25Frame *frame);
+void shiftBits(ax25Frame *frame);
 void printHex(const char *label, uint8_t *data, size_t len);
-void makeCRC(iFrame *frame);
-void concatCrcFrame(iFrame *frame);
-void concatAx25Frame(iFrame *frame);
-void hextobin_rev(iFrame *frame);
+void makeCRC(ax25Frame *frame);
+void concatCrcFrame(ax25Frame *frame);
+void concatAx25Frame(ax25Frame *frame);
+void hextobin_rev(ax25Frame *frame);
 void printBin(const char *label, uint8_t *bitstream, size_t len);
-void bitStuff(iFrame *frame);
-uint8_t *genNRZI(iFrame *frame);
+void bitStuff(ax25Frame *frame);
+uint8_t *genNRZI(ax25Frame *frame);
+
 #endif // AX25_H

@@ -89,7 +89,7 @@ void concatTelemData(telemetryInfoFrame *tFrame)
     tFrame->tData = (uint8_t *)telemData;
 
     printf("Concatenated Telemetry Data: %.*s\r\n", (int)tFrame->tDataSize+1, tFrame->tData);
-    printf("Telemetry Data Size: %ld\r\n", tFrame->tDataSize);
+    printf("Telemetry Data Size: %u\r\n", tFrame->tDataSize);
     printf("--------------------------------------------\r\n");
 }
 
@@ -379,7 +379,7 @@ void printPFrameStructMembers(positionFrame *pFrame)
     printf("Longitude: %s\r\n", pFrame->lon);
     printf("Symbol Code: %c\r\n", pFrame->SymCode);
     printf("Comment: %s\r\n", pFrame->comment);
-    printf("Comment Size: %ld\r\n", pFrame->commentSize);
+    printf("Comment Size: %u\r\n", pFrame->commentSize);
 }
 
 void printMFrameStructMembers(messageFrame *mFrame)
@@ -388,7 +388,7 @@ void printMFrameStructMembers(messageFrame *mFrame)
     printf("Addressee: %.9s\r\n", mFrame->addressee);
     printf("End of Header: %c\r\n", mFrame->endOfHeader);
     printf("Message: %s\r\n", mFrame->message);
-    printf("Message Size: %ld\r\n", mFrame->messageSize);
+    printf("Message Size: %u\r\n", mFrame->messageSize);
 }
 
 void printTFrameStructMembers(telemetryInfoFrame *tFrame)
@@ -403,9 +403,8 @@ void printTFrameStructMembers(telemetryInfoFrame *tFrame)
     printf("Analog Value 5: %.4s\r\n", tFrame->analogValue5);
     printf("Digital Value: %.8s\r\n", tFrame->digitalValue);
     printf("Comment: %s\r\n", tFrame->comment);
-    printf("Comment Length: %ld\r\n", tFrame->commentLength);
-    printf("Telemetry Data: %s\r\n", tFrame->tData);
-    printf("Telemetry Data Size: %ld\r\n", tFrame->tDataSize);
+    printf("Comment Length: %d\r\n", tFrame->commentLength);
+    printf("Telemetry Data Size: %u\r\n", tFrame->tDataSize);
 }
 
 void printParamFrameStructMembers(telemetryParamFrame *tParamFrame)
@@ -424,7 +423,7 @@ void printParamFrameStructMembers(telemetryParamFrame *tParamFrame)
     printf("B6: %.3s\r\n", tParamFrame->B6);
     printf("B7: %.3s\r\n", tParamFrame->B7);
     printf("B8: %.3s\r\n", tParamFrame->B8);
-    printf("Param Frame Size: %ld\r\n", tParamFrame->paramFrameSize);
+    printf("Param Frame Size: %u\r\n", tParamFrame->paramFrameSize);
 }
 
 void printUnitFrameStructMembers(telemetryUnitFrame *tUnitFrame) {
@@ -443,7 +442,7 @@ void printUnitFrameStructMembers(telemetryUnitFrame *tUnitFrame) {
     printf("BU6: %.3s\r\n", tUnitFrame->BU6);
     printf("BU7: %.3s\r\n", tUnitFrame->BU7);
     printf("BU8: %.3s\r\n", tUnitFrame->BU8);
-    printf("Unit Frame Size: %ld\r\n", tUnitFrame->unitFrameSize);
+    printf("Unit Frame Size: %u\r\n", tUnitFrame->unitFrameSize);
 }
 
 void freeFrames(
@@ -452,7 +451,7 @@ void freeFrames(
     telemetryUnitFrame *tUnitFrame,
     messageFrame *mFrame,
     positionFrame *pFrame,
-    hdlcFrame *hdlcFrame
+    encodedAx25Frame *encodedFrame
 ) {
     if (tInfoFrame) {
         if (tInfoFrame->tData) free(tInfoFrame->tData);
@@ -481,10 +480,10 @@ void freeFrames(
         free(pFrame);
     }
     
-    if (hdlcFrame) {
-        if (hdlcFrame->nrziBinHdlcFrame) {
-            free(hdlcFrame->nrziBinHdlcFrame);
-            hdlcFrame->nrziBinHdlcFrame = NULL;
+    if (encodedFrame) {
+        if (encodedFrame->nrziBinHdlcFrame) {
+            free(encodedFrame->nrziBinHdlcFrame);
+            encodedFrame->nrziBinHdlcFrame = NULL;
         }
     }
     

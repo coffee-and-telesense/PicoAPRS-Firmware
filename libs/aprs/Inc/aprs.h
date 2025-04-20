@@ -151,6 +151,6 @@ void freeFrames(
     telemetryUnitFrame *tUnitFrame,
     messageFrame *mFrame,
     positionFrame *pFrame,
-    hdlcFrame *hdlcFrame
+    encodedAx25Frame *encodedFrame
 );
 #endif // APRS_H
