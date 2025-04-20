@@ -15,7 +15,7 @@ telemetryInfoFrame *initTFrame(void)
     {
         return NULL;
     } else {
-        printf("Telemetry Frame Initialized!\n");
+        printf("Telemetry Frame Initialized!\r\n");
     }
 
 
@@ -39,15 +39,21 @@ telemetryInfoFrame *initTFrame(void)
 }
 
 
-void updateTelemData(telemetryInfoFrame *tFrame, uint8_t *analogValue1, uint8_t *analogValue2, uint8_t *analogValue3, uint8_t *analogValue4, uint8_t *analogValue5, uint8_t *digitalValue, char *comment)
-{
 
-memcpy(tFrame->sequenceNumber, SEQUENCE_NUMBER, sizeof(tFrame->sequenceNumber));
-    memcpy(tFrame->analogValue1, analogValue1, sizeof(tFrame->analogValue1));
-    memcpy(tFrame->analogValue2, analogValue2, sizeof(tFrame->analogValue2));
-    memcpy(tFrame->analogValue3, analogValue3, sizeof(tFrame->analogValue3));
-    memcpy(tFrame->analogValue4, analogValue4, sizeof(tFrame->analogValue4));
-    memcpy(tFrame->analogValue5, analogValue5, sizeof(tFrame->analogValue5));
+void updateTelemData(
+    telemetryInfoFrame *tFrame,
+    uint8_t analogValues[5][5],     
+    uint8_t *digitalValue,        
+    char *comment                 
+) {
+    memcpy(tFrame->sequenceNumber, SEQUENCE_NUMBER, sizeof(tFrame->sequenceNumber));
+
+    memcpy(tFrame->analogValue1, analogValues[0], sizeof(tFrame->analogValue1));
+    memcpy(tFrame->analogValue2, analogValues[1], sizeof(tFrame->analogValue2));
+    memcpy(tFrame->analogValue3, analogValues[2], sizeof(tFrame->analogValue3));
+    memcpy(tFrame->analogValue4, analogValues[3], sizeof(tFrame->analogValue4));
+    memcpy(tFrame->analogValue5, analogValues[4], sizeof(tFrame->analogValue5));
+
     memcpy(tFrame->digitalValue, digitalValue, sizeof(tFrame->digitalValue));
 
     tFrame->comment = comment;
@@ -56,8 +62,8 @@ memcpy(tFrame->sequenceNumber, SEQUENCE_NUMBER, sizeof(tFrame->sequenceNumber));
     tFrame->tDataSize = 0;
 
     printTFrameStructMembers(tFrame);
-
 }
+
 
 void concatTelemData(telemetryInfoFrame *tFrame)
 {
@@ -82,9 +88,9 @@ void concatTelemData(telemetryInfoFrame *tFrame)
 
     tFrame->tData = (uint8_t *)telemData;
 
-    printf("Concatenated Telemetry Data: %.*s\n", (int)tFrame->tDataSize+1, tFrame->tData);
-    printf("Telemetry Data Size: %ld\n", tFrame->tDataSize);
-    printf("--------------------------------------------\n");
+    printf("Concatenated Telemetry Data: %.*s\r\n", (int)tFrame->tDataSize+1, tFrame->tData);
+    printf("Telemetry Data Size: %ld\r\n", tFrame->tDataSize);
+    printf("--------------------------------------------\r\n");
 }
 
 telemetryParamFrame *initParamFrame(void)
@@ -94,7 +100,7 @@ telemetryParamFrame *initParamFrame(void)
     {
         return NULL;
     } else {
-        printf("Parameter Frame Initialized!\n");
+        printf("Parameter Frame Initialized!\r\n");
     }
 
     strcpy(tParamFrame->typeIdentifier, "PARM.");
@@ -119,23 +125,21 @@ telemetryParamFrame *initParamFrame(void)
     return tParamFrame;
 }
 
-void updateTelemParamData(telemetryParamFrame *tParamFrame, char *A1, char *A2, char *A3, char *A4, char *A5, char *B1, char *B2, char *B3, char *B4, char *B5, char *B6, char *B7, char *B8)
-{
+void updateTelemParamData(telemetryParamFrame *tParamFrame, char *analogInputs[5], char *digitalInputs[8]) {
     char *analog[] = {tParamFrame->A1, tParamFrame->A2, tParamFrame->A3, tParamFrame->A4, tParamFrame->A5};
-    char *digital[] = {tParamFrame->B1, tParamFrame->B2, tParamFrame->B3, tParamFrame->B4, tParamFrame->B5, tParamFrame->B6, tParamFrame->B7, tParamFrame->B8};
-    char *inputAnalog[] = {A1, A2, A3, A4, A5};
-    char *inputDigital[] = {B1, B2, B3, B4, B5, B6, B7, B8};
+    char *digital[] = {tParamFrame->B1, tParamFrame->B2, tParamFrame->B3, tParamFrame->B4,
+                       tParamFrame->B5, tParamFrame->B6, tParamFrame->B7, tParamFrame->B8};
 
-    for (int i = 0; i < 5; i++)
-    {
-        strcpy(analog[i], inputAnalog[i]);
-        tParamFrame->paramFrameSize += strlen(inputAnalog[i]);
+    tParamFrame->paramFrameSize = 0;
+
+    for (int i = 0; i < 5; i++) {
+        strcpy(analog[i], analogInputs[i]);
+        tParamFrame->paramFrameSize += strlen(analogInputs[i]);
     }
 
-    for (int i = 0; i < 8; i++)
-    {
-        strcpy(digital[i], inputDigital[i]);
-        tParamFrame->paramFrameSize += strlen(inputDigital[i]);
+    for (int i = 0; i < 8; i++) {
+        strcpy(digital[i], digitalInputs[i]);
+        tParamFrame->paramFrameSize += strlen(digitalInputs[i]);
     }
 
     printParamFrameStructMembers(tParamFrame);
@@ -165,8 +169,8 @@ void concatParamData(telemetryParamFrame *tParamFrame)
              tParamFrame->B8);
 
     tParamFrame->paramFrame = (uint8_t *)paramData;
-    printf("Concatenated Param Data: %.*s\n", (int)tParamFrame->paramFrameSize, tParamFrame->paramFrame);
-    printf("--------------------------------------------\n");
+    printf("Concatenated Param Data: %.*s\r\n", (int)tParamFrame->paramFrameSize, tParamFrame->paramFrame);
+    printf("--------------------------------------------\r\n");
     return;
 }
 
@@ -179,7 +183,7 @@ telemetryUnitFrame *initUnitFrame(void)
     {
         return NULL;
     }else {
-        printf("Unit Frame Initialized!\n");
+        printf("Unit Frame Initialized!\r\n");
     }
 
 
@@ -204,31 +208,24 @@ telemetryUnitFrame *initUnitFrame(void)
     return tUnitFrame;
 }
 
-void updateTelemUnitData(telemetryUnitFrame *tUnitFrame, char *A1, char *A2, char *A3, char *A4, char *A5, char *B1, char *B2, char *B3, char *B4, char *B5, char *B6, char *B7, char *B8){
+void updateTelemUnitData(telemetryUnitFrame *tUnitFrame, char *analogUnits[5], char *digitalUnits[8]) {
+    char *analog[] = {tUnitFrame->AU1, tUnitFrame->AU2, tUnitFrame->AU3, tUnitFrame->AU4, tUnitFrame->AU5};
+    char *digital[] = {tUnitFrame->BU1, tUnitFrame->BU2, tUnitFrame->BU3, tUnitFrame->BU4,
+                       tUnitFrame->BU5, tUnitFrame->BU6, tUnitFrame->BU7, tUnitFrame->BU8};
 
+    tUnitFrame->unitFrameSize = 0;
 
-char *analogU[] = {tUnitFrame->AU1, tUnitFrame->AU2, tUnitFrame->AU3, tUnitFrame->AU4, tUnitFrame->AU5};
-   
-   
-    char *digitalU[] = {tUnitFrame->BU1, tUnitFrame->BU2, tUnitFrame->BU3, tUnitFrame->BU4, tUnitFrame->BU5, tUnitFrame->BU6, tUnitFrame->BU7, tUnitFrame->BU8};
-    char *analog[] = {A1, A2, A3, A4, A5};
-    char *digital[] = {B1, B2, B3, B4, B5, B6, B7, B8};
-
-    for (int i = 0; i < 5; i++)
-    {
-        strcpy(analogU[i], analog[i]);
-        tUnitFrame->unitFrameSize += strlen(analog[i]);
+    for (int i = 0; i < 5; i++) {
+        strcpy(analog[i], analogUnits[i]);
+        tUnitFrame->unitFrameSize += strlen(analogUnits[i]);
     }
 
-    for (int i = 0; i < 8; i++)
-    {
-        strcpy(digitalU[i], digital[i]);
-        tUnitFrame->unitFrameSize += strlen(digital[i]);
+    for (int i = 0; i < 8; i++) {
+        strcpy(digital[i], digitalUnits[i]);
+        tUnitFrame->unitFrameSize += strlen(digitalUnits[i]);
     }
 
     printUnitFrameStructMembers(tUnitFrame);
-
-
 }
 
 void concatUnitData(telemetryUnitFrame *tUnitFrame)
@@ -253,8 +250,8 @@ void concatUnitData(telemetryUnitFrame *tUnitFrame)
              tUnitFrame->BU8);
 
     tUnitFrame->unitFrame = (uint8_t *)unitData;
-    printf("Concatenated Unit Data: %.*s\n", (int)tUnitFrame->unitFrameSize, tUnitFrame->unitFrame);
-    printf("--------------------------------------------\n");
+    printf("Concatenated Unit Data: %.*s\r\n", (int)tUnitFrame->unitFrameSize, tUnitFrame->unitFrame);
+    printf("--------------------------------------------\r\n");
     return;
 }
 
@@ -265,7 +262,7 @@ messageFrame *initMFrame(void)
     {
         return NULL;
     } else {
-        printf("Message Frame Initialized!\n");
+        printf("Message Frame Initialized!\r\n");
     }
 
     mFrame->typeIdentifier = ':';
@@ -284,7 +281,7 @@ void updateMessageData(messageFrame *mFrame, char *addressee, char *message)
     if (mFrame->messageSize > 67)
     {
         mFrame->messageSize = 67;
-        printf("Message Size Exceeded! Truncated to 67 characters\n");
+        printf("Message Size Exceeded! Truncated to 67 characters\r\n");
     }
     mFrame->message = message;
     printMFrameStructMembers(mFrame);
@@ -304,8 +301,8 @@ void concatMessageData(messageFrame *mFrame)
     mFrame->messageSize = strlen((char *)messageData) + 1;
     mFrame->messageFrame = (uint8_t *)messageData;
 
-    printf("Concatenated Message Data: %.*s\n", (int)mFrame->messageSize, mFrame->messageFrame);
-    printf("--------------------------------------------\n");
+    printf("Concatenated Message Data: %.*s\r\n", (int)mFrame->messageSize, mFrame->messageFrame);
+    printf("--------------------------------------------\r\n");
     return;
 }
 
@@ -316,7 +313,7 @@ positionFrame *initPFrame(void)
     {
         return NULL;
     } else {
-        printf("Position Frame Initialized!\n");
+        printf("Position Frame Initialized!\r\n");
     }
 
     pFrame->capability = '/'; // Simplex Capability
@@ -342,7 +339,7 @@ void updatePositionData(positionFrame *pFrame, char *time, char *lat, char *lon,
         pFrame->commentSize = 0;
     } else if(strlen(pFrame->comment) > 43){
         pFrame->commentSize = 43;
-        printf("Comment Size Exceeded! Truncated to 43 characters\n");
+        printf("Comment Size Exceeded! Truncated to 43 characters\r\n");
     }
     else {
         pFrame->commentSize = strlen(comment);
@@ -367,84 +364,128 @@ void concatPositionData(positionFrame *pFrame)
              pFrame->comment);
     pFrame->positionFrameSize = strlen((char *)positionData) + 1;
     pFrame->positionFrame = (uint8_t *)positionData;
-    printf("Concatenated Position Data: %.*s\n", (int)pFrame->positionFrameSize, pFrame->positionFrame);
-    printf("--------------------------------------------\n");
+    printf("Concatenated Position Data: %.*s\r\n", (int)pFrame->positionFrameSize, pFrame->positionFrame);
+    printf("--------------------------------------------\r\n");
     return;
 }
 
 
 void printPFrameStructMembers(positionFrame *pFrame)
 {
-    printf("Capability: %c\n", pFrame->capability);
-    printf("Time: %s\n", pFrame->time);
-    printf("Table ID: %c\n", pFrame->tableID);
-    printf("Latitude: %s\n", pFrame->lat);
-    printf("Longitude: %s\n", pFrame->lon);
-    printf("Symbol Code: %c\n", pFrame->SymCode);
-    printf("Comment: %s\n", pFrame->comment);
-    printf("Comment Size: %ld\n", pFrame->commentSize);
+    printf("Capability: %c\r\n", pFrame->capability);
+    printf("Time: %s\r\n", pFrame->time);
+    printf("Table ID: %c\r\n", pFrame->tableID);
+    printf("Latitude: %s\r\n", pFrame->lat);
+    printf("Longitude: %s\r\n", pFrame->lon);
+    printf("Symbol Code: %c\r\n", pFrame->SymCode);
+    printf("Comment: %s\r\n", pFrame->comment);
+    printf("Comment Size: %ld\r\n", pFrame->commentSize);
 }
 
 void printMFrameStructMembers(messageFrame *mFrame)
 {
-    printf("Type Identifier: %c\n", mFrame->typeIdentifier);
-    printf("Addressee: %.9s\n", mFrame->addressee);
-    printf("End of Header: %c\n", mFrame->endOfHeader);
-    printf("Message: %s\n", mFrame->message);
-    printf("Message Size: %ld\n", mFrame->messageSize);
+    printf("Type Identifier: %c\r\n", mFrame->typeIdentifier);
+    printf("Addressee: %.9s\r\n", mFrame->addressee);
+    printf("End of Header: %c\r\n", mFrame->endOfHeader);
+    printf("Message: %s\r\n", mFrame->message);
+    printf("Message Size: %ld\r\n", mFrame->messageSize);
 }
 
 void printTFrameStructMembers(telemetryInfoFrame *tFrame)
 {
 
-    printf("Type Identifier: %c\n", tFrame->typeIdentifier);
-    printf("Sequence Number: %.5s\n", tFrame->sequenceNumber);
-    printf("Analog Value 1: %.4s\n", tFrame->analogValue1);
-    printf("Analog Value 2: %.4s\n", tFrame->analogValue2);
-    printf("Analog Value 3: %.4s\n", tFrame->analogValue3);
-    printf("Analog Value 4: %.4s\n", tFrame->analogValue4);
-    printf("Analog Value 5: %.4s\n", tFrame->analogValue5);
-    printf("Digital Value: %.8s\n", tFrame->digitalValue);
-    printf("Comment: %s\n", tFrame->comment);
-    printf("Comment Length: %ld\n", tFrame->commentLength);
-    printf("Telemetry Data: %s\n", tFrame->tData);
-    printf("Telemetry Data Size: %ld\n", tFrame->tDataSize);
+    printf("Type Identifier: %c\r\n", tFrame->typeIdentifier);
+    printf("Sequence Number: %.5s\r\n", tFrame->sequenceNumber);
+    printf("Analog Value 1: %.4s\r\n", tFrame->analogValue1);
+    printf("Analog Value 2: %.4s\r\n", tFrame->analogValue2);
+    printf("Analog Value 3: %.4s\r\n", tFrame->analogValue3);
+    printf("Analog Value 4: %.4s\r\n", tFrame->analogValue4);
+    printf("Analog Value 5: %.4s\r\n", tFrame->analogValue5);
+    printf("Digital Value: %.8s\r\n", tFrame->digitalValue);
+    printf("Comment: %s\r\n", tFrame->comment);
+    printf("Comment Length: %ld\r\n", tFrame->commentLength);
+    printf("Telemetry Data: %s\r\n", tFrame->tData);
+    printf("Telemetry Data Size: %ld\r\n", tFrame->tDataSize);
 }
 
 void printParamFrameStructMembers(telemetryParamFrame *tParamFrame)
 {
-    printf("Type Identifier: %.5s\n", tParamFrame->typeIdentifier);
-    printf("A1: %.7s\n", tParamFrame->A1);
-    printf("A2: %.7s\n", tParamFrame->A2);
-    printf("A3: %.6s\n", tParamFrame->A3);
-    printf("A4: %.6s\n", tParamFrame->A4);
-    printf("A5: %.5s\n", tParamFrame->A5);
-    printf("B1: %.6s\n", tParamFrame->B1);
-    printf("B2: %.5s\n", tParamFrame->B2);
-    printf("B3: %.4s\n", tParamFrame->B3);
-    printf("B4: %.4s\n", tParamFrame->B4);
-    printf("B5: %.4s\n", tParamFrame->B5);
-    printf("B6: %.3s\n", tParamFrame->B6);
-    printf("B7: %.3s\n", tParamFrame->B7);
-    printf("B8: %.3s\n", tParamFrame->B8);
-    printf("Param Frame Size: %ld\n", tParamFrame->paramFrameSize);
+    printf("Type Identifier: %.5s\r\n", tParamFrame->typeIdentifier);
+    printf("A1: %.7s\r\n", tParamFrame->A1);
+    printf("A2: %.7s\r\n", tParamFrame->A2);
+    printf("A3: %.6s\r\n", tParamFrame->A3);
+    printf("A4: %.6s\r\n", tParamFrame->A4);
+    printf("A5: %.5s\r\n", tParamFrame->A5);
+    printf("B1: %.6s\r\n", tParamFrame->B1);
+    printf("B2: %.5s\r\n", tParamFrame->B2);
+    printf("B3: %.4s\r\n", tParamFrame->B3);
+    printf("B4: %.4s\r\n", tParamFrame->B4);
+    printf("B5: %.4s\r\n", tParamFrame->B5);
+    printf("B6: %.3s\r\n", tParamFrame->B6);
+    printf("B7: %.3s\r\n", tParamFrame->B7);
+    printf("B8: %.3s\r\n", tParamFrame->B8);
+    printf("Param Frame Size: %ld\r\n", tParamFrame->paramFrameSize);
 }
 
 void printUnitFrameStructMembers(telemetryUnitFrame *tUnitFrame) {
 
-    printf("Type Identifier: %.5s\n", tUnitFrame->typeIdentifier);
-    printf("AU1: %.7s\n", tUnitFrame->AU1);
-    printf("AU2: %.7s\n", tUnitFrame->AU2);
-    printf("AU3: %.6s\n", tUnitFrame->AU3);
-    printf("AU4: %.6s\n", tUnitFrame->AU4);
-    printf("AU5: %.5s\n", tUnitFrame->AU5);
-    printf("BU1: %.6s\n", tUnitFrame->BU1);
-    printf("BU2: %.5s\n", tUnitFrame->BU2);
-    printf("BU3: %.4s\n", tUnitFrame->BU3);
-    printf("BU4: %.4s\n", tUnitFrame->BU4);
-    printf("BU5: %.4s\n", tUnitFrame->BU5);
-    printf("BU6: %.3s\n", tUnitFrame->BU6);
-    printf("BU7: %.3s\n", tUnitFrame->BU7);
-    printf("BU8: %.3s\n", tUnitFrame->BU8);
-    printf("Unit Frame Size: %ld\n", tUnitFrame->unitFrameSize);
+    printf("Type Identifier: %.5s\r\n", tUnitFrame->typeIdentifier);
+    printf("AU1: %.7s\r\n", tUnitFrame->AU1);
+    printf("AU2: %.7s\r\n", tUnitFrame->AU2);
+    printf("AU3: %.6s\r\n", tUnitFrame->AU3);
+    printf("AU4: %.6s\r\n", tUnitFrame->AU4);
+    printf("AU5: %.5s\r\n", tUnitFrame->AU5);
+    printf("BU1: %.6s\r\n", tUnitFrame->BU1);
+    printf("BU2: %.5s\r\n", tUnitFrame->BU2);
+    printf("BU3: %.4s\r\n", tUnitFrame->BU3);
+    printf("BU4: %.4s\r\n", tUnitFrame->BU4);
+    printf("BU5: %.4s\r\n", tUnitFrame->BU5);
+    printf("BU6: %.3s\r\n", tUnitFrame->BU6);
+    printf("BU7: %.3s\r\n", tUnitFrame->BU7);
+    printf("BU8: %.3s\r\n", tUnitFrame->BU8);
+    printf("Unit Frame Size: %ld\r\n", tUnitFrame->unitFrameSize);
+}
+
+void freeFrames(
+    telemetryInfoFrame *tInfoFrame,
+    telemetryParamFrame *tParamFrame,
+    telemetryUnitFrame *tUnitFrame,
+    messageFrame *mFrame,
+    positionFrame *pFrame,
+    hdlcFrame *hdlcFrame
+) {
+    if (tInfoFrame) {
+        if (tInfoFrame->tData) free(tInfoFrame->tData);
+        free(tInfoFrame);
+    }
+    
+
+    if (tParamFrame) {
+        if (tParamFrame->paramFrame) free(tParamFrame->paramFrame);
+        free(tParamFrame);
+    }
+   
+    if (tUnitFrame) {
+        if (tUnitFrame->unitFrame) free(tUnitFrame->unitFrame);
+        free(tUnitFrame);
+    }
+   
+
+    if (mFrame) {
+        if (mFrame->messageFrame) free(mFrame->messageFrame);
+        free(mFrame);
+    }
+   
+    if (pFrame) {
+        if (pFrame->positionFrame) free(pFrame->positionFrame);
+        free(pFrame);
+    }
+    
+    if (hdlcFrame) {
+        if (hdlcFrame->nrziBinHdlcFrame) {
+            free(hdlcFrame->nrziBinHdlcFrame);
+            hdlcFrame->nrziBinHdlcFrame = NULL;
+        }
+    }
+    
 }

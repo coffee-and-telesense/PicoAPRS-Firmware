@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "ax25.h"
 
 // Constant definitions
 #define TELEM_DATA_SIZE 34
@@ -114,15 +115,20 @@ typedef struct {
 
 // Function prototypes
 void concatTelemData(telemetryInfoFrame *tFrame);
-void updateTelemData(telemetryInfoFrame *tFrame, uint8_t *analogValue1, uint8_t *analogValue2, uint8_t *analogValue3, uint8_t *analogValue4, uint8_t *analogValue5, uint8_t *digitalValue, char *comment);
+void updateTelemData(
+    telemetryInfoFrame *tFrame,
+    uint8_t analogValues[5][5],     
+    uint8_t *digitalValue,        
+    char *comment                 
+);
 telemetryInfoFrame *initTFrame(void);
 
 void concatParamData(telemetryParamFrame *tParamFrame);
-void updateTelemParamData(telemetryParamFrame *tParamFrame, char *A1, char *A2, char *A3, char *A4, char *A5, char *B1, char *B2, char *B3, char *B4, char *B5, char *B6, char *B7, char *B8);
+void updateTelemParamData(telemetryParamFrame *tParamFrame, char *analogInputs[5], char *digitalInputs[8]);
 telemetryParamFrame *initParamFrame(void);
 
 void concatUnitData(telemetryUnitFrame *tUnitFrame);
-void updateTelemUnitData(telemetryUnitFrame *tUnitFrame, char *AU1, char *AU2, char *AU3, char *AU4, char *AU5, char *BU1, char *BU2, char *BU3, char *BU4, char *BU5, char *BU6, char *BU7, char *BU8);
+void updateTelemUnitData(telemetryUnitFrame *tUnitFrame, char *analogUnits[5], char *digitalUnits[8]);
 telemetryUnitFrame *initUnitFrame(void);
 
 void concatMessageData(messageFrame *mFrame);
@@ -139,4 +145,12 @@ void printUnitFrameStructMembers(telemetryUnitFrame *tUnitFrame);
 void printMFrameStructMembers(messageFrame *mFrame);
 void printPFrameStructMembers(positionFrame *pFrame);
 
+void freeFrames(
+    telemetryInfoFrame *tFrame,
+    telemetryParamFrame *tParamFrame,
+    telemetryUnitFrame *tUnitFrame,
+    messageFrame *mFrame,
+    positionFrame *pFrame,
+    hdlcFrame *hdlcFrame
+);
 #endif // APRS_H
