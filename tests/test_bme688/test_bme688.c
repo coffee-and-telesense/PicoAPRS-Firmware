@@ -150,22 +150,27 @@ int main(void)
     int fetch_success = bme_fetch_data(&bme);
     if (fetch_success)
     {
-      debug_print("Temperature: %d.%02d°C, ",
-                  bme.sensor_data.temperature / 100,
-                  (bme.sensor_data.temperature % 100));
-      debug_print("Pressure: %d Pa, ", bme.sensor_data.pressure);
-      debug_print("Humidity: %d.%03d%%, ",
-                  bme.sensor_data.humidity / 1000,
-                  (bme.sensor_data.humidity % 1000));
-      debug_print("Gas Resistance: %d.%03d kΩ, ",
-                  bme.sensor_data.gas_resistance / 1000,
-                  (bme.sensor_data.gas_resistance % 1000));
-      debug_print("Status: 0x%X\r\n", bme.sensor_data.status);
+      // debug_print("Temperature: %d.%02d°C, ",
+      //             bme.sensor_data.temperature / 100,
+      //             (bme.sensor_data.temperature % 100));
+      // debug_print("Pressure: %d Pa, ", bme.sensor_data.pressure);
+      // debug_print("Humidity: %d.%03d%%, ",
+      //             bme.sensor_data.humidity / 1000,
+      //             (bme.sensor_data.humidity % 1000));
+      // debug_print("Gas Resistance: %d.%03d kΩ, ",
+      //             bme.sensor_data.gas_resistance / 1000,
+      //             (bme.sensor_data.gas_resistance % 1000));
+      // debug_print("Status: 0x%X\r\n", bme.sensor_data.status);
+      debug_print("%d, ", bme.sensor_data.temperature);
+      debug_print("%d, ", bme.sensor_data.pressure);
+      debug_print("%d, ", bme.sensor_data.humidity);
+      debug_print("%d, ", bme.sensor_data.gas_resistance);
+      debug_print("%X, \r\n", bme.sensor_data.status);
     }
 
     // The "blink" code is a simple verification of program execution,
     // separate from the BME68x sensor testing above
-    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+    HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
     HAL_Delay(1000);
 
     /* USER CODE BEGIN 3 */
