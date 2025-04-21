@@ -97,7 +97,7 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  debug_print("Initialization Complete!\r\n");
   if (HAL_I2C_IsDeviceReady(&hi2c1, BME68X_ADDR, 3, HAL_MAX_DELAY) == HAL_OK)
   {
     debug_print("Sensor is ready\r\n");
@@ -161,11 +161,11 @@ int main(void)
       //             bme.sensor_data.gas_resistance / 1000,
       //             (bme.sensor_data.gas_resistance % 1000));
       // debug_print("Status: 0x%X\r\n", bme.sensor_data.status);
-      debug_print("%d, ", bme.sensor_data.temperature);
-      debug_print("%d, ", bme.sensor_data.pressure);
-      debug_print("%d, ", bme.sensor_data.humidity);
-      debug_print("%d, ", bme.sensor_data.gas_resistance);
-      debug_print("%X, \r\n", bme.sensor_data.status);
+      debug_print("%d temp, ", bme.sensor_data.temperature);
+      debug_print("%d pressure, ", bme.sensor_data.pressure);
+      debug_print("%d humid, ", bme.sensor_data.humidity);
+      debug_print("%d gas res, ", bme.sensor_data.gas_resistance);
+      debug_print("%X status, \r\n", bme.sensor_data.status);
     }
 
     // The "blink" code is a simple verification of program execution,
