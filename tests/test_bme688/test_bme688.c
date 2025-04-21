@@ -165,7 +165,7 @@ int main(void)
 
     // The "blink" code is a simple verification of program execution,
     // separate from the BME68x sensor testing above
-    HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
     HAL_Delay(1000);
 
     /* USER CODE BEGIN 3 */

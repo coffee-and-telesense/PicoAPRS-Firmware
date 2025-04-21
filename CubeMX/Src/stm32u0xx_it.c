@@ -56,7 +56,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern I2C_HandleTypeDef hi2c1;
-extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 
@@ -157,17 +157,17 @@ void FLASH_ECC_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles TIM6, DAC and LPTIM1 global Interrupts (combined with EXTI 31).
+  * @brief This function handles TIM2 Global Interrupt.
   */
-void TIM6_DAC_LPTIM1_IRQHandler(void)
+void TIM2_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM6_DAC_LPTIM1_IRQn 0 */
+  /* USER CODE BEGIN TIM2_IRQn 0 */
 
-  /* USER CODE END TIM6_DAC_LPTIM1_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim6);
-  /* USER CODE BEGIN TIM6_DAC_LPTIM1_IRQn 1 */
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
 
-  /* USER CODE END TIM6_DAC_LPTIM1_IRQn 1 */
+  /* USER CODE END TIM2_IRQn 1 */
 }
 
 /**
