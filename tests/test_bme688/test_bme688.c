@@ -19,7 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
-#include "stm32u0xx_hal_tim.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 #include "logging.h"
@@ -109,7 +109,7 @@ int main(void)
 
   // Create bme interface struct and initialize it
   bme68x_sensor_t bme;
-  bme_init(&bme, &hi2c1, delay_us_timer);
+  bme_init(&bme, &hi2c1, &delay_us_timer);
   // Check status, should be 0 for OK
   int bme_status = bme_check_status(&bme);
   {
