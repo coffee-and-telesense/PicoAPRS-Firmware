@@ -155,7 +155,7 @@ int main(void)
     if (fetch_success)
     {
       debug_print("Temperature     : %d.%02d°C\r\n",
-        (bme.sensor_data.temperature / 100.0),
+        (bme.sensor_data.temperature / 100.0), // Temp = Raw Value / 100
         fmod(bme.sensor_data.temperature, 100.0));
 
       debug_print("Pressure        : %d Pa\r\n",

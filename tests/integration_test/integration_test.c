@@ -18,11 +18,14 @@
 #include "main.h"
 #include "rtc.h"
 #include "usart.h"
+#include "tim.h"
+#include "logging.h"
 
 /* USER CODE BEGIN Includes */
-#include <math.h>  //for fabs()
+#include <math.h>  
 #include <stdio.h>
 #include <string.h>
+
 
 //  // APRSlib stuff
 #include "aprs.h"
@@ -33,6 +36,9 @@
 #include "gps_types.h"
 #include "max_m10s.h"
 #include "ubx.h"
+
+//  // Include BME Driver
+#include "bme68x_driver.h"
 
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 // Macro defining the prototype for the function that redirects printf output to UART
@@ -223,6 +229,64 @@ void GPS_ReadOnce(void) {
     printf("GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
 }
 
+void BME_READ(void) {
+    // Create bme interface struct and initialize it
+    bme68x_sensor_t bme;
+    bme_init(&bme, &hi2c1, &delay_us_timer);
+
+    // Check status, should be 0 for OK
+    int bme_status = bme_check_status(&bme);
+    {
+        if (bme_status == BME68X_ERROR)
+        {
+        printf("Sensor error:" + bme_status);
+        return BME68X_ERROR;
+        }
+        else if (bme_status == BME68X_WARNING)
+        {
+        printf("Sensor Warning:" + bme_status);
+        }
+    }
+    // Set temp, pressure, humidity oversampling configuration
+    // Trying with defaults
+    bme_set_TPH_default(&bme);
+    // Set the heater configuration to 300 deg C for 100ms for Forced mode
+    bme_set_heaterprof(&bme, 300, 100);
+    // Set to forced mode, which takes a single sample and returns to sleep mode
+    bme_set_opmode(&bme, BME68X_FORCED_MODE);
+    /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
+    delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
+    // Fetch data
+    int fetch_success = bme_fetch_data(&bme);
+    if (fetch_success)
+    {
+    printf("Temperature     : %d.%02d°C\r\n",
+        (bme.sensor_data.temperature / 100.0),
+        fmod(bme.sensor_data.temperature, 100.0));
+
+    printf("Pressure        : %d Pa\r\n",
+            bme.sensor_data.pressure);
+
+    printf("Humidity        : %d.%03d%%\r\n",
+            (bme.sensor_data.humidity / 1000.0),
+            fmod(bme.sensor_data.humidity, 1000.0));
+
+    printf("Gas Resistance  : %d.%03d kΩ\r\n",
+            (bme.sensor_data.gas_resistance / 1000.0),
+            fmod(bme.sensor_data.gas_resistance, 1000.0));
+            
+    printf("Status          : 0x%X\r\n",
+            bme.sensor_data.status);
+
+    printf("\n---------------------------------------\n");
+    }
+
+    // The "blink" code is a simple verification of program execution,
+    // separate from the BME68x sensor testing above
+    HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
+    HAL_Delay(1000);
+}
+
 /* ================================ */
 /*       System Initialization      */
 /* ================================ */
@@ -246,6 +310,7 @@ void INIT() {
     MX_USART2_UART_Init();
     printf("Initializing I2C...\n");
     MX_I2C1_Init();
+
     //  --- GPS init ---
     printf("Initializing GPS...\r\n");
     gps_init.hi2c = &hi2c1;
@@ -266,8 +331,15 @@ void INIT() {
     }
 
     HAL_Delay(50);
-    // HAL_GPIO_ALL_LED_OFF();
-
+    MX_TIM2_Init();
+    if (HAL_I2C_IsDeviceReady(&hi2c1, BME68X_ADDR, 3, HAL_MAX_DELAY) == HAL_OK)
+    {
+        printf("Sensor is ready\r\n");
+    }
+    else
+    {
+        printf("Sensor not responding\r\n");
+    }
     printf("\n--- System Booting Up ---\n");
     HAL_Delay(50);
     printf("Initializing Values...\n\n");
@@ -347,7 +419,7 @@ void ADC_READ_TEST() {
 int main(void) {
     // Initialize all system peripherals and hardware
     INIT();
-
+    
     HAL_Delay(50);
     HAL_ADCEx_Calibration_Start(&hadc1);  // Calibrate ADC1 (recommended after power-up)
 
@@ -363,6 +435,9 @@ int main(void) {
     if (value_adc > Threshold) {
         // If the voltage is good
         GPS_ReadOnce();
+
+        BME_SensorRead();
+        
         // Loop waiting for user interaction (button press) to confirm system is ready
         while (1) {
             printf("Waiting for good ADC value (aka button) \n\n");
