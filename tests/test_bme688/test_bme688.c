@@ -12,7 +12,11 @@
  * This software is licensed under terms that can be found in the LICENSE file
  * in the root directory of this software component.
  * If no LICENSE file comes with this software, it is provided AS-IS.
- *
+ * BME68X_SLEEP_MODE     // No measurements
+ * BME68X_FORCED_MODE    // One-shot measurement (best for low-power)
+ * BME68X_PARALLEL_MODE  // Continuous measurement using heater profiles
+ * BME68X_SEQUENTIAL_MODE// Like parallel but runs profiles in sequence
+ * STM32_Programmer_CLI --connect port=swd --download C:/School/PicoAPRS-Firmware/build/Debug/tests/test_bme688/test_bme688.elf -hardRst -rst --start
  ******************************************************************************
  */
 /* USER CODE END Header */
@@ -24,7 +28,7 @@
 #include "gpio.h"
 #include "logging.h"
 #include "bme68x_driver.h"
-
+#include <math.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -150,22 +154,25 @@ int main(void)
     int fetch_success = bme_fetch_data(&bme);
     if (fetch_success)
     {
-      // debug_print("Temperature: %d.%02d°C, ",
-      //             bme.sensor_data.temperature / 100,
-      //             (bme.sensor_data.temperature % 100));
-      // debug_print("Pressure: %d Pa, ", bme.sensor_data.pressure);
-      // debug_print("Humidity: %d.%03d%%, ",
-      //             bme.sensor_data.humidity / 1000,
-      //             (bme.sensor_data.humidity % 1000));
-      // debug_print("Gas Resistance: %d.%03d kΩ, ",
-      //             bme.sensor_data.gas_resistance / 1000,
-      //             (bme.sensor_data.gas_resistance % 1000));
-      // debug_print("Status: 0x%X\r\n", bme.sensor_data.status);
-      debug_print("%d temp, ", bme.sensor_data.temperature);
-      debug_print("%d pressure, ", bme.sensor_data.pressure);
-      debug_print("%d humid, ", bme.sensor_data.humidity);
-      debug_print("%d gas res, ", bme.sensor_data.gas_resistance);
-      debug_print("%X status, \r\n", bme.sensor_data.status);
+      debug_print("Temperature     : %d.%02d°C\r\n",
+        (bme.sensor_data.temperature / 100.0),
+        fmod(bme.sensor_data.temperature, 100.0));
+
+      debug_print("Pressure        : %d Pa\r\n",
+              bme.sensor_data.pressure);
+
+      debug_print("Humidity        : %d.%03d%%\r\n",
+              (bme.sensor_data.humidity / 1000.0),
+              fmod(bme.sensor_data.humidity, 1000.0));
+
+      debug_print("Gas Resistance  : %d.%03d kΩ\r\n",
+              (bme.sensor_data.gas_resistance / 1000.0),
+              fmod(bme.sensor_data.gas_resistance, 1000.0));
+              
+      debug_print("Status          : 0x%X\r\n",
+              bme.sensor_data.status);
+
+      debug_print("\n---------------------------------------\n");
     }
 
     // The "blink" code is a simple verification of program execution,
