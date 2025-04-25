@@ -252,6 +252,12 @@ void BME_READ(void) {
     bme_set_TPH_default(&bme);
     // Set the heater configuration to 300 deg C for 100ms for Forced mode
     bme_set_heaterprof(&bme, 300, 100);
+
+    // Read sensor id
+    uint8_t sensor_id;
+    bme_read(0xD0, &sensor_id, 4, &hi2c1);
+    debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
+
     // Set to forced mode, which takes a single sample and returns to sleep mode
     bme_set_opmode(&bme, BME68X_FORCED_MODE);
     /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
@@ -260,25 +266,36 @@ void BME_READ(void) {
     int fetch_success = bme_fetch_data(&bme);
     if (fetch_success)
     {
-    printf("Temperature     : %d.%02d°C\r\n",
-        (bme.sensor_data.temperature / 100.0),
-        fmod(bme.sensor_data.temperature, 100.0));
+    // Print raw values
+    debug_print("Raw Temperature     : %d\n", bme.sensor_data.temperature);
+    debug_print("Raw Pressure        : %d\n", bme.sensor_data.pressure);
+    debug_print("Raw Humidity        : %d\n", bme.sensor_data.humidity);
+    debug_print("Raw Gas Resistance  : %d\n", bme.sensor_data.gas_resistance);
 
-    printf("Pressure        : %d Pa\r\n",
-            bme.sensor_data.pressure);
+    // Convert and print the processed values
+    // Temperature: Divide by 100 to get the value in °C with 2 decimal places
+    debug_print("Temperature         : %d.%02d°C\n",
+        (int)(bme.sensor_data.temperature / 100.0f), // Integer part
+        (int)fmod(bme.sensor_data.temperature, 100.0f)); // Fractional part (2 decimal places)
 
-    printf("Humidity        : %d.%03d%%\r\n",
-            (bme.sensor_data.humidity / 1000.0),
-            fmod(bme.sensor_data.humidity, 1000.0));
+    // Pressure: Divide by 100 to get the value in Pa
+    debug_print("Pressure            : %d Pa\n",
+        bme.sensor_data.pressure); 
 
-    printf("Gas Resistance  : %d.%03d kΩ\r\n",
-            (bme.sensor_data.gas_resistance / 1000.0),
-            fmod(bme.sensor_data.gas_resistance, 1000.0));
-            
-    printf("Status          : 0x%X\r\n",
-            bme.sensor_data.status);
+    // Humidity: Divide by 1000 to get the value in % with 3 decimal places
+    debug_print("Humidity            : %d.%03d%%\n",
+        (int)(bme.sensor_data.humidity / 1000.0f), // Integer part
+        (int)fmod(bme.sensor_data.humidity, 1000.0f)); // Fractional part (3 decimal places)
 
-    printf("\n---------------------------------------\n");
+    // Gas Resistance: Convert to kΩ and display with 3 decimal places
+    debug_print("Gas Resistance      : %d.%03d kΩ\n",
+        (int)(bme.sensor_data.gas_resistance / 1000.0f), // Integer part (kΩ)
+        (int)fmod(bme.sensor_data.gas_resistance, 1000.0f)); // Fractional part (milliΩ)
+
+    // Print the status in hexadecimal
+    debug_print("Status              : 0x%X\n", bme.sensor_data.status);
+
+    debug_print("\n---------------------------------------\n");
     }
 
     // The "blink" code is a simple verification of program execution,
