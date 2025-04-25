@@ -229,6 +229,9 @@ void GPS_ReadOnce(void) {
     printf("GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
 }
 
+/* ================================ */
+/*       BME68x Sensor Function     */
+/* ================================ */
 void BME_SensorRead(void) {
     // Create bme interface struct and initialize it
     bme68x_sensor_t bme;
