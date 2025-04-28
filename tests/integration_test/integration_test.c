@@ -15,17 +15,16 @@
 #include "adc.h"
 #include "gpio.h"
 #include "i2c.h"
+#include "logging.h"
 #include "main.h"
 #include "rtc.h"
-#include "usart.h"
 #include "tim.h"
-#include "logging.h"
+#include "usart.h"
 
 /* USER CODE BEGIN Includes */
-#include <math.h>  
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-
 
 //  // APRSlib stuff
 #include "aprs.h"
@@ -36,6 +35,7 @@
 #include "gps_types.h"
 #include "max_m10s.h"
 #include "ubx.h"
+#include "ubx_messages.h"  // for ubx_nav_pvt_s
 
 //  // Include BME Driver
 #include "bme68x_driver.h"
@@ -52,7 +52,7 @@
 #define MCP9808_ADDR (0x18 << 1)       // I2C address of the MCP9808 temperature sensor (shifted for read/write operations)
 #define MCP9808_REG_AMBIENT_TEMP 0x05  // Register for reading the ambient temperature data
 
-#define MAX_M10S_DEFAULT_ADDR (0x42 << 1)  // Default I2C address of the MAX-M10S GPS module (shifted for read/write)
+#define MAX_M10S_DEFAULT_ADDR (0x42)  // Default I2C address of the MAX-M10S GPS module (shifted for read/write)
 #define sec 20
 
 /* USER CODE BEGIN PV */
@@ -84,50 +84,51 @@ PUTCHAR_PROTOTYPE {
 /*       LTR-329 Sensor Functions   */
 /* ================================ */
 /* --- LTR-329 initialization --- */
-static void LTR329_Init(void) {
-    uint8_t data[2];
-    data[0] = LTR329_CONTR;
-    data[1] = 0x01;  // Active mode, gain 1x
-    HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, data, 2, HAL_MAX_DELAY);
+// static void LTR329_Init(void) {
+//     uint8_t data[2];
+//     data[0] = LTR329_CONTR;
+//     data[1] = 0x01;  // Active mode, gain 1x
+//     HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, data, 2, HAL_MAX_DELAY);
 
-    data[0] = LTR329_MEAS_RATE;
-    data[1] = 0x02;  // 2Hz integration, 100ms measurement
-    HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, data, 2, HAL_MAX_DELAY);
+//     data[0] = LTR329_MEAS_RATE;
+//     data[1] = 0x02;  // 2Hz integration, 100ms measurement
+//     HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, data, 2, HAL_MAX_DELAY);
 
-    printf("LTR-329 Initialized!\r\n");
-}
+//     printf("LTR-329 Initialized!\r\n");
+// }
 
-/* --- LTR-329 read ambient light --- */
-static uint16_t LTR329_ReadALS(void) {
-    uint8_t reg = LTR329_DATA_START;
-    uint8_t data[4];
-    HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, &reg, 1, HAL_MAX_DELAY);
-    HAL_I2C_Master_Receive(&hi2c1, LTR329_ADDR, data, 4, HAL_MAX_DELAY);
-    return (uint16_t)((data[1] << 8) | data[0]);
-}
+// /* --- LTR-329 read ambient light --- */
+// static uint16_t LTR329_ReadALS(void) {
+//     uint8_t reg = LTR329_DATA_START;
+//     uint8_t data[4];
+//     HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, &reg, 1, HAL_MAX_DELAY);
+//     HAL_I2C_Master_Receive(&hi2c1, LTR329_ADDR, data, 4, HAL_MAX_DELAY);
+//     return (uint16_t)((data[1] << 8) | data[0]);
+// }
 
 /* ================================ */
 /*       MCP9808 Sensor Functions   */
 /* ================================ */
-/* --- MCP9808 initialization --- */
-static void MCP9808_Init(void) {
-    printf("MCP9808 Initialized!\r\n");
-}
+// /* --- MCP9808 initialization --- */
+// static void MCP9808_Init(void) {
+//     printf("MCP9808 Initialized!\r\n");
+// }
 
-/* --- MCP9808 read temperature in Celsius --- */
-static float MCP9808_ReadTemp(void) {
-    uint8_t reg = MCP9808_REG_AMBIENT_TEMP;
-    uint8_t data[2];
-    HAL_I2C_Master_Transmit(&hi2c1, MCP9808_ADDR, &reg, 1, HAL_MAX_DELAY);
-    HAL_I2C_Master_Receive(&hi2c1, MCP9808_ADDR, data, 2, HAL_MAX_DELAY);
+// /* --- MCP9808 read temperature in Celsius --- */
+// static float MCP9808_ReadTemp(void) {
+//     uint8_t reg = MCP9808_REG_AMBIENT_TEMP;
+//     uint8_t data[2];
+//     HAL_I2C_Master_Transmit(&hi2c1, MCP9808_ADDR, &reg, 1, HAL_MAX_DELAY);
+//     HAL_I2C_Master_Receive(&hi2c1, MCP9808_ADDR, data, 2, HAL_MAX_DELAY);
 
-    uint16_t raw = (data[0] << 8) | data[1];
-    float temperature = (raw & 0x0FFF) / 16.0f;
-    if (raw & 0x1000) {  // negative bit
-        temperature -= 256;
-    }
-    return temperature;
-}
+//     uint16_t raw = (data[0] << 8) | data[1];
+//     float temperature = (raw & 0x0FFF) / 16.0f;
+//     if (raw & 0x1000) {  // negative bit
+//         temperature -= 256;
+//     }
+//     return temperature;
+// }
+
 /* ================================ */
 /*       LED Blinking Functions     */
 /* ================================ */
@@ -212,6 +213,19 @@ void GPS_ReadOnce(void) {
     print_status("PVT validate", status);
     if (status != UBLOX_OK) return;
 
+    // payload starts at buf[6]
+    ubx_nav_pvt_s* pvt = (ubx_nav_pvt_s*)&gps_dev.rx_buffer[6];
+
+    printf("PVT fixType=%u, gnssFixOK=%u, validTime=%u\n",
+           pvt->fixType,
+           pvt->flags.bits.gnssFixOK,
+           pvt->valid.bits.validTime);
+
+    if (pvt->fixType < 2 || !pvt->flags.bits.gnssFixOK) {
+        printf("  No fix yet – waiting for satellites…\r\n");
+        return;
+    }
+
     // — manual parse of lon/lat —
     uint8_t* buf = gps_dev.rx_buffer;
     // Note: payload starts at index 6 of buf.
@@ -223,12 +237,51 @@ void GPS_ReadOnce(void) {
                                 (buf[6 + 29] << 8) |
                                 (buf[6 + 30] << 16) |
                                 (buf[6 + 31] << 24));
-    float lon = lon_raw / 1e7f;
-    float lat = lat_raw / 1e7f;
+    // float lon = lon_raw / 1e7f;
+    // float lat = lat_raw / 1e7f;
 
-    printf("GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
+    // printf("GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
+    // split into degrees + fractional part
+
+    // Float printing was giving me trouble, so this is the workaround for that
+    int32_t lat_deg = lat_raw / 10000000;
+    int32_t lat_rem = abs(lat_raw % 10000000);
+
+    int32_t lon_deg = lon_raw / 10000000;
+    int32_t lon_rem = abs(lon_raw % 10000000);
+
+    // print with integer formatting
+    printf("GPS fix:  Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
+           lat_deg, lat_rem, lon_deg, lon_rem);
 }
 
+//Apparently cold-starts take 30-60s, so we have to wait for the gps module to get a fix
+void wait_for_gps_fix(void) {
+    ubx_nav_pvt_s* pvt;
+
+    // keep asking for a PVT until we have at least a 2D fix
+    do {
+        GPS_ReadOnce();   // send NAV-PVT, read & validate
+        HAL_Delay(1000);  // pause 1 s between tries
+
+        // point at the PVT payload in the buffer
+        pvt = (ubx_nav_pvt_s*)&gps_dev.rx_buffer[6];
+
+        // optional: print out fixType each time to watch progress
+        printf("  fixType=%u, gnssFixOK=%u\n",
+               pvt->fixType,
+               pvt->flags.bits.gnssFixOK);
+
+    } while (pvt->fixType < 2 || !pvt->flags.bits.gnssFixOK);
+
+    // at this point we have a fix, so lat/lon are valid
+    int32_t lat_raw = pvt->lat, lon_raw = pvt->lon;
+    int32_t lat_deg = lat_raw / 10000000, lat_rem = abs(lat_raw % 10000000);
+    int32_t lon_deg = lon_raw / 10000000, lon_rem = abs(lon_raw % 10000000);
+    printf("GPS fix: Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
+           lat_deg, lat_rem,
+           lon_deg, lon_rem);
+}
 /* ================================ */
 /*       BME68x Sensor Function     */
 /* ================================ */
@@ -240,14 +293,11 @@ void BME_SensorRead(void) {
     // Check status, should be 0 for OK
     int bme_status = bme_check_status(&bme);
     {
-        if (bme_status == BME68X_ERROR)
-        {
-        printf("Sensor error:" + bme_status);
-        return BME68X_ERROR;
-        }
-        else if (bme_status == BME68X_WARNING)
-        {
-        printf("Sensor Warning:" + bme_status);
+        if (bme_status == BME68X_ERROR) {
+            printf("Sensor error:" + bme_status);
+            return BME68X_ERROR;
+        } else if (bme_status == BME68X_WARNING) {
+            printf("Sensor Warning:" + bme_status);
         }
     }
     // Set temp, pressure, humidity oversampling configuration
@@ -267,38 +317,37 @@ void BME_SensorRead(void) {
     delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
     // Fetch data
     int fetch_success = bme_fetch_data(&bme);
-    if (fetch_success)
-    {
-    // Print raw values
-    debug_print("Raw Temperature     : %d\n", bme.sensor_data.temperature);
-    debug_print("Raw Pressure        : %d\n", bme.sensor_data.pressure);
-    debug_print("Raw Humidity        : %d\n", bme.sensor_data.humidity);
-    debug_print("Raw Gas Resistance  : %d\n", bme.sensor_data.gas_resistance);
+    if (fetch_success) {
+        // Print raw values
+        debug_print("Raw Temperature     : %d\n", bme.sensor_data.temperature);
+        debug_print("Raw Pressure        : %d\n", bme.sensor_data.pressure);
+        debug_print("Raw Humidity        : %d\n", bme.sensor_data.humidity);
+        debug_print("Raw Gas Resistance  : %d\n", bme.sensor_data.gas_resistance);
 
-    // Convert and print the processed values
-    // Temperature: Divide by 100 to get the value in °C with 2 decimal places
-    debug_print("Temperature         : %d.%02d°C\n",
-        (int)(bme.sensor_data.temperature / 100.0f), // Integer part
-        (int)fmod(bme.sensor_data.temperature, 100.0f)); // Fractional part (2 decimal places)
+        // Convert and print the processed values
+        // Temperature: Divide by 100 to get the value in °C with 2 decimal places
+        debug_print("Temperature         : %d.%02d°C\n",
+                    (int)(bme.sensor_data.temperature / 100.0f),      // Integer part
+                    (int)fmod(bme.sensor_data.temperature, 100.0f));  // Fractional part (2 decimal places)
 
-    // Pressure: Divide by 100 to get the value in Pa
-    debug_print("Pressure            : %d Pa\n",
-        bme.sensor_data.pressure); 
+        // Pressure: Divide by 100 to get the value in Pa
+        debug_print("Pressure            : %d Pa\n",
+                    bme.sensor_data.pressure);
 
-    // Humidity: Divide by 1000 to get the value in % with 3 decimal places
-    debug_print("Humidity            : %d.%03d%%\n",
-        (int)(bme.sensor_data.humidity / 1000.0f), // Integer part
-        (int)fmod(bme.sensor_data.humidity, 1000.0f)); // Fractional part (3 decimal places)
+        // Humidity: Divide by 1000 to get the value in % with 3 decimal places
+        debug_print("Humidity            : %d.%03d%%\n",
+                    (int)(bme.sensor_data.humidity / 1000.0f),      // Integer part
+                    (int)fmod(bme.sensor_data.humidity, 1000.0f));  // Fractional part (3 decimal places)
 
-    // Gas Resistance: Convert to kΩ and display with 3 decimal places
-    debug_print("Gas Resistance      : %d.%03d kΩ\n",
-        (int)(bme.sensor_data.gas_resistance / 1000.0f), // Integer part (kΩ)
-        (int)fmod(bme.sensor_data.gas_resistance, 1000.0f)); // Fractional part (milliΩ)
+        // Gas Resistance: Convert to kΩ and display with 3 decimal places
+        debug_print("Gas Resistance      : %d.%03d kΩ\n",
+                    (int)(bme.sensor_data.gas_resistance / 1000.0f),      // Integer part (kΩ)
+                    (int)fmod(bme.sensor_data.gas_resistance, 1000.0f));  // Fractional part (milliΩ)
 
-    // Print the status in hexadecimal
-    debug_print("Status              : 0x%X\n", bme.sensor_data.status);
+        // Print the status in hexadecimal
+        debug_print("Status              : 0x%X\n", bme.sensor_data.status);
 
-    debug_print("\n---------------------------------------\n");
+        debug_print("\n---------------------------------------\n");
     }
 
     // The "blink" code is a simple verification of program execution,
@@ -330,6 +379,8 @@ void INIT() {
     MX_USART2_UART_Init();
     printf("Initializing I2C...\n");
     MX_I2C1_Init();
+    printf("Scanning i2c bus...\n");
+    i2c_scan();
 
     //  --- GPS init ---
     printf("Initializing GPS...\r\n");
@@ -352,12 +403,9 @@ void INIT() {
 
     HAL_Delay(50);
     MX_TIM2_Init();
-    if (HAL_I2C_IsDeviceReady(&hi2c1, BME68X_ADDR, 3, HAL_MAX_DELAY) == HAL_OK)
-    {
+    if (HAL_I2C_IsDeviceReady(&hi2c1, BME68X_ADDR, 3, HAL_MAX_DELAY) == HAL_OK) {
         printf("Sensor is ready\r\n");
-    }
-    else
-    {
+    } else {
         printf("Sensor not responding\r\n");
     }
     printf("\n--- System Booting Up ---\n");
@@ -439,7 +487,7 @@ void ADC_READ_TEST() {
 int main(void) {
     // Initialize all system peripherals and hardware
     INIT();
-    
+
     HAL_Delay(50);
     HAL_ADCEx_Calibration_Start(&hadc1);  // Calibrate ADC1 (recommended after power-up)
 
@@ -454,10 +502,11 @@ int main(void) {
     // Check if the ADC value is above a pre-defined threshold (good power check)
     if (value_adc > Threshold) {
         // If the voltage is good
-        GPS_ReadOnce();
+        // GPS_ReadOnce();
+        wait_for_gps_fix();
 
         BME_SensorRead();
-        
+
         // Loop waiting for user interaction (button press) to confirm system is ready
         while (1) {
             printf("Waiting for good ADC value (aka button) \n\n");
