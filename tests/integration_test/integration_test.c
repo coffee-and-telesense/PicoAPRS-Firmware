@@ -301,6 +301,7 @@ void wait_for_gps_fix(void) {
 void BME_SensorRead(void) {
     static bme68x_sensor_t bme;               // your “instance” of the sensor
     bme_init(&bme, &hi2c1, &delay_us_timer);  // wire it up to hi2c1 and your delay fn
+    
 
     // Quick status check
     if (bme_check_status(&bme) != BME68X_OK) {
