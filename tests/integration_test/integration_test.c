@@ -55,6 +55,9 @@
 #define MAX_M10S_DEFAULT_ADDR (0x42)  // Default I2C address of the MAX-M10S GPS module (shifted for read/write)
 #define sec 20
 
+#define BME68X_ADDR (0x77 << 1)  // 0xEE
+#define SEALEVEL_PRESSURE 101325
+
 /* USER CODE BEGIN PV */
 volatile uint8_t buttonPressed = 0;  // Flag to indicate if the button has been pressed (1 = pressed, 0 = not pressed)
 volatile uint32_t Threshold = 1000;  // ADC threshold value corresponding to 2.3V (calculated using Vin/Vref * (2^n - 1))
@@ -255,7 +258,7 @@ void GPS_ReadOnce(void) {
            lat_deg, lat_rem, lon_deg, lon_rem);
 }
 
-//Apparently cold-starts take 30-60s, so we have to wait for the gps module to get a fix
+// Apparently cold-starts take 30-60s, so we have to wait for the gps module to get a fix
 void wait_for_gps_fix(void) {
     ubx_nav_pvt_s* pvt;
 
@@ -274,87 +277,151 @@ void wait_for_gps_fix(void) {
 
     } while (pvt->fixType < 2 || !pvt->flags.bits.gnssFixOK);
 
-    // at this point we have a fix, so lat/lon are valid
-    int32_t lat_raw = pvt->lat, lon_raw = pvt->lon;
-    int32_t lat_deg = lat_raw / 10000000, lat_rem = abs(lat_raw % 10000000);
-    int32_t lon_deg = lon_raw / 10000000, lon_rem = abs(lon_raw % 10000000);
-    printf("GPS fix: Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
-           lat_deg, lat_rem,
-           lon_deg, lon_rem);
+    // // at this point we have a fix, so lat/lon are valid
+    // int32_t lat_raw = pvt->lat, lon_raw = pvt->lon;
+    // int32_t lat_deg = lat_raw / 10000000, lat_rem = abs(lat_raw % 10000000);
+    // int32_t lon_deg = lon_raw / 10000000, lon_rem = abs(lon_raw % 10000000);
+    // printf("GPS fix: Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
+    //        lat_deg, lat_rem,
+    //        lon_deg, lon_rem);
 }
 /* ================================ */
 /*       BME68x Sensor Function     */
 /* ================================ */
-void BME_SensorRead(void) {
-    // Create bme interface struct and initialize it
-    bme68x_sensor_t bme;
-    bme_init(&bme, &hi2c1, &delay_us_timer);
 
-    // Check status, should be 0 for OK
-    int bme_status = bme_check_status(&bme);
-    {
-        if (bme_status == BME68X_ERROR) {
-            printf("Sensor error:" + bme_status);
-            return BME68X_ERROR;
-        } else if (bme_status == BME68X_WARNING) {
-            printf("Sensor Warning:" + bme_status);
-        }
+void BME_SensorRead(void) {
+    static bme68x_sensor_t bme;               // your “instance” of the sensor
+    bme_init(&bme, &hi2c1, &delay_us_timer);  // wire it up to hi2c1 and your delay fn
+
+    // Quick status check
+    if (bme_check_status(&bme) != BME68X_OK) {
+        printf("BME68x init failed!\r\n");
+        return;
     }
-    // Set temp, pressure, humidity oversampling configuration
-    // Trying with defaults
+
+    // Configure oversampling: T×2, P×16, H×1 (same as the Arduino defaults)
     bme_set_TPH_default(&bme);
-    // Set the heater configuration to 300 deg C for 100ms for Forced mode
+
+    // Set up the heater for a single forced‐mode cycle (300 °C for 100 ms)
     bme_set_heaterprof(&bme, 300, 100);
 
-    // Read sensor id
-    uint8_t sensor_id;
-    bme_read(0xD0, &sensor_id, 4, &hi2c1);
-    debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
-
-    // Set to forced mode, which takes a single sample and returns to sleep mode
+    // Trigger one forced measurement
     bme_set_opmode(&bme, BME68X_FORCED_MODE);
-    /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
-    delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
-    // Fetch data
-    int fetch_success = bme_fetch_data(&bme);
-    if (fetch_success) {
-        // Print raw values
-        debug_print("Raw Temperature     : %d\n", bme.sensor_data.temperature);
-        debug_print("Raw Pressure        : %d\n", bme.sensor_data.pressure);
-        debug_print("Raw Humidity        : %d\n", bme.sensor_data.humidity);
-        debug_print("Raw Gas Resistance  : %d\n", bme.sensor_data.gas_resistance);
 
-        // Convert and print the processed values
-        // Temperature: Divide by 100 to get the value in °C with 2 decimal places
-        debug_print("Temperature         : %d.%02d°C\n",
-                    (int)(bme.sensor_data.temperature / 100.0f),      // Integer part
-                    (int)fmod(bme.sensor_data.temperature, 100.0f));  // Fractional part (2 decimal places)
+    // Wait the required duration (driver gives you µs)
+    uint32_t wait_us = bme_get_meas_dur(&bme, BME68X_FORCED_MODE);
+    HAL_Delay((wait_us + 999) / 1000);  // round up to ms
 
-        // Pressure: Divide by 100 to get the value in Pa
-        debug_print("Pressure            : %d Pa\n",
-                    bme.sensor_data.pressure);
-
-        // Humidity: Divide by 1000 to get the value in % with 3 decimal places
-        debug_print("Humidity            : %d.%03d%%\n",
-                    (int)(bme.sensor_data.humidity / 1000.0f),      // Integer part
-                    (int)fmod(bme.sensor_data.humidity, 1000.0f));  // Fractional part (3 decimal places)
-
-        // Gas Resistance: Convert to kΩ and display with 3 decimal places
-        debug_print("Gas Resistance      : %d.%03d kΩ\n",
-                    (int)(bme.sensor_data.gas_resistance / 1000.0f),      // Integer part (kΩ)
-                    (int)fmod(bme.sensor_data.gas_resistance, 1000.0f));  // Fractional part (milliΩ)
-
-        // Print the status in hexadecimal
-        debug_print("Status              : 0x%X\n", bme.sensor_data.status);
-
-        debug_print("\n---------------------------------------\n");
+    // Fetch the data
+    uint8_t n_fields = bme_fetch_data(&bme);
+    if (n_fields == 0) {
+        printf("No new data from BME68x\n");
+        return;
     }
 
-    // The "blink" code is a simple verification of program execution,
-    // separate from the BME68x sensor testing above
-    HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
-    HAL_Delay(1000);
+    // it still doesn't print floats
+    //  float T = bme.sensor_data.temperature;     // °C
+    //  float P = bme.sensor_data.pressure;        // Pa
+    //  float H = bme.sensor_data.humidity;        // %RH (or %RH×1000—check your API)
+    //  float G = bme.sensor_data.gas_resistance;  // Ω
+
+    // // If humidity is in ‰ (x1000), divide by 1000.0f to get percent:
+    // printf("BME68x: T=%.2f °C, P=%.0f Pa, H=%.3f %%, G=%.0f Ω\r\n",
+    //        T,
+    //        P,
+    //        H / 1000.0f,
+    //        G);
+
+    // but ints work
+    int32_t rawT = bme.sensor_data.temperature;     // e.g. 2236  => 22.36 °C
+    int32_t rawP = bme.sensor_data.pressure;        // e.g. 101325
+    int32_t rawH = bme.sensor_data.humidity;        // e.g. 45123 => 45.123 %
+    int32_t rawG = bme.sensor_data.gas_resistance;  // e.g. 12000 Ω
+
+    //the whole altitude thing is weird. it works better outside
+    //I'll leave the code in here since it's not breaking anything anyways.
+    float altitude = 44330.0f * (1.0f - powf((float)rawP / SEALEVEL_PRESSURE, 0.1902949f));
+    // round to nearest meter:
+    long alt_int = (long)lroundf(altitude);
+
+    printf("BME68x: T=%ld.%02ld°C, P=%ldPa, H=%ld.%03ld%%, G=%ldΩ, Alt=%ldm\n",
+           rawT / 100, abs(rawT % 100),
+           rawP,
+           rawH / 1000, abs(rawH % 1000),
+           rawG,
+           alt_int);
 }
+
+// void BME_SensorRead(void) {
+//     // Create bme interface struct and initialize it
+//     bme68x_sensor_t bme;
+//     bme_init(&bme, &hi2c1, &delay_us_timer);
+
+//     // Check status, should be 0 for OK
+//     int bme_status = bme_check_status(&bme);
+//     {
+//         if (bme_status == BME68X_ERROR) {
+//             printf("Sensor error:" + bme_status);
+//             return BME68X_ERROR;
+//         } else if (bme_status == BME68X_WARNING) {
+//             printf("Sensor Warning:" + bme_status);
+//         }
+//     }
+//     // Set temp, pressure, humidity oversampling configuration
+//     // Trying with defaults
+//     bme_set_TPH_default(&bme);
+//     // Set the heater configuration to 300 deg C for 100ms for Forced mode
+//     bme_set_heaterprof(&bme, 300, 100);
+
+//     // Read sensor id
+//     uint8_t sensor_id;
+//     bme_read(0xD0, &sensor_id, 4, &hi2c1);
+//     debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
+
+//     // Set to forced mode, which takes a single sample and returns to sleep mode
+//     bme_set_opmode(&bme, BME68X_FORCED_MODE);
+//     /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
+//     delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
+//     // Fetch data
+//     int fetch_success = bme_fetch_data(&bme);
+//     if (fetch_success) {
+//         // Print raw values
+//         debug_print("Raw Temperature     : %d\n", bme.sensor_data.temperature);
+//         debug_print("Raw Pressure        : %d\n", bme.sensor_data.pressure);
+//         debug_print("Raw Humidity        : %d\n", bme.sensor_data.humidity);
+//         debug_print("Raw Gas Resistance  : %d\n", bme.sensor_data.gas_resistance);
+
+//         // Convert and print the processed values
+//         // Temperature: Divide by 100 to get the value in °C with 2 decimal places
+//         debug_print("Temperature         : %d.%02d°C\n",
+//                     (int)(bme.sensor_data.temperature / 100.0f),      // Integer part
+//                     (int)fmod(bme.sensor_data.temperature, 100.0f));  // Fractional part (2 decimal places)
+
+//         // Pressure: Divide by 100 to get the value in Pa
+//         debug_print("Pressure            : %d Pa\n",
+//                     bme.sensor_data.pressure);
+
+//         // Humidity: Divide by 1000 to get the value in % with 3 decimal places
+//         debug_print("Humidity            : %d.%03d%%\n",
+//                     (int)(bme.sensor_data.humidity / 1000.0f),      // Integer part
+//                     (int)fmod(bme.sensor_data.humidity, 1000.0f));  // Fractional part (3 decimal places)
+
+//         // Gas Resistance: Convert to kΩ and display with 3 decimal places
+//         debug_print("Gas Resistance      : %d.%03d kΩ\n",
+//                     (int)(bme.sensor_data.gas_resistance / 1000.0f),      // Integer part (kΩ)
+//                     (int)fmod(bme.sensor_data.gas_resistance, 1000.0f));  // Fractional part (milliΩ)
+
+//         // Print the status in hexadecimal
+//         debug_print("Status              : 0x%X\n", bme.sensor_data.status);
+
+//         debug_print("\n---------------------------------------\n");
+//     }
+
+//     // The "blink" code is a simple verification of program execution,
+//     // separate from the BME68x sensor testing above
+//     HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
+//     HAL_Delay(1000);
+// }
 
 /* ================================ */
 /*       System Initialization      */
@@ -504,7 +571,7 @@ int main(void) {
         // If the voltage is good
         // GPS_ReadOnce();
         wait_for_gps_fix();
-
+        printf("back in main(), now calling BME_SensorRead()\r\n");
         BME_SensorRead();
 
         // Loop waiting for user interaction (button press) to confirm system is ready

@@ -29,6 +29,6 @@ add_subdirectory(libs/ax25)
 
 # Add tests
 #add_subdirectory(tests/gps_simple_test)
-#add_subdirectory(tests/integration_test)
+add_subdirectory(tests/integration_test)
 #add_subdirectory(tests/test_aprs)
-add_subdirectory(tests/test_bme688)
+#add_subdirectory(tests/test_bme688)

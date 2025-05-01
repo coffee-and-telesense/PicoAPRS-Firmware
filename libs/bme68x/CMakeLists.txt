@@ -9,6 +9,11 @@ add_library(bme68x STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/bme68x.c
 )
 
+target_compile_definitions(bme68x PUBLIC
+    BME68X_DO_NOT_USE_FPU
+    $<$<CONFIG:Debug>:DEBUG>
+)
+
 # Define include directories
 target_include_directories(bme68x PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
