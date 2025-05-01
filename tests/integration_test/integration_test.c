@@ -542,9 +542,10 @@ void ADC_READ_TEST() {
     value_adc = HAL_ADC_GetValue(&hadc1);  // Read the converted value (last result stored in register)
     HAL_ADC_Stop(&hadc1);                  // Stop the ADC after reading (optional in single conversion mode, but good practice)
 
+    // Actual voltage value = (ADC_VAL / (2^n - 1)) * Vref
     // Print the current ADC value and the threshold value to UART (debugging output)
-    printf("\nvalue_adc = %lu\nThreshold = %lu\n\n",
-           value_adc, Threshold);
+    printf("ADC Raw Value: %lu\n", value_adc);
+    printf("Threshold:     %lu\n\n", Threshold);
 
     HAL_Delay(2000);  // Delay to allow some time before next reading (optional for testing)
 }
