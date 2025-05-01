@@ -439,7 +439,7 @@ void BME_SensorRead(void) {
 
 /* --- Initialize system and peripherals --- */
 void INIT() {
-    printf("Initializing HAL...\n");
+    printf("\nInitializing HAL...\n");
     HAL_Init();
     printf("Initializing RTC...\n");
     MX_RTC_Init();
@@ -454,7 +454,7 @@ void INIT() {
     MX_ADC1_Init();
     printf("Initializing USART...\n");
     MX_USART2_UART_Init();
-    printf("Initializing I2C...\n");
+    printf("\nInitializing I2C...\n");
     MX_I2C1_Init();
     printf("Scanning i2c bus...\n");
     i2c_scan();
@@ -538,6 +538,7 @@ void Enter_Standby_Mode() {
     printf("Wakeup Timer Set.\n");
     printf("Configuring Timer to %ds...\n", sec);
     printf("Entering Standby Mode...\n");
+    printf("-----------------------------------------------\n\n");
     HAL_PWR_EnterSTANDBYMode();
     printf("This should never be printed unless standby mode fails.\n");
 }
@@ -585,9 +586,10 @@ int main(void) {
         printf("back in main(), now calling BME_SensorRead()\r\n");
         BME_SensorRead();
 
+        printf("Waiting for good ADC value (aka button) \n\n");
         // Loop waiting for user interaction (button press) to confirm system is ready
         while (1) {
-            printf("Waiting for good ADC value (aka button) \n\n");
+            
             HAL_Delay(2000);
 
             // Check if the button was pressed (set by external interrupt callback)

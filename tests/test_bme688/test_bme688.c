@@ -112,7 +112,7 @@ int main(void)
   uint8_t n_fields = bme_fetch_data(&bme);
   if (n_fields == 0) {
     debug_print("No new data from BME68x\n");
-      return;
+    return;
   }
 
   // it still doesn't print floats
@@ -146,8 +146,9 @@ int main(void)
          rawH / 1000, abs(rawH % 1000),
          rawG,
          alt_int);
-  HAL_Delay(6000);
-  debug_print("End of code\n");
+  HAL_Delay(5000);
+  
+  // debug_print("End of code\n");
   }
   return 0;
 }
