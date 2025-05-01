@@ -354,7 +354,7 @@ void BME_SensorRead(void) {
     // round to nearest meter:
     long alt_int = (long)lroundf(altitude);
 
-    printf("BME68x: T=%ld.%02ld°C, P=%ldPa, H=%ld.%03ld%%, G=%ldΩ, Alt=%ldm\n",
+    printf("BME68x: T=%ld.%02ld °C, P=%ld Pa, H=%ld.%02ld%%, G=%ld Ω, Alt=%ld m\n",
            rawT / 100, abs(rawT % 100),
            rawP,
            rawH / 1000, abs(rawH % 1000),
