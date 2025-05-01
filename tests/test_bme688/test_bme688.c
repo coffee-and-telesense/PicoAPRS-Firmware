@@ -140,7 +140,7 @@ int main(void)
   // round to nearest meter:
   long alt_int = (long)lroundf(altitude);
 
-  debug_print("BME68x: T=%ld.%02ld°C, P=%ldPa, H=%ld.%03ld%%, G=%ldΩ, Alt=%ldm\n",
+  debug_print("BME68x: T=%ld.%02ld°C, P=%ldPa, H=%ld.%02ld%%, G=%ldΩ, Alt=%ldm\n",
          rawT / 100, abs(rawT % 100),
          rawP,
          rawH / 1000, abs(rawH % 1000),
