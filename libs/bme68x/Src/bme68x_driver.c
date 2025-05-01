@@ -105,84 +105,54 @@ uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode) {
     return bme68x_get_meas_dur(opmode, &bme->conf, &bme->device);
 }
 
-// /** Implements the default microsecond delay callback */
-// int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)
-// {
-//   // Cast the I2C handle back to the correct type
-//   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;
+/** Implements the default microsecond delay callback */
+int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)
+{
+  // Cast the I2C handle back to the correct type
+  I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;
 
-//   // For multi-byte writes, we need pairs of register addresses and data,
-//   // since the sensor does *not* auto-increment for multi-byte writes.
-//   // Create a buffer with enough space for all register/data pairs
-//   uint8_t buffer[length * 2];
+  // For multi-byte writes, we need pairs of register addresses and data,
+  // since the sensor does *not* auto-increment for multi-byte writes.
+  // Create a buffer with enough space for all register/data pairs
+  uint8_t buffer[length * 2];
 
-//   // Fill the buffer with register/data pairs
-//   /** @todo: Determine max size needed for this buffer */
-//   for (uint16_t i = 0; i < length; i++)
-//   {
-//     buffer[i * 2] = reg_addr + i;
-//     buffer[i * 2 + 1] = reg_data[i];
-//   }
+  // Fill the buffer with register/data pairs
+  /** @todo: Determine max size needed for this buffer */
+  for (uint16_t i = 0; i < length; i++)
+  {
+    buffer[i * 2] = reg_addr + i;
+    buffer[i * 2 + 1] = reg_data[i];
+  }
 
-//   // Transmit all register/data pairs in a single transaction
-//   if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, buffer, length * 2, HAL_MAX_DELAY) != HAL_OK)
-//   {
-//     // Error in transmission
-//     return -1;
-//   }
+  // Transmit all register/data pairs in a single transaction
+  if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, buffer, length * 2, HAL_MAX_DELAY) != HAL_OK)
+  {
+    // Error in transmission
+    return -1;
+  }
 
-//   // Return 0 on success
-//   return 0;
-// }
-
-// /** Implements the default microsecond delay callback */
-// int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
-// {
-//   // Cast the I2C handle back to the correct type
-//   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;
-
-//   /** @todo: Consider using HAL_I2C_Mem_Read in a single transaction */
-//   // Send the register address (1 byte)
-//   if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, &reg_addr, 1, HAL_MAX_DELAY) != HAL_OK)
-//   {
-//     // Error in transmitting register address
-//     return -1;
-//   }
-
-//   // Read the requested number of bytes
-//   // The sensor auto-increments for I2C reads
-//   if (HAL_I2C_Master_Receive(i2c_handle, BME68X_ADDR, reg_data, length, HAL_MAX_DELAY) != HAL_OK)
-//   {
-//     // Error in reading data
-//     return -1;
-//   }
-
-int8_t bme_write(uint8_t reg_addr,
-                 const uint8_t *reg_data,
-                 uint32_t length,
-                 void *intf_ptr) {
-    HAL_StatusTypeDef r = HAL_I2C_Mem_Write(
-        (I2C_HandleTypeDef *)intf_ptr,
-        BME68X_ADDR,  // 0xEE if you’re using (0x77<<1)
-        reg_addr,
-        I2C_MEMADD_SIZE_8BIT,
-        (uint8_t *)reg_data,
-        length,
-        HAL_MAX_DELAY);
-    return (r == HAL_OK ? 0 : -1);
+  // Return 0 on success
+  return 0;
 }
 
-int8_t bme_read(uint8_t reg_addr,
-                uint8_t *reg_data,
-                uint32_t length,
-                void *intf_ptr) {
-    HAL_StatusTypeDef r = HAL_I2C_Mem_Read(
-        (I2C_HandleTypeDef *)intf_ptr,
-        BME68X_ADDR,
-        reg_addr,
-        I2C_MEMADD_SIZE_8BIT,
-        reg_data,
-        length,
-        HAL_MAX_DELAY);
-    return (r == HAL_OK ? 0 : -1);
-}
+/** Implements the default microsecond delay callback */
+int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
+{
+  // Cast the I2C handle back to the correct type
+  I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;
+
+  /** @todo: Consider using HAL_I2C_Mem_Read in a single transaction */
+  // Send the register address (1 byte)
+  if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, &reg_addr, 1, HAL_MAX_DELAY) != HAL_OK)
+  {
+    // Error in transmitting register address
+    return -1;
+  }
+
+  // Read the requested number of bytes
+  // The sensor auto-increments for I2C reads
+  if (HAL_I2C_Master_Receive(i2c_handle, BME68X_ADDR, reg_data, length, HAL_MAX_DELAY) != HAL_OK)
+  {
+    // Error in reading data
+    return -1;
+  }
