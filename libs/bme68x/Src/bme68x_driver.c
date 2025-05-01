@@ -156,3 +156,4 @@ int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf
     // Error in reading data
     return -1;
   }
+}
