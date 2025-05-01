@@ -261,8 +261,9 @@ void GPS_ReadOnce(void) {
 // Apparently cold-starts take 30-60s, so we have to wait for the gps module to get a fix
 void wait_for_gps_fix(void) {
     ubx_nav_pvt_s* pvt;
+    const int max_attempts = 5;
+    int attempt = 0;
 
-    // keep asking for a PVT until we have at least a 2D fix
     do {
         GPS_ReadOnce();   // send NAV-PVT, read & validate
         HAL_Delay(1000);  // pause 1 s between tries
@@ -270,12 +271,20 @@ void wait_for_gps_fix(void) {
         // point at the PVT payload in the buffer
         pvt = (ubx_nav_pvt_s*)&gps_dev.rx_buffer[6];
 
-        // optional: print out fixType each time to watch progress
-        printf("  fixType=%u, gnssFixOK=%u\n",
+        // optional debug:
+        printf("  try %d: fixType=%u, gnssFixOK=%u\n",
+               attempt + 1,
                pvt->fixType,
                pvt->flags.bits.gnssFixOK);
 
-    } while (pvt->fixType < 2 || !pvt->flags.bits.gnssFixOK);
+        attempt++;
+    } while (attempt < max_attempts &&
+             (pvt->fixType < 2 || !pvt->flags.bits.gnssFixOK));
+
+    if (pvt->fixType < 2 || !pvt->flags.bits.gnssFixOK) {
+        printf("GPS fix failed after %d attempts\n", max_attempts);
+        return;
+    }
 
     // // at this point we have a fix, so lat/lon are valid
     // int32_t lat_raw = pvt->lat, lon_raw = pvt->lon;
@@ -338,8 +347,8 @@ void BME_SensorRead(void) {
     int32_t rawH = bme.sensor_data.humidity;        // e.g. 45123 => 45.123 %
     int32_t rawG = bme.sensor_data.gas_resistance;  // e.g. 12000 Ω
 
-    //the whole altitude thing is weird. it works better outside
-    //I'll leave the code in here since it's not breaking anything anyways.
+    // the whole altitude thing is weird. it works better outside
+    // I'll leave the code in here since it's not breaking anything anyways.
     float altitude = 44330.0f * (1.0f - powf((float)rawP / SEALEVEL_PRESSURE, 0.1902949f));
     // round to nearest meter:
     long alt_int = (long)lroundf(altitude);
