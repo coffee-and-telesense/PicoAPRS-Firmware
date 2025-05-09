@@ -72,6 +72,17 @@ char aprsFrame[100];  // APRS Frame array
 static max_m10s_dev_s gps_dev;
 static max_m10s_init_s gps_init;
 
+// APRS input values
+uint8_t analogValues[5][5] = {
+    "001,",
+    "002,",
+    "003,",
+    "004,",
+    "005,"
+};
+char *digitalValue = "00001100";
+char *comment = "hello!";
+
 /* ================================ */
 /*          Helper Functions        */
 /* ================================ */
@@ -83,54 +94,6 @@ PUTCHAR_PROTOTYPE {
     return ch;
 }
 
-/* ================================ */
-/*       LTR-329 Sensor Functions   */
-/* ================================ */
-/* --- LTR-329 initialization --- */
-// static void LTR329_Init(void) {
-//     uint8_t data[2];
-//     data[0] = LTR329_CONTR;
-//     data[1] = 0x01;  // Active mode, gain 1x
-//     HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, data, 2, HAL_MAX_DELAY);
-
-//     data[0] = LTR329_MEAS_RATE;
-//     data[1] = 0x02;  // 2Hz integration, 100ms measurement
-//     HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, data, 2, HAL_MAX_DELAY);
-
-//     printf("LTR-329 Initialized!\r\n");
-// }
-
-// /* --- LTR-329 read ambient light --- */
-// static uint16_t LTR329_ReadALS(void) {
-//     uint8_t reg = LTR329_DATA_START;
-//     uint8_t data[4];
-//     HAL_I2C_Master_Transmit(&hi2c1, LTR329_ADDR, &reg, 1, HAL_MAX_DELAY);
-//     HAL_I2C_Master_Receive(&hi2c1, LTR329_ADDR, data, 4, HAL_MAX_DELAY);
-//     return (uint16_t)((data[1] << 8) | data[0]);
-// }
-
-/* ================================ */
-/*       MCP9808 Sensor Functions   */
-/* ================================ */
-// /* --- MCP9808 initialization --- */
-// static void MCP9808_Init(void) {
-//     printf("MCP9808 Initialized!\r\n");
-// }
-
-// /* --- MCP9808 read temperature in Celsius --- */
-// static float MCP9808_ReadTemp(void) {
-//     uint8_t reg = MCP9808_REG_AMBIENT_TEMP;
-//     uint8_t data[2];
-//     HAL_I2C_Master_Transmit(&hi2c1, MCP9808_ADDR, &reg, 1, HAL_MAX_DELAY);
-//     HAL_I2C_Master_Receive(&hi2c1, MCP9808_ADDR, data, 2, HAL_MAX_DELAY);
-
-//     uint16_t raw = (data[0] << 8) | data[1];
-//     float temperature = (raw & 0x0FFF) / 16.0f;
-//     if (raw & 0x1000) {  // negative bit
-//         temperature -= 256;
-//     }
-//     return temperature;
-// }
 
 /* ================================ */
 /*       LED Blinking Functions     */
@@ -166,38 +129,7 @@ static void print_status(const char* message, gps_status_e status) {
     }
     printf("%s: %s (0x%02X)\r\n", message, status_str, status);
 }
-// === 1) Define a one‐shot GPS read function ===
-// void GPS_ReadOnce(void) {
-//     gps_status_e status;
 
-//     // 1a) send the PVT command
-//     status = max_m10s_command(&gps_dev, GPS_CMD_PVT);
-//     print_status("PVT cmd", status);
-//     if (status != UBLOX_OK) return;
-
-//     // 1b) small pause to let the module prep its data
-//     HAL_Delay(100);
-
-//     // 1c) read the response
-//     status = max_m10s_read(&gps_dev);
-//     print_status("PVT read", status);
-//     if (status != UBLOX_OK) return;
-
-//     // 1d) validate it
-//     status = max_m10s_validate_response(&gps_dev, GPS_CMD_PVT);
-//     print_status("PVT validate", status);
-//     if (status != UBLOX_OK) return;
-
-//     // 1e) parse UBX‐PVT into a struct
-//     gps_pvt_data_t pvt;
-//     if (ubx_parse_gps_pvt(gps_dev.rx_buffer, gps_dev.rx_size, &pvt) == UBLOX_OK) {
-//         float lat = pvt.lat / 1e7f;
-//         float lon = pvt.lon / 1e7f;
-//         printf("↳ GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
-//     } else {
-//         printf("↳ PVT parse error\r\n");
-//     }
-// }
 void GPS_ReadOnce(void) {
     gps_status_e status;
 
@@ -240,11 +172,7 @@ void GPS_ReadOnce(void) {
                                 (buf[6 + 29] << 8) |
                                 (buf[6 + 30] << 16) |
                                 (buf[6 + 31] << 24));
-    // float lon = lon_raw / 1e7f;
-    // float lat = lat_raw / 1e7f;
-
-    // printf("GPS fix:  Lat=%.7f°, Lon=%.7f°\r\n", lat, lon);
-    // split into degrees + fractional part
+    
 
     // Float printing was giving me trouble, so this is the workaround for that
     int32_t lat_deg = lat_raw / 10000000;
@@ -286,13 +214,7 @@ void wait_for_gps_fix(void) {
         return;
     }
 
-    // // at this point we have a fix, so lat/lon are valid
-    // int32_t lat_raw = pvt->lat, lon_raw = pvt->lon;
-    // int32_t lat_deg = lat_raw / 10000000, lat_rem = abs(lat_raw % 10000000);
-    // int32_t lon_deg = lon_raw / 10000000, lon_rem = abs(lon_raw % 10000000);
-    // printf("GPS fix: Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
-    //        lat_deg, lat_rem,
-    //        lon_deg, lon_rem);
+
 }
 /* ================================ */
 /*       BME68x Sensor Function     */
@@ -329,18 +251,6 @@ void BME_SensorRead(void) {
         return;
     }
 
-    // it still doesn't print floats
-    //  float T = bme.sensor_data.temperature;     // °C
-    //  float P = bme.sensor_data.pressure;        // Pa
-    //  float H = bme.sensor_data.humidity;        // %RH (or %RH×1000—check your API)
-    //  float G = bme.sensor_data.gas_resistance;  // Ω
-
-    // // If humidity is in ‰ (x1000), divide by 1000.0f to get percent:
-    // printf("BME68x: T=%.2f °C, P=%.0f Pa, H=%.3f %%, G=%.0f Ω\r\n",
-    //        T,
-    //        P,
-    //        H / 1000.0f,
-    //        G);
 
     // but ints work
     int32_t rawT = bme.sensor_data.temperature;     // e.g. 2236  => 22.36 °C
@@ -362,76 +272,7 @@ void BME_SensorRead(void) {
            alt_int);
 }
 
-// void BME_SensorRead(void) {
-//     // Create bme interface struct and initialize it
-//     bme68x_sensor_t bme;
-//     bme_init(&bme, &hi2c1, &delay_us_timer);
 
-//     // Check status, should be 0 for OK
-//     int bme_status = bme_check_status(&bme);
-//     {
-//         if (bme_status == BME68X_ERROR) {
-//             printf("Sensor error:" + bme_status);
-//             return BME68X_ERROR;
-//         } else if (bme_status == BME68X_WARNING) {
-//             printf("Sensor Warning:" + bme_status);
-//         }
-//     }
-//     // Set temp, pressure, humidity oversampling configuration
-//     // Trying with defaults
-//     bme_set_TPH_default(&bme);
-//     // Set the heater configuration to 300 deg C for 100ms for Forced mode
-//     bme_set_heaterprof(&bme, 300, 100);
-
-//     // Read sensor id
-//     uint8_t sensor_id;
-//     bme_read(0xD0, &sensor_id, 4, &hi2c1);
-//     debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
-
-//     // Set to forced mode, which takes a single sample and returns to sleep mode
-//     bme_set_opmode(&bme, BME68X_FORCED_MODE);
-//     /** @todo: May adjust the specific timing function called here, but it should be based on bme_get_meas_dur */
-//     delay_us_timer(bme_get_meas_dur(&bme, BME68X_SLEEP_MODE), &hi2c1);
-//     // Fetch data
-//     int fetch_success = bme_fetch_data(&bme);
-//     if (fetch_success) {
-//         // Print raw values
-//         debug_print("Raw Temperature     : %d\n", bme.sensor_data.temperature);
-//         debug_print("Raw Pressure        : %d\n", bme.sensor_data.pressure);
-//         debug_print("Raw Humidity        : %d\n", bme.sensor_data.humidity);
-//         debug_print("Raw Gas Resistance  : %d\n", bme.sensor_data.gas_resistance);
-
-//         // Convert and print the processed values
-//         // Temperature: Divide by 100 to get the value in °C with 2 decimal places
-//         debug_print("Temperature         : %d.%02d°C\n",
-//                     (int)(bme.sensor_data.temperature / 100.0f),      // Integer part
-//                     (int)fmod(bme.sensor_data.temperature, 100.0f));  // Fractional part (2 decimal places)
-
-//         // Pressure: Divide by 100 to get the value in Pa
-//         debug_print("Pressure            : %d Pa\n",
-//                     bme.sensor_data.pressure);
-
-//         // Humidity: Divide by 1000 to get the value in % with 3 decimal places
-//         debug_print("Humidity            : %d.%03d%%\n",
-//                     (int)(bme.sensor_data.humidity / 1000.0f),      // Integer part
-//                     (int)fmod(bme.sensor_data.humidity, 1000.0f));  // Fractional part (3 decimal places)
-
-//         // Gas Resistance: Convert to kΩ and display with 3 decimal places
-//         debug_print("Gas Resistance      : %d.%03d kΩ\n",
-//                     (int)(bme.sensor_data.gas_resistance / 1000.0f),      // Integer part (kΩ)
-//                     (int)fmod(bme.sensor_data.gas_resistance, 1000.0f));  // Fractional part (milliΩ)
-
-//         // Print the status in hexadecimal
-//         debug_print("Status              : 0x%X\n", bme.sensor_data.status);
-
-//         debug_print("\n---------------------------------------\n");
-//     }
-
-//     // The "blink" code is a simple verification of program execution,
-//     // separate from the BME68x sensor testing above
-//     HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
-//     HAL_Delay(1000);
-// }
 
 /* ================================ */
 /*       System Initialization      */
@@ -561,6 +402,24 @@ void ADC_READ_TEST() {
     HAL_Delay(2000);  // Delay to allow some time before next reading (optional for testing)
 }
 
+void APRS_CreatePacket(uint8_t *analogValues, char *digitalValue, char *comment){
+    telemetryInfoFrame *tFrame = initTFrame();
+    updateTelemData(tFrame, analogValues,(uint8_t*) digitalValue, comment);
+    concatTelemData(tFrame);
+
+    //wrap aprs packet in ax25 packet
+    ax25Frame *frame = initFrame(tFrame->tData, tFrame->tDataSize);
+    encodedAx25Frame encodedFrame = processFrameVerbose(frame);
+    
+
+    //clean up
+    freeFrames(tFrame, NULL, NULL, NULL, NULL, &encodedFrame);
+    
+    //blinky
+    HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
+   
+    HAL_Delay(10000);
+}
 /* USER CODE BEGIN 4 */
 
 int main(void) {
@@ -585,25 +444,7 @@ int main(void) {
         wait_for_gps_fix();
         printf("back in main(), now calling BME_SensorRead()\r\n");
         BME_SensorRead();
-
-        printf("Waiting for good ADC value (aka button) \n\n");
-        // Loop waiting for user interaction (button press) to confirm system is ready
-        while (1) {
-            
-            HAL_Delay(2000);
-
-            // Check if the button was pressed (set by external interrupt callback)
-            if (buttonPressed == 1) {
-                // Confirm good capacitor values via button press
-                printf("Capacitor values are good! (Button Pressed!)\n");
-                HAL_Delay(1000);
-
-                // Clear the button press flag
-                buttonPressed = 0;
-                break;  // Exit the while loop
-            }
-        }
-
+        APRS_CreatePacket(analogValues, &digitalValue, &comment);
         // Indicate system is entering standby mode
         Enter_Standby_Mode();
     }

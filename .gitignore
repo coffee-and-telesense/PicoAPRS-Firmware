@@ -5,3 +5,4 @@
 *.o
 *compile_commands.json
 *CmakeFiles
+*ninja
