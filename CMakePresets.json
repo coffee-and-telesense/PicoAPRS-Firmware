@@ -55,6 +55,11 @@
         {
             "name": "MinSizeRel",
             "configurePreset": "MinSizeRel"
+        },
+        {
+            "name": "test_bme688",
+            "description": "Test application for the BME688 sensor",
+            "displayName": "Test BME68x"
         }
     ]
 }
