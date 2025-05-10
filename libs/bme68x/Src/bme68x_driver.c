@@ -149,8 +149,25 @@ int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, voi
   return 0;
 }
 
-/** Implements the default microsecond delay callback */
-int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
+/** Implements the default I2C read transaction */
+int8_t bme_read(uint8_t reg_addr,
+                uint8_t *reg_data,
+                uint32_t length,
+                void *intf_ptr)
+{
+  HAL_StatusTypeDef r = HAL_I2C_Mem_Read(
+      (I2C_HandleTypeDef *)intf_ptr,
+      BME68X_ADDR,
+      reg_addr,
+      I2C_MEMADD_SIZE_8BIT,
+      reg_data,
+      length,
+      HAL_MAX_DELAY);
+  return (r == HAL_OK ? 0 : -1);
+}
+
+/** Read directly from the sensor without touching Bosch-provided code */
+int8_t bme_read_direct(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
 {
   // Cast the I2C handle back to the correct type
   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;

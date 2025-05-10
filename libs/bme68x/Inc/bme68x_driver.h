@@ -204,6 +204,20 @@ int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, voi
 int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
 
 /**
+ * @brief Read directly from the sensor without touching Bosch-provided code
+ *
+ * This function is intended for usage outside of the bme68x_dev device struct.
+ * It may be used to read directly instead of through the Bosch-provided code.
+ *
+ * @param[in] reg_addr Register address of the sensor
+ * @param[in] reg_data Pointer to the data to write the sensor value to
+ * @param[in] length Length of the transfer
+ * @param[in] i2c_handle Pointer to the stm32 I2C peripheral handle
+ * @return 0 if successful, non-zero otherwise
+ */
+int8_t bme_read_direct(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
+
+/**
  * @example main.c
  *
  * Example usage of the BME68x sensor driver.
