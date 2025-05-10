@@ -6,7 +6,7 @@ set(PROJECT_NAME "test_bme688")
 include(${CMAKE_SOURCE_DIR}/../../cmake/test_config.cmake)
 
 # Set the target MCU - this is the only line users need to change
-set(TARGET_MCU "STM32L476RG")
+set(TARGET_MCU "STM32U083RC")
 
 # Setup compiler settings
 set(CMAKE_C_STANDARD 11)
