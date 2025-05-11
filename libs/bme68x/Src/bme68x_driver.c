@@ -119,8 +119,25 @@ uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode)
   return bme68x_get_meas_dur(opmode, &bme->conf, &bme->device);
 }
 
-/** Implements the default microsecond delay callback */
-int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)
+/** Implements the default I2C write transaction */
+int8_t bme_write(uint8_t reg_addr,
+                 const uint8_t *reg_data,
+                 uint32_t length,
+                 void *intf_ptr)
+{
+  HAL_StatusTypeDef r = HAL_I2C_Mem_Write(
+      (I2C_HandleTypeDef *)intf_ptr,
+      BME68X_ADDR, // 0xEE if you’re using (0x77<<1)
+      reg_addr,
+      I2C_MEMADD_SIZE_8BIT,
+      (uint8_t *)reg_data,
+      length,
+      HAL_MAX_DELAY);
+  return (r == HAL_OK ? 0 : -1);
+}
+
+/** Write directly to the sensor without touching Bosch-provided code */
+int8_t bme_write_direct(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)
 {
   // Cast the I2C handle back to the correct type
   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;
