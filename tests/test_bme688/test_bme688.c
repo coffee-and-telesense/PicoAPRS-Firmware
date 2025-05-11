@@ -109,6 +109,12 @@ int main(void)
 
   // Create bme interface struct and initialize it
   bme68x_sensor_t bme;
+
+  // Test direct read and write
+  uint8_t sensor_id;
+  bme_read_direct(0xD0, &sensor_id, 4, &hi2c1);
+  debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
+
   bme_init(&bme, &hi2c1, &delay_us_timer);
   // Check status, should be 0 for OK
   int bme_status = bme_check_status(&bme);
@@ -130,10 +136,6 @@ int main(void)
   // bme_set_TPH(&bme, BME68X_OS_1X, BME68X_OS_1X, BME68X_OS_1X);
   // Set the heater configuration to 300 deg C for 100ms for Forced mode
   bme_set_heaterprof(&bme, 300, 100);
-
-  // uint8_t sensor_id;
-  // bme_read(0xD0, &sensor_id, 4, &hi2c1);
-  // debug_print("Received sensor ID: 0x%X\r\n", sensor_id);
 
   /* USER CODE END 2 */
 
