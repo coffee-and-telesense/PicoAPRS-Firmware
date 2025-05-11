@@ -11,7 +11,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 ### This is a generator expression which will be evaluated during build
 ### system generation to produce project wide definitions
-add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
+add_compile_definitions(
+  BME68X_DO_NOT_USE_FPU
+  $<$<CONFIG:Debug>:DEBUG>
+)
 
 ### gps feature selection, see libs\gps\Inc\driver\max_m10s.h for details
 #(NON-BLOCKING if ON or BLOCKING if OFF)
