@@ -240,6 +240,7 @@ int8_t bme_read_direct(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, voi
  * @note: Requires HAL peripheral drivers and initialization, specifically for i2c.
  * @note: Assumes an I2C_HandleTypeDef hi2c1 instance exists.
  * @note: Requires a microsecond delay function implemented in the application.
+ * @note: Assumes BME68X_DO_NOT_USE_FPU define is set.
  *
  * @code
  * #include "bme68x_driver.h"
