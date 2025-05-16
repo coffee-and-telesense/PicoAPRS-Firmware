@@ -182,8 +182,10 @@ void GPS_ReadOnce(void) {
     int32_t lon_rem = abs(lon_raw % 10000000);
 
     // print with integer formatting
+    printf("\n----------------------------------------\n");
     printf("GPS fix:  Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
            lat_deg, lat_rem, lon_deg, lon_rem);
+    printf("\n----------------------------------------\n");
 }
 
 // Apparently cold-starts take 30-60s, so we have to wait for the gps module to get a fix
@@ -271,8 +273,6 @@ void BME_SensorRead(void) {
            rawG,
            alt_int);
 }
-
-
 
 /* ================================ */
 /*       System Initialization      */
