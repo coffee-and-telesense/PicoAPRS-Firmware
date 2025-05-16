@@ -56,6 +56,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern I2C_HandleTypeDef hi2c1;
+extern RTC_HandleTypeDef hrtc;
 extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
@@ -143,6 +144,20 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles RTC and TAMP interrupts (combined EXTI lines 20 & 21).
+  */
+void RTC_TAMP_IRQHandler(void)
+{
+  /* USER CODE BEGIN RTC_TAMP_IRQn 0 */
+
+  /* USER CODE END RTC_TAMP_IRQn 0 */
+  HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
+  /* USER CODE BEGIN RTC_TAMP_IRQn 1 */
+
+  /* USER CODE END RTC_TAMP_IRQn 1 */
+}
+
+/**
   * @brief This function handles FLASH global Interrupt + FLASH ECC interrupt.
   */
 void FLASH_ECC_IRQHandler(void)
@@ -154,6 +169,20 @@ void FLASH_ECC_IRQHandler(void)
   /* USER CODE BEGIN FLASH_ECC_IRQn 1 */
 
   /* USER CODE END FLASH_ECC_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line 4 to 15 interrupts.
+  */
+void EXTI4_15_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI4_15_IRQn 0 */
+
+  /* USER CODE END EXTI4_15_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(Cap_Intr_Pin);
+  /* USER CODE BEGIN EXTI4_15_IRQn 1 */
+
+  /* USER CODE END EXTI4_15_IRQn 1 */
 }
 
 /**

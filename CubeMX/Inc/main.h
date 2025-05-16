@@ -76,6 +76,7 @@ void Error_Handler(void);
 #define UserLED_GPIO_Port GPIOA
 #define Cap_Intr_Pin GPIO_PIN_4
 #define Cap_Intr_GPIO_Port GPIOC
+#define Cap_Intr_EXTI_IRQn EXTI4_15_IRQn
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
