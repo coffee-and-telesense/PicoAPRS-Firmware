@@ -1,3 +1,7 @@
 *build/
 *.vscode
-**/Drivers/
+*CMakeCache.txt
+*.cmake
+*.o
+*compile_commands.json
+*CmakeFiles

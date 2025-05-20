@@ -22,7 +22,7 @@
  * @todo: This will need to be updated for the target MCU (e.g. the U0)
  * @todo: Alternatively, we could include an "i2c.h" file under the assumption that one will be created within the application code.
  */
-#include "stm32l4xx_hal_i2c.h"
+#include "stm32u0xx_hal.h"
 /** @note: As currently written, the Bosch library needs BME68X_DO_NOT_USE_FPU
  * to be set in order to prevent floating point code from being used. This is currently
  * set in the CMakeLists.txt file for this driver.
@@ -190,6 +190,22 @@ uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode);
 int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
 
 /**
+ * @brief Write directly to the sensor without touching Bosch-provided code
+ *
+ * This function is intended for usage outside of the bme68x_dev device struct.
+ * It may be used to write directly instead of through the Bosch-provided code.
+ * It should only be used for writing to a single register, or multiple *sequential*
+ * registers, as it provides auto-incrementing of addresses.
+ *
+ * @param[in] reg_addr Register address of the sensor
+ * @param[in] reg_data Pointer to the data to be written to the sensor
+ * @param[in] length Length of the transfer
+ * @param[in] i2c_handle Pointer to the stm32 I2C peripheral handle
+ * @return 0 if successful, non-zero otherwise
+ */
+int8_t bme_write_direct(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
+
+/**
  * @brief Implements the default I2C read transaction
  *
  * Sets the read function pointer on the bme68x_dev device struct.
@@ -204,12 +220,27 @@ int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, voi
 int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
 
 /**
+ * @brief Read directly from the sensor without touching Bosch-provided code
+ *
+ * This function is intended for usage outside of the bme68x_dev device struct.
+ * It may be used to read directly instead of through the Bosch-provided code.
+ *
+ * @param[in] reg_addr Register address of the sensor
+ * @param[in] reg_data Pointer to the data to write the sensor value to
+ * @param[in] length Length of the transfer
+ * @param[in] i2c_handle Pointer to the stm32 I2C peripheral handle
+ * @return 0 if successful, non-zero otherwise
+ */
+int8_t bme_read_direct(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
+
+/**
  * @example main.c
  *
  * Example usage of the BME68x sensor driver.
  * @note: Requires HAL peripheral drivers and initialization, specifically for i2c.
  * @note: Assumes an I2C_HandleTypeDef hi2c1 instance exists.
  * @note: Requires a microsecond delay function implemented in the application.
+ * @note: Assumes BME68X_DO_NOT_USE_FPU define is set.
  *
  * @code
  * #include "bme68x_driver.h"

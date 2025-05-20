@@ -22,6 +22,13 @@ After initialization, configuration is performed, using default oversampling val
 
 Data is then fetched from the sensor repeatedly in a loop. As noted above, the delay function should be implemented in application code, for example using a hardware timer and function defined in `tim.c`, but the microsecond delay should still be based on the return value from the `bme_get_meas_dur` function.
 
+**Note:** The driver allows the application to determine whether it should use floating versus fixed point. Setting the define `BME68X_DO_NOT_USE_FPU` will disable floating point. This may be set in cmake configuration at the application level using something like the following:
+```cmake
+target_compile_definitions(test_bme688 PRIVATE
+    BME68X_DO_NOT_USE_FPU
+)
+```
+
 ```c
 #include "bme68x_driver.h"
 
@@ -144,9 +151,35 @@ Implements the default I2C write transaction. This is leveraged by the Bosch lib
 **Returns:**
 - `int8_t`: 0 if successful, non-zero otherwise
 
+### `bme_write_direct()`
+
+This function is intended for usage outside of the bme68x_dev device struct. It may be used to write directly instead of through the Bosch-provided code. It should only be used for writing to a single register, or multiple *sequential* registers, as it provides auto-incrementing of addresses.
+
+**Parameters:**
+- `reg_addr`: Register address of the sensor
+- `reg_data`: Pointer to the data to be written to the sensor
+- `length`: Length of the transfer
+- `i2c_handle`: Pointer to the stm32 I2C peripheral handle
+
+**Returns:**
+- `int8_t`: 0 if successful, non-zero otherwise
+
 ### `bme_read()`
 
 Implements the default I2C read transaction. This is leveraged by the Bosch library to perform reads from the device over I2C. It should typically not be necessary for application code to call this function directly, though it may be useful in troubleshooting.
+
+**Parameters:**
+- `reg_addr`: Register address of the sensor
+- `reg_data`: Pointer to the data to write the sensor value(s) to
+- `length`: Length of the transfer
+- `i2c_handle`: Pointer to the stm32 I2C peripheral handle
+
+**Returns:**
+- `int8_t`: 0 if successful, non-zero otherwise
+
+### `bme_read_direct()`
+
+Used to read directly from the sensor without touching Bosch-provided code. This function is intended for usage outside of the bme68x_dev device struct.
 
 **Parameters:**
 - `reg_addr`: Register address of the sensor
@@ -190,10 +223,6 @@ It is not necessarily anticipated that we will use floating point hardware, but 
 There are a few functions from the Bosch library that are not currently in use, but could possibly be useful in the future (e.g. `sort_sensor_data`, `calc_heatr_dur_shared`, and `read_all_field_data`). These have been left in place under the assumption that the application will be compiled with some reasonable level of optimization which will result in their removal from the compiled binary.
 
 ## Next Steps
-
-**Validate humidity measurements**
-
-The humidity measurements currently appear to be returning the max value consistently. This may be an individual sensor-specific problem, it could be related to a timing issue, or possibly an oversampling setting. First steps to resolve are to test on additional sensors, adjust the oversampling setting, or simply step through the code with a debugger and see if it's possible to retrieve a valid humidity measurement at any stage.
 
 **Create non-blocking version**
 
