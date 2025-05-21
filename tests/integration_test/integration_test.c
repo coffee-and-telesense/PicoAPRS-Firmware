@@ -1,15 +1,16 @@
-/**
- ******************************************************************************
- * @file           : test_integration.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * For a fresh run do cmake --preset Debug && cmake --build build/Debug
- * For a run that already has a debug cmake --build build/Debug --clean-first
- * For flashing/building STM32_Programmer_CLI --connect port=swd --download D:/School/CubeMXtest/u0_integrated_standby/build/Debug/u0_integrated_standby.elf -hardRst -rst --start
- ******************************************************************************
- */
+w /**
+  ******************************************************************************
+  * @file           : test_integration.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * For a fresh run do cmake --preset Debug && cmake --build build/Debug
+  * For a run that already has a debug cmake --build build/Debug --clean-first
+  * For flashing/building STM32_Programmer_CLI --connect port=swd --download D:/School/CubeMXtest/u0_integrated_standby/build/Debug/u0_integrated_standby.elf -hardRst -rst --start
+  ******************************************************************************
+  */
+// #ifdef SLAY
 
 /* Includes ------------------------------------------------------------------*/
 #include "adc.h"
@@ -60,13 +61,23 @@
 
 /* USER CODE BEGIN PV */
 volatile uint8_t buttonPressed = 0;  // Flag to indicate if the button has been pressed (1 = pressed, 0 = not pressed)
-volatile uint32_t Threshold = 1000;  // ADC threshold value corresponding to 2.3V (calculated using Vin/Vref * (2^n - 1))
-volatile uint32_t value_adc = 0;     // Variable to store the ADC conversion result (raw digital value)
+volatile uint32_t Threshold = 1000;      // ADC threshold value corresponding to 2.3V (calculated using Vin/Vref * (2^n - 1))
+volatile uint32_t value_adc = 0;         // Variable to store the ADC conversion result (raw digital value)
 volatile float latitude = 0.0f;
 volatile float longitude = 0.0f;
 volatile float tempVal = 0.0f;
 volatile uint16_t lightVal = 0;
 char aprsFrame[100];  // APRS Frame array
+char latStr[30];      // str for aprs
+char lonStr[30];      // str for aprs
+
+char timeStr[16];  // str for aprs
+
+char tempStr[16];
+char pressureStr[16];
+char humidityStr[16];
+char gasStr[16];
+char altStr[16];
 
 // GPS Static variables
 static max_m10s_dev_s gps_dev;
@@ -78,8 +89,7 @@ uint8_t analogValues[5][5] = {
     "002,",
     "003,",
     "004,",
-    "005,"
-};
+    "005,"};
 char *digitalValue = "00001100";
 char *comment = "hello!";
 
@@ -90,10 +100,9 @@ char *comment = "hello!";
 /* --- Retarget printf to UART2 --- */
 /* Overrides putchar to send characters through UART2, allowing printf debugging */
 PUTCHAR_PROTOTYPE {
-    HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, COM_POLL_TIMEOUT);
+    HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, COM_POLL_TIMEOUT);
     return ch;
 }
-
 
 /* ================================ */
 /*       LED Blinking Functions     */
@@ -102,8 +111,8 @@ PUTCHAR_PROTOTYPE {
 /* ================================ */
 /*       MAX10s GPS Functions       */
 /* ================================ */
-static void print_status(const char* message, gps_status_e status) {
-    const char* status_str;
+static const char *print_status(const char *message, gps_status_e status) {
+    const char *status_str;
     switch (status) {
         case UBLOX_OK:
             status_str = "OK";
@@ -128,6 +137,8 @@ static void print_status(const char* message, gps_status_e status) {
             break;
     }
     printf("%s: %s (0x%02X)\r\n", message, status_str, status);
+
+    return status_str;
 }
 
 void GPS_ReadOnce(void) {
@@ -149,7 +160,7 @@ void GPS_ReadOnce(void) {
     if (status != UBLOX_OK) return;
 
     // payload starts at buf[6]
-    ubx_nav_pvt_s* pvt = (ubx_nav_pvt_s*)&gps_dev.rx_buffer[6];
+    ubx_nav_pvt_s *pvt = (ubx_nav_pvt_s *)&gps_dev.rx_buffer[6];
 
     printf("PVT fixType=%u, gnssFixOK=%u, validTime=%u\n",
            pvt->fixType,
@@ -162,7 +173,7 @@ void GPS_ReadOnce(void) {
     }
 
     // — manual parse of lon/lat —
-    uint8_t* buf = gps_dev.rx_buffer;
+    uint8_t *buf = gps_dev.rx_buffer;
     // Note: payload starts at index 6 of buf.
     int32_t lon_raw = (int32_t)((buf[6 + 24]) |
                                 (buf[6 + 25] << 8) |
@@ -172,7 +183,6 @@ void GPS_ReadOnce(void) {
                                 (buf[6 + 29] << 8) |
                                 (buf[6 + 30] << 16) |
                                 (buf[6 + 31] << 24));
-    
 
     // Float printing was giving me trouble, so this is the workaround for that
     int32_t lat_deg = lat_raw / 10000000;
@@ -181,14 +191,33 @@ void GPS_ReadOnce(void) {
     int32_t lon_deg = lon_raw / 10000000;
     int32_t lon_rem = abs(lon_raw % 10000000);
 
+    if (lat_deg > 90 || lat_deg < -90 || lon_deg > 180 || lon_deg < -180)  // checking for correct data
+        printf("Incorrect data for GPS location");
+    else
     // print with integer formatting
-    printf("GPS fix:  Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
-           lat_deg, lat_rem, lon_deg, lon_rem);
+    // printf("GPS fix:  Lat=%ld.%07ld°, Lon=%ld.%07ld°\r\n",
+    //   lat_deg, lat_rem, lon_deg, lon_rem);
+    {
+        printf("GPS fix:\n");
+        sprintf(latStr, "%ld.%02ld", lat_deg, lat_rem);
+        sprintf(lonStr, "%ld.%02ld", lon_deg, lon_rem);
+    }
+
+    // point at the decoded PVT struct
+    ubx_nav_pvt_s *pvt = (ubx_nav_pvt_s *)&gps_dev.rx_buffer[6];  // might not need this line again?
+
+    // format month/day hour:minute
+    snprintf(timeStr, sizeof(timeStr),
+             "%02u%02u%02u%02u",
+             pvt->month,
+             pvt->day,
+             pvt->hour,
+             pvt->min);
 }
 
 // Apparently cold-starts take 30-60s, so we have to wait for the gps module to get a fix
-void wait_for_gps_fix(void) {
-    ubx_nav_pvt_s* pvt;
+void wait_for_gps(void) {
+    ubx_nav_pvt_s *pvt;
     const int max_attempts = 5;
     int attempt = 0;
 
@@ -197,7 +226,7 @@ void wait_for_gps_fix(void) {
         HAL_Delay(1000);  // pause 1 s between tries
 
         // point at the PVT payload in the buffer
-        pvt = (ubx_nav_pvt_s*)&gps_dev.rx_buffer[6];
+        pvt = (ubx_nav_pvt_s *)&gps_dev.rx_buffer[6];
 
         // optional debug:
         printf("  try %d: fixType=%u, gnssFixOK=%u\n",
@@ -213,8 +242,6 @@ void wait_for_gps_fix(void) {
         printf("GPS fix failed after %d attempts\n", max_attempts);
         return;
     }
-
-
 }
 /* ================================ */
 /*       BME68x Sensor Function     */
@@ -223,7 +250,6 @@ void wait_for_gps_fix(void) {
 void BME_SensorRead(void) {
     static bme68x_sensor_t bme;               // your “instance” of the sensor
     bme_init(&bme, &hi2c1, &delay_us_timer);  // wire it up to hi2c1 and your delay fn
-    
 
     // Quick status check
     if (bme_check_status(&bme) != BME68X_OK) {
@@ -251,7 +277,6 @@ void BME_SensorRead(void) {
         return;
     }
 
-
     // but ints work
     int32_t rawT = bme.sensor_data.temperature;     // e.g. 2236  => 22.36 °C
     int32_t rawP = bme.sensor_data.pressure;        // e.g. 101325
@@ -264,15 +289,19 @@ void BME_SensorRead(void) {
     // round to nearest meter:
     long alt_int = (long)lroundf(altitude);
 
-    printf("BME68x: T=%ld.%02ld °C, P=%ld Pa, H=%ld.%02ld%%, G=%ld Ω, Alt=%ld m\n",
-           rawT / 100, abs(rawT % 100),
-           rawP,
-           rawH / 1000, abs(rawH % 1000),
-           rawG,
-           alt_int);
+    // printf("BME68x: T=%ld.%02ld °C, P=%ld Pa, H=%ld.%02ld%%, G=%ld Ω, Alt=%ld m\n",
+    //         rawT / 100, abs(rawT % 100),
+    //        rawP,
+    //       rawH / 1000, abs(rawH % 1000),
+    //      rawG,
+    //     alt_int);
+
+    sprintf(tempStr, "%ld.%02ld°C", rawT / 100, abs(rawT % 100));
+    sprintf(pressureStr, "%ldPa", rawP);
+    sprintf(humidityStr, "%ld.%02ld%%", rawH / 1000, abs((rawH % 1000) / 10));  // Only keep 2 decimals
+    sprintf(gasStr, "%ldΩ", rawG);
+    sprintf(altStr, "%ldm", alt_int);
 }
-
-
 
 /* ================================ */
 /*       System Initialization      */
@@ -353,7 +382,7 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
 }
 
 /* RTC Wakeup Timer Interrupt Handler ----------------------------------------*/
-void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef* hrtc) {
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
     __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(hrtc, RTC_FLAG_WUTF);  // Clear RTC wakeup flag
 }
 
@@ -402,22 +431,26 @@ void ADC_READ_TEST() {
     HAL_Delay(2000);  // Delay to allow some time before next reading (optional for testing)
 }
 
-void APRS_CreatePacket(uint8_t *analogValues, char *digitalValue, char *comment){
+void APRS_CreatePacket(uint8_t *analogValues, char *digitalValue, char *comment, char *latStr, char *lonStr, const char *status_str) {
     telemetryInfoFrame *tFrame = initTFrame();
-    updateTelemData(tFrame, analogValues,(uint8_t*) digitalValue, comment);
+    updateTelemData(tFrame, analogValues, (uint8_t *)digitalValue, comment);
     concatTelemData(tFrame);
 
-    //wrap aprs packet in ax25 packet
+    // position frame
+    positionFrame *pFrame = initPositionFrame();
+    updatePositionData(pFrame, timeStr, latStr, lonStr, comment);
+    concatPositionData(pFrame);
+
+    // wrap aprs packet in ax25 packet
     ax25Frame *frame = initFrame(tFrame->tData, tFrame->tDataSize);
     encodedAx25Frame encodedFrame = processFrameVerbose(frame);
-    
 
-    //clean up
+    // clean up
     freeFrames(tFrame, NULL, NULL, NULL, NULL, &encodedFrame);
-    
-    //blinky
+
+    // blinky
     HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
-   
+
     HAL_Delay(10000);
 }
 /* USER CODE BEGIN 4 */
@@ -441,10 +474,10 @@ int main(void) {
     if (value_adc > Threshold) {
         // If the voltage is good
         // GPS_ReadOnce();
-        wait_for_gps_fix();
+        wait_for_gps();
         printf("back in main(), now calling BME_SensorRead()\r\n");
         BME_SensorRead();
-        APRS_CreatePacket(analogValues, &digitalValue, &comment);
+        APRS_CreatePacket(analogValues, &digitalValue, &comment & latStr, &lonStr, status_str);
         // Indicate system is entering standby mode
         Enter_Standby_Mode();
     }
@@ -468,3 +501,5 @@ int main(void) {
     // Normally unreachable, but good practice to return 0 in main
     return 0;
 }
+
+// #endif
