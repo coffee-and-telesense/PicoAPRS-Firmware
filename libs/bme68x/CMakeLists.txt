@@ -17,9 +17,10 @@ target_compile_definitions(bme68x PUBLIC
 # Define include directories
 target_include_directories(bme68x PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/driver
-    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/protocols
-    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/protocols/ubx
+    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x_defs.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x_driver.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x_types.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x
 )
 
 # Link with required dependencies

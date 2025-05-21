@@ -29,15 +29,9 @@
  */
 #include "bme68x_defs.h"
 #include "bme68x.h"
+#include "bme68x_types.h"
 
 /* ========================== MACROS ========================== */
-
-/**
- * @brief Basic error macro
- * @todo: Consider using in conjunction with the common error types macros
- */
-#define BME68X_ERROR INT8_C(-1)
-#define BME68X_WARNING INT8_C(1)
 
 /**
  * @brief Alias the default address, with a left shift to use expected HAL format

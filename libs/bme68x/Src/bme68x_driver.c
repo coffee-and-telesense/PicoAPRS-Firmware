@@ -11,42 +11,68 @@
  *     https://github.com/boschsensortec/Bosch-BME68x-Library
  ******************************************************************************/
 
-#include "bme68x_driver.h"
 
+/*******************************************************************************
+ * @file: bme68x_driver.c
+ * @brief: Driver for the BME68x sensor using STM32 HAL.
+ *
+ * This file contains the implementation of functions for configuring
+ * and reading data from the BME68x sensor using STM32 HAL.
+ *
+ * @version: 0.1.0
+ * @sources:
+ *   - Bosch BME68x library and Arduino examples
+ *     https://github.com/boschsensortec/Bosch-BME68x-Library
+ ******************************************************************************/
+
+#include "bme68x_driver.h"
 #include <string.h>
+
 /* ========================== FUNCTION IMPLEMENTATIONS ========================== */
 
-/** Initializes the BME68x sensor interface */
-void bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, bme68x_delay_us_fptr_t delay_fn) {
-    if (bme == NULL) {
-        return;
+/**
+ * @brief Initializes the BME68x sensor interface with default configuration.
+ * 
+ * This function sets up the I2C handle, function pointers, and default values,
+ * and calls bme68x_init from the Bosch driver. It updates the bme->status.
+ * 
+ * @param bme Pointer to sensor struct
+ * @param i2c_handle Pointer to HAL I2C handle
+ * @param delay_fn Delay function with microsecond resolution
+ * @return bme_status_e Status of initialization
+ */
+bme_status_e bme_init(bme68x_sensor_t *bme, I2C_HandleTypeDef *i2c_handle, bme68x_delay_us_fptr_t delay_fn) {
+    if (!bme || !i2c_handle || !delay_fn) {
+        return BME68X_NULL_PTR;
     }
 
-    // Zero-initialize all members
     memset(bme, 0, sizeof(bme68x_sensor_t));
 
-    // Assign the I2C handle
     bme->i2c_handle = i2c_handle;
-
-    //
-    // Set default values
-    //
     bme->device.intf_ptr = i2c_handle;
-    /** @todo (maybe) Assign variant ID on bme struct */
     bme->device.read = &bme_read;
     bme->device.write = &bme_write;
     bme->device.delay_us = delay_fn;
-    bme->status = BME68X_OK;
-    // Typical ambient temperature in Celsius
     bme->device.amb_temp = 25;
-    // Assume sensor starts in sleep mode
     bme->last_opmode = BME68X_SLEEP_MODE;
 
-    bme68x_init(&bme->device);
+    bme->status = bme68x_init(&bme->device);
+    if (bme->status != BME68X_OK) {
+        return BME68X_INIT_FAILED;
+    }
+
+    return BME68X_OK;
 }
 
-/** Returns basic status check */
-int8_t bme_check_status(bme68x_sensor_t *bme) {
+/**
+ * @brief Checks current status of the sensor interface and classifies it.
+ * 
+ * @param bme Pointer to sensor struct
+ * @return bme_status_e OK, WARNING, or ERROR based on status value
+ */
+bme_status_e bme_check_status(bme68x_sensor_t *bme) {
+    if (!bme) return BME68X_NULL_PTR;
+
     if (bme->status < BME68X_OK) {
         return BME68X_ERROR;
     } else if (bme->status > BME68X_OK) {
@@ -56,127 +82,153 @@ int8_t bme_check_status(bme68x_sensor_t *bme) {
     }
 }
 
-/** Set the Temperature, Pressure and Humidity over-sampling using default values. */
-void bme_set_TPH_default(bme68x_sensor_t *bme) {
-    bme_set_TPH(bme, BME68X_OS_2X, BME68X_OS_16X, BME68X_OS_1X);
+/**
+ * @brief Sets temperature, pressure, and humidity oversampling to default values.
+ * 
+ * Default: Temperature = 2x, Pressure = 16x, Humidity = 1x
+ * 
+ * @param bme Pointer to sensor struct
+ * @return bme_status_e Status after applying configuration
+ */
+bme_status_e bme_set_TPH_default(bme68x_sensor_t *bme) {
+    return bme_set_TPH(bme, BME68X_OS_2X, BME68X_OS_16X, BME68X_OS_1X);
 }
 
-/** Set the Temperature, Pressure and Humidity over-sampling.*/
-void bme_set_TPH(bme68x_sensor_t *bme, uint8_t os_temp, uint8_t os_pres, uint8_t os_hum) {
+/**
+ * @brief Sets temperature, pressure, and humidity oversampling to custom values.
+ * 
+ * @param bme Pointer to sensor struct
+ * @param os_temp Oversampling for temperature
+ * @param os_pres Oversampling for pressure
+ * @param os_hum Oversampling for humidity
+ * @return bme_status_e Status after setting configuration
+ */
+bme_status_e bme_set_TPH(bme68x_sensor_t *bme, uint8_t os_temp, uint8_t os_pres, uint8_t os_hum) {
+    if (!bme) return BME68X_NULL_PTR;
+
     bme->status = bme68x_get_conf(&bme->conf, &bme->device);
+    if (bme->status != BME68X_OK) return BME68X_GET_CONF_FAILED;
 
-    if (bme->status == BME68X_OK) {
-        bme->conf.os_hum = os_hum;
-        bme->conf.os_temp = os_temp;
-        bme->conf.os_pres = os_pres;
+    bme->conf.os_hum = os_hum;
+    bme->conf.os_temp = os_temp;
+    bme->conf.os_pres = os_pres;
 
-        bme->status = bme68x_set_conf(&bme->conf, &bme->device);
-    }
+    bme->status = bme68x_set_conf(&bme->conf, &bme->device);
+    if (bme->status != BME68X_OK) return BME68X_SET_CONF_FAILED;
+
+    return BME68X_OK;
 }
 
-/** Set the heater profile for Forced mode */
-void bme_set_heaterprof(bme68x_sensor_t *bme, uint16_t temp, uint16_t dur) {
+/**
+ * @brief Sets heater profile for forced mode operation.
+ * 
+ * @param bme Pointer to sensor struct
+ * @param temp Target heater temperature in °C
+ * @param dur Heater duration in milliseconds
+ * @return bme_status_e Status after setting heater config
+ */
+bme_status_e bme_set_heaterprof(bme68x_sensor_t *bme, uint16_t temp, uint16_t dur) {
+    if (!bme) return BME68X_NULL_PTR;
+
     bme->heatr_conf.enable = BME68X_ENABLE;
     bme->heatr_conf.heatr_temp = temp;
     bme->heatr_conf.heatr_dur = dur;
 
     bme->status = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &bme->heatr_conf, &bme->device);
+    if (bme->status != BME68X_OK) return BME68X_SET_HEATER_FAILED;
+
+    return BME68X_OK;
 }
 
-/** Set the operation mode */
-void bme_set_opmode(bme68x_sensor_t *bme, uint8_t opmode) {
+/**
+ * @brief Sets the sensor's operation mode (e.g., sleep or forced).
+ * 
+ * @param bme Pointer to sensor struct
+ * @param opmode Operation mode constant
+ * @return bme_status_e Status after setting mode
+ */
+bme_status_e bme_set_opmode(bme68x_sensor_t *bme, uint8_t opmode) {
+    if (!bme) return BME68X_NULL_PTR;
+
     bme->status = bme68x_set_op_mode(opmode, &bme->device);
-    if ((bme->status == BME68X_OK) && (opmode != BME68X_SLEEP_MODE))
+    if (bme->status != BME68X_OK) return BME68X_SET_MODE_FAILED;
+
+    if (opmode != BME68X_SLEEP_MODE) {
         bme->last_opmode = opmode;
+    }
+    return BME68X_OK;
 }
 
-/** Fetch data from the sensor into the struct's sensor_data buffer */
-uint8_t bme_fetch_data(bme68x_sensor_t *bme) {
-    uint8_t n_fields = 0;
-    bme->status = bme68x_get_data(bme->last_opmode, &bme->sensor_data, &n_fields, &bme->device);
-    return n_fields;
+/**
+ * @brief Fetches data from the sensor.
+ * 
+ * @param bme Pointer to sensor struct
+ * @param n_fields Pointer to field count variable (output)
+ * @return bme_status_e Status of data fetch
+ */
+bme_status_e bme_fetch_data(bme68x_sensor_t *bme, uint8_t *n_fields) {
+    if (!bme || !n_fields) return BME68X_NULL_PTR;
+
+    *n_fields = 0;
+    bme->status = bme68x_get_data(bme->last_opmode, &bme->sensor_data, n_fields, &bme->device);
+    if (bme->status != BME68X_OK) return BME68X_GET_DATA_FAILED;
+
+    return BME68X_OK;
 }
 
-/** Get the measurement duration in microseconds*/
+/**
+ * @brief Returns the duration of a single measurement (in microseconds).
+ * 
+ * @param bme Pointer to sensor struct
+ * @param opmode Operation mode to check for
+ * @return uint32_t Measurement duration in microseconds, 0 on error
+ */
 uint32_t bme_get_meas_dur(bme68x_sensor_t *bme, uint8_t opmode) {
-    if (opmode == BME68X_SLEEP_MODE)
+    if (!bme) return 0;
+
+    if (opmode == BME68X_SLEEP_MODE) {
         opmode = bme->last_opmode;
+    }
 
     return bme68x_get_meas_dur(opmode, &bme->conf, &bme->device);
 }
 
-// /** Implements the default microsecond delay callback */
-// int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)
-// {
-//   // Cast the I2C handle back to the correct type
-//   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;
+/**
+ * @brief Low-level I2C write function used by Bosch driver.
+ * 
+ * @param reg_addr Register address to write to
+ * @param reg_data Pointer to data buffer
+ * @param length Length of data
+ * @param intf_ptr Pointer to I2C handle
+ * @return int8_t BME68X_OK or BME680_I2C_WRITE_FAILED
+ */
+int8_t bme_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr) {
+    if (!reg_data || !intf_ptr) return BME68X_NULL_PTR;
 
-//   // For multi-byte writes, we need pairs of register addresses and data,
-//   // since the sensor does *not* auto-increment for multi-byte writes.
-//   // Create a buffer with enough space for all register/data pairs
-//   uint8_t buffer[length * 2];
-
-//   // Fill the buffer with register/data pairs
-//   /** @todo: Determine max size needed for this buffer */
-//   for (uint16_t i = 0; i < length; i++)
-//   {
-//     buffer[i * 2] = reg_addr + i;
-//     buffer[i * 2 + 1] = reg_data[i];
-//   }
-
-//   // Transmit all register/data pairs in a single transaction
-//   if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, buffer, length * 2, HAL_MAX_DELAY) != HAL_OK)
-//   {
-//     // Error in transmission
-//     return -1;
-//   }
-
-//   // Return 0 on success
-//   return 0;
-// }
-
-// /** Implements the default microsecond delay callback */
-// int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
-// {
-//   // Cast the I2C handle back to the correct type
-//   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)intf_ptr;
-
-//   /** @todo: Consider using HAL_I2C_Mem_Read in a single transaction */
-//   // Send the register address (1 byte)
-//   if (HAL_I2C_Master_Transmit(i2c_handle, BME68X_ADDR, &reg_addr, 1, HAL_MAX_DELAY) != HAL_OK)
-//   {
-//     // Error in transmitting register address
-//     return -1;
-//   }
-
-//   // Read the requested number of bytes
-//   // The sensor auto-increments for I2C reads
-//   if (HAL_I2C_Master_Receive(i2c_handle, BME68X_ADDR, reg_data, length, HAL_MAX_DELAY) != HAL_OK)
-//   {
-//     // Error in reading data
-//     return -1;
-//   }
-// }
-
-int8_t bme_write(uint8_t reg_addr,
-                 const uint8_t *reg_data,
-                 uint32_t length,
-                 void *intf_ptr) {
     HAL_StatusTypeDef r = HAL_I2C_Mem_Write(
         (I2C_HandleTypeDef *)intf_ptr,
-        BME68X_ADDR,  // 0xEE if you’re using (0x77<<1)
+        BME68X_ADDR,
         reg_addr,
         I2C_MEMADD_SIZE_8BIT,
         (uint8_t *)reg_data,
         length,
         HAL_MAX_DELAY);
-    return (r == HAL_OK ? 0 : -1);
+
+    return (r == HAL_OK ? BME68X_OK : BME68X_I2C_WRITE_FAILED);
 }
 
-int8_t bme_read(uint8_t reg_addr,
-                uint8_t *reg_data,
-                uint32_t length,
-                void *intf_ptr) {
+/**
+ * @brief Low-level I2C read function used by Bosch driver.
+ * 
+ * @param reg_addr Register address to read from
+ * @param reg_data Pointer to receive buffer
+ * @param length Number of bytes to read
+ * @param intf_ptr Pointer to I2C handle
+ * @return int8_t BME68X_OK or BME680_I2C_READ_FAILED
+ */
+int8_t bme_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr) {
+    if (!reg_data || !intf_ptr) return BME68X_NULL_PTR;
+
     HAL_StatusTypeDef r = HAL_I2C_Mem_Read(
         (I2C_HandleTypeDef *)intf_ptr,
         BME68X_ADDR,
@@ -185,5 +237,6 @@ int8_t bme_read(uint8_t reg_addr,
         reg_data,
         length,
         HAL_MAX_DELAY);
-    return (r == HAL_OK ? 0 : -1);
+
+    return (r == HAL_OK ? BME68X_OK : BME68X_I2C_READ_FAILED);
 }
