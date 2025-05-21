@@ -19,7 +19,6 @@ target_include_directories(bme68x PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x_defs.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x_driver.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x_types.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/bme68x
 )
 

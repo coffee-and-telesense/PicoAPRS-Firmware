@@ -29,9 +29,37 @@
  */
 #include "bme68x_defs.h"
 #include "bme68x.h"
-#include "bme68x_types.h"
 
 /* ========================== MACROS ========================== */
+
+/**
+ * @brief Basic error macro
+ * @todo: Consider using in conjunction with the common error types macros
+ */
+/* Errors */  // Located in bme68x_defs.h
+// /* Null pointer passed */
+// #define BME68X_E_NULL_PTR INT8_C(-11)
+
+// /* Communication failure */
+// #define BME68X_E_COM_FAIL INT8_C(-2)
+
+// /* Sensor not found */
+// #define BME68X_E_DEV_NOT_FOUND INT8_C(-3)
+
+// /* Incorrect length parameter */
+// #define BME68X_E_INVALID_LENGTH INT8_C(-4)
+
+// /* Self test fail error */
+// #define BME68X_E_SELF_TEST INT8_C(-5)
+#define BME68X_ERROR INT8_C(-6)
+#define BME68X_SENSOR_ERROR INT8_C(-7)
+#define BME68X_INIT_SENSOR_ERROR INT8_C(-8)
+#define BME68X_WARNING INT8_C(-9)
+#define BME68X_TEMP INT8_C(-10)
+#define BME68X_PRES INT8_C(-12)
+#define BME68X_GAS INT8_C(-13)
+#define BME68X_HUMID INT8_C(-14)
+#define BME68X_I2C_ERROR INT8_C(-1)
 
 /**
  * @brief Alias the default address, with a left shift to use expected HAL format

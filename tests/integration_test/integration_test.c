@@ -102,6 +102,7 @@ PUTCHAR_PROTOTYPE {
 /* ================================ */
 /*       MAX10s GPS Functions       */
 /* ================================ */
+// 2 is bme and 1 is sensor
 static void print_status(const char* message, gps_status_e status) {
     const char* status_str;
     switch (status) {
