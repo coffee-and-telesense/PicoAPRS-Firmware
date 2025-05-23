@@ -14,7 +14,6 @@
 
 /* ========================== INCLUDES ========================== */
 #ifdef DEBUG
-#include "logging.h"
 #endif
 
 /**
@@ -22,7 +21,8 @@
  * @todo: This will need to be updated for the target MCU (e.g. the U0)
  * @todo: Alternatively, we could include an "i2c.h" file under the assumption that one will be created within the application code.
  */
-#include "stm32l4xx_hal_i2c.h"
+//#include "stm32u0xx_hal_i2c.h"
+#include "i2c.h"
 /** @note: As currently written, the Bosch library needs BME68X_DO_NOT_USE_FPU
  * to be set in order to prevent floating point code from being used. This is currently
  * set in the CMakeLists.txt file for this driver.
@@ -36,8 +36,30 @@
  * @brief Basic error macro
  * @todo: Consider using in conjunction with the common error types macros
  */
-#define BME68X_ERROR INT8_C(-1)
-#define BME68X_WARNING INT8_C(1)
+/* Errors */  // Located in bme68x_defs.h
+// /* Null pointer passed */
+// #define BME68X_E_NULL_PTR INT8_C(-11)
+
+// /* Communication failure */
+// #define BME68X_E_COM_FAIL INT8_C(-2)
+
+// /* Sensor not found */
+// #define BME68X_E_DEV_NOT_FOUND INT8_C(-3)
+
+// /* Incorrect length parameter */
+// #define BME68X_E_INVALID_LENGTH INT8_C(-4)
+
+// /* Self test fail error */
+// #define BME68X_E_SELF_TEST INT8_C(-5)
+#define BME68X_ERROR INT8_C(-6)
+#define BME68X_SENSOR_ERROR INT8_C(-7)
+#define BME68X_INIT_SENSOR_ERROR INT8_C(-8)
+#define BME68X_WARNING INT8_C(-9)
+#define BME68X_TEMP INT8_C(-10)
+#define BME68X_PRES INT8_C(-12)
+#define BME68X_GAS INT8_C(-13)
+#define BME68X_HUMID INT8_C(-14)
+#define BME68X_I2C_ERROR INT8_C(-1)
 
 /**
  * @brief Alias the default address, with a left shift to use expected HAL format

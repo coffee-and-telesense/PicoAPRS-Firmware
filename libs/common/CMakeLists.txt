@@ -15,3 +15,5 @@ target_compile_definitions(common PUBLIC DEBUG)
 target_link_libraries(common PUBLIC
     stm32cubemx
 )
+
+message(STATUS "Added common library")

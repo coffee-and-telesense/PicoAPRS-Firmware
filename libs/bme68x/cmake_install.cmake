@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/reece/Documents/School/PSU/coffee-and-telesense/PicoAPRS-Firmware/libs/bme68x
+# Install script for directory: D:/School/Capstone/PicoAPRS-Firmware/libs/bme68x
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Program Files/PicoAPRS-Firmware")
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files/PicoAPRS-RTOS-Firmware")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -29,11 +29,11 @@ endif()
 
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
-  set(CMAKE_CROSSCOMPILING "FALSE")
+  set(CMAKE_CROSSCOMPILING "TRUE")
 endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "C:/MinGW/bin/objdump.exe")
+  set(CMAKE_OBJDUMP "D:/STM32CubeCLT_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-objdump.exe")
 endif()
 
