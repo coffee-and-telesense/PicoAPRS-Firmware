@@ -74,6 +74,12 @@ extern "C" {
 #include "bmv080_defs.h"
 #include "bmv080.h"
 
+// NOTE: BMV080_I2C_ADDRESS originally from combridge.c
+/* Private define ------------------------------------------------------------*/
+/* BMV080 I2C address
+ * note that the BMV080 pins are connected such that I2C Address Bit 0 = 0 and I2C Address Bit 1 = 0
+ */
+#define BMV080_I2C_ADDRESS 0x54
 
 /* Helper macro for updating the final status */
 #define UPDATE_OPERATION_STATUS(current_status, final_status) (final_status = ((final_status) != 0) ? (final_status) : (current_status))
@@ -131,6 +137,14 @@ bmv080_status_code_t bmv080(const bmv080_sercom_handle_t sercom_handle,
                             const bmv080_callback_tick_t get_tick_ms, 
                             const print_function_t print,
                             const enable_ext_interrupt_function_t enable_ext_interrupt);
+
+// From combridge.c in Bosch STM32 example for Cortex M4
+/* I2C read and write functions */
+int8_t combridge_i2c_read_16bit(bmv080_sercom_handle_t handle, uint16_t header, uint16_t *payload, uint16_t payload_length);
+int8_t combridge_i2c_write_16bit(bmv080_sercom_handle_t handle, uint16_t header, const uint16_t *payload, uint16_t payload_length);
+
+/* Delay function */
+int8_t combridge_delay(uint32_t period);
 
 #ifdef __cplusplus  
 }
