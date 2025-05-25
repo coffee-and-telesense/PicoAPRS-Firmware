@@ -18,8 +18,8 @@ if(U083)
     # Disable CTest integration
     set(CMAKE_SKIP_TESTS TRUE)
 
-    project(PicoAPRS-RTOS-Firmware C CXX ASM)
-    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+project(PicoAPRS-Firmware C CXX ASM)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
     ### This is a generator expression which will be evaluated during build
     ### system generation to produce project wide definitions
@@ -46,7 +46,7 @@ if(U073KCU6)
     # Disable CTest integration
     set(CMAKE_SKIP_TESTS TRUE)
 
-    project(PicoAPRS-RTOS-Firmware C CXX ASM)
+    project(PicoAPRS-Firmware C CXX ASM)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
     ### This is a generator expression which will be evaluated during build
