@@ -15,11 +15,12 @@
 #include "adc.h"
 #include "gpio.h"
 #include "i2c.h"
-#include "logging.h"
+#include "usart.h"
+//#include "logging.h"
 #include "main.h"
 #include "rtc.h"
 #include "tim.h"
-#include "usart.h"
+//#include "usart.h"
 
 /* USER CODE BEGIN Includes */
 #include <math.h>

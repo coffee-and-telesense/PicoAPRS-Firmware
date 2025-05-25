@@ -12,7 +12,7 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "adc.h"
+//#include "adc.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "logging.h"
@@ -20,6 +20,7 @@
 #include "rtc.h"
 #include "tim.h"
 #include "usart.h"
+#include "adc.h"
 
 /* USER CODE BEGIN Includes */
 #include <math.h>
@@ -436,10 +437,10 @@ int main(void) {
 
     // Read initial ADC value to check battery/capacitor voltage
     printf("Starting ADC Calibration.\n");
-    ADC_READ_TEST();
+    //ADC_READ_TEST();
 
     // Check if the ADC value is above a pre-defined threshold (good power check)
-    if (value_adc > Threshold) {
+    //if (value_adc > Threshold) {
         // If the voltage is good
         // GPS_ReadOnce();
         wait_for_gps_fix();
@@ -448,7 +449,7 @@ int main(void) {
         APRS_CreatePacket(analogValues, &digitalValue, &comment);
         // Indicate system is entering standby mode
         Enter_Standby_Mode();
-    }
+    //}
 
     // If ADC voltage is too low (bad capacitor voltage), turn on user LED
     // Run LED step sequence to provide visual feedback
