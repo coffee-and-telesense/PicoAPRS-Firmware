@@ -10,5 +10,5 @@ target_link_libraries(integration_test PRIVATE
     bme68x
     aprs
     ax25
-    # common
+    common
 )

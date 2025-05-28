@@ -15,7 +15,7 @@
 //#include "adc.h"
 #include "gpio.h"
 #include "i2c.h"
-//#include "logging.h"
+#include "logging.h"
 #include "main.h"
 #include "rtc.h"
 #include "tim.h"
@@ -47,7 +47,7 @@
 /* --- Sensor addresses and register definitions --- */
 #define MAX_M10S_DEFAULT_ADDR (0x42)  // Default I2C address of the MAX-M10S GPS module (shifted for read/write)
 #define sec 20
-
+#define COM_POLL_TIMEOUT 1000
 #define BME68X_ADDRS (0x77 << 1)  // 0xEE
 #define SEALEVEL_PRESSURE 101325
 
@@ -86,6 +86,13 @@ char *comment = "hello!";
   //  HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, COM_POLL_TIMEOUT);
     //return ch;
 //}
+
+/* --- Retarget printf to UART1 --- */
+/* Overrides putchar to send characters through UART1, allowing printf debugging */
+PUTCHAR_PROTOTYPE {
+    HAL_UART_Transmit(&huart1, (uint8_t*)&ch, 1, COM_POLL_TIMEOUT);
+    return ch;
+}
 
 
 /* ================================ */
@@ -437,6 +444,7 @@ int main(void) {
         // Turns on gps transistor
         HAL_GPIO_WritePin(GPIOA, GPS_RTC_PWR_EN_Pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOA, GPS_PWR_EN_Pin, GPIO_PIN_RESET);
+
         GPS_ReadOnce();
         wait_for_gps_fix();
         printf("back in main(), now calling BME_SensorRead()\r\n");
