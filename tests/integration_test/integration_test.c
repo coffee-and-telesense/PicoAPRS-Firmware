@@ -45,14 +45,6 @@
 // Macro defining the prototype for the function that redirects printf output to UART
 
 /* --- Sensor addresses and register definitions --- */
-#define LTR329_ADDR (0x29 << 1)  // I2C address of the LTR-329 ambient light sensor (shifted for read/write operations)
-#define LTR329_CONTR 0x80        // Control register for configuring the LTR-329 sensor
-#define LTR329_MEAS_RATE 0x85    // Register to set the measurement rate and integration time
-#define LTR329_DATA_START 0x88   // Register address where ambient light data starts
-
-#define MCP9808_ADDR (0x18 << 1)       // I2C address of the MCP9808 temperature sensor (shifted for read/write operations)
-#define MCP9808_REG_AMBIENT_TEMP 0x05  // Register for reading the ambient temperature data
-
 #define MAX_M10S_DEFAULT_ADDR (0x42)  // Default I2C address of the MAX-M10S GPS module (shifted for read/write)
 #define sec 20
 
@@ -60,7 +52,7 @@
 #define SEALEVEL_PRESSURE 101325
 
 /* USER CODE BEGIN PV */
-volatile uint8_t buttonPressed = 0;  // Flag to indicate if the button has been pressed (1 = pressed, 0 = not pressed)
+volatile uint8_t PGOOD = 0;  // Flag to indicate if the button has been pressed (1 = pressed, 0 = not pressed)
 volatile uint32_t Threshold = 1000;  // ADC threshold value corresponding to 2.3V (calculated using Vin/Vref * (2^n - 1))
 volatile uint32_t value_adc = 0;     // Variable to store the ADC conversion result (raw digital value)
 volatile float latitude = 0.0f;
@@ -348,11 +340,11 @@ void i2c_scan(void) {
 }
 
 // External interrupt callback function (called when rising edge detected on button pin)
-//void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
-  //  if (GPIO_Pin == Cap_Intr_Pin) {  // Check if the triggered pin is the push button
-    //    buttonPressed = 1;           // Set flag to indicate button press
-    //}
-//}
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+   if (GPIO_Pin == PGOOD_Pin) {  // Check if the triggered pin is the push button
+       PGOOD = 1;           // Set flag to indicate button press
+    }
+}
 
 /* RTC Wakeup Timer Interrupt Handler ----------------------------------------*/
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef* hrtc) {
@@ -368,9 +360,9 @@ void ButtonTest() {
     while (1) {
         printf("Waiting for Button!\n");
         HAL_Delay(5000);
-        if (buttonPressed == 1) {
+        if (PGOOD == 1) {
             printf("Button Pressed!\n");
-            buttonPressed = 0;
+            PGOOD = 0;
         }
     }
 }
@@ -440,13 +432,14 @@ int main(void) {
     //ADC_READ_TEST();
 
     // Check if the ADC value is above a pre-defined threshold (good power check)
-    //if (value_adc > Threshold) {
+    if (PGOOD == 1) {
         // If the voltage is good
-        // GPS_ReadOnce();
+        GPS_ReadOnce();
         wait_for_gps_fix();
         printf("back in main(), now calling BME_SensorRead()\r\n");
         BME_SensorRead();
         APRS_CreatePacket(analogValues, &digitalValue, &comment);
+        PGOOD = 0;
         // Indicate system is entering standby mode
         Enter_Standby_Mode();
     //}
