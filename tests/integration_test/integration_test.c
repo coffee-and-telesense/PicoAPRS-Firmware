@@ -19,8 +19,8 @@
 #include "main.h"
 #include "rtc.h"
 #include "tim.h"
-//#include "usart.h"
-#include "dac.h"
+#include "usart.h"
+//#include "dac.h"
 
 /* USER CODE BEGIN Includes */
 #include <math.h>
@@ -48,7 +48,7 @@
 #define MAX_M10S_DEFAULT_ADDR (0x42)  // Default I2C address of the MAX-M10S GPS module (shifted for read/write)
 #define sec 20
 
-#define BME68X_ADDR (0x77 << 1)  // 0xEE
+#define BME68X_ADDRS (0x77 << 1)  // 0xEE
 #define SEALEVEL_PRESSURE 101325
 
 /* USER CODE BEGIN PV */
@@ -285,10 +285,10 @@ void INIT() {
     SystemClock_Config();
     printf("Initializing GPIO Ports...\n");
     MX_GPIO_Init();
-    printf("Initializing ADC...\n");
-    MX_ADC1_Init();
+    //printf("Initializing ADC...\n");
+    //MX_ADC1_Init();
     printf("Initializing USART...\n");
-    MX_USART2_UART_Init();
+    MX_USART1_UART_Init();
     printf("\nInitializing I2C...\n");
     MX_I2C1_Init();
     printf("Scanning i2c bus...\n");
@@ -315,7 +315,7 @@ void INIT() {
 
     HAL_Delay(50);
     MX_TIM2_Init();
-    if (HAL_I2C_IsDeviceReady(&hi2c1, BME68X_ADDR, 3, HAL_MAX_DELAY) == HAL_OK) {
+    if (HAL_I2C_IsDeviceReady(&hi2c1, BME68X_ADDRS, 3, HAL_MAX_DELAY) == HAL_OK) {
         printf("Sensor is ready\r\n");
     } else {
         printf("Sensor not responding\r\n");
@@ -442,7 +442,7 @@ int main(void) {
         PGOOD = 0;
         // Indicate system is entering standby mode
         Enter_Standby_Mode();
-    //}
+    }
 
     // If ADC voltage is too low (bad capacitor voltage), turn on user LED
     // Run LED step sequence to provide visual feedback

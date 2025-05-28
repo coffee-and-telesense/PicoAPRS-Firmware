@@ -21,7 +21,7 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-
+extern volatile uint8_t delay_complete = 0;
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim2;
@@ -107,5 +107,40 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 }
 
 /* USER CODE BEGIN 1 */
+/** Example implementation for a microsecond delay callback */
+void delay_us_timer(uint32_t us, void *intf_ptr)
+{
+  (void)intf_ptr;
+  /* Reset completion flag */
+  delay_complete = 0;
 
+  /* Set the timer period for the desired delay */
+  __HAL_TIM_SET_COUNTER(&htim2, 0);
+  __HAL_TIM_SET_AUTORELOAD(&htim2, us - 1);
+
+  /* Clear any pending interrupts */
+  __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
+
+  /* Start the timer with interrupts */
+  HAL_TIM_Base_Start_IT(&htim2);
+
+  /* Wait for completion (via interrupt) */
+  // This is a blocking delay, but it allows the CPU to enter
+  // a low-power mode during the wait if needed
+  while (delay_complete == 0)
+  {
+    /* Add memory barrier to prevent removal of this code with compiler optimization*/
+    __DSB();
+  }
+}
+
+/* Callback: executed when timer period elapses */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM2)
+  {
+    delay_complete = 1;
+    HAL_TIM_Base_Stop_IT(&htim2);
+  }
+}
 /* USER CODE END 1 */

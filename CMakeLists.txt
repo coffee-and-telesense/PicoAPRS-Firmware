@@ -18,8 +18,8 @@ if(U083)
     # Disable CTest integration
     set(CMAKE_SKIP_TESTS TRUE)
 
-project(PicoAPRS-Firmware C CXX ASM)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+    project(PicoAPRS-Firmware C CXX ASM)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
     ### This is a generator expression which will be evaluated during build
     ### system generation to produce project wide definitions
@@ -32,7 +32,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
     # Add library directories
     add_subdirectory(targets/stm32U0xx/U083/cmake/stm32cubemx)
     add_subdirectory(libs/gps)
-    #add_subdirectory(libs/common)
+    # add_subdirectory(libs/common)
     add_subdirectory(libs/bme68x)
     add_subdirectory(libs/aprs)
     add_subdirectory(libs/ax25)
@@ -77,7 +77,7 @@ endif()
 # Add tests
 #add_subdirectory(tests/gps_simple_test)
 add_subdirectory(tests/integration_test)
-add_subdirectory(tests/integrated_stop2_test)
+#add_subdirectory(tests/integrated_stop2_test)
 add_subdirectory(tests/test_aprs)
 #add_subdirectory(tests/test_bme688)
 

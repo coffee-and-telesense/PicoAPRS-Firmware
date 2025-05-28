@@ -52,7 +52,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SNSR_EN_GPIO_Port, SNSR_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPS_RTC_PWR_EN_Pin|GPS_PWR_EN_Pin|RF_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPS_RTC_PWR_EN_Pin|GPS_PWR_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PGOOD_Pin */
   GPIO_InitStruct.Pin = PGOOD_Pin;
@@ -67,12 +67,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SNSR_EN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO1_Pin GPIO0_Pin LLD_Pin */
-  GPIO_InitStruct.Pin = GPIO1_Pin|GPIO0_Pin|LLD_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pins : GPS_RTC_PWR_EN_Pin GPS_PWR_EN_Pin */
   GPIO_InitStruct.Pin = GPS_RTC_PWR_EN_Pin|GPS_PWR_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -80,31 +74,21 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : RF_IRQ_Pin */
-  GPIO_InitStruct.Pin = RF_IRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pin : LLD_Pin */
+  GPIO_InitStruct.Pin = LLD_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(RF_IRQ_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(LLD_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : RF_EN_Pin */
-  GPIO_InitStruct.Pin = RF_EN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(RF_EN_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : CHRGR_EN_Pin GPIO3_Pin GPIO2_Pin */
-  GPIO_InitStruct.Pin = CHRGR_EN_Pin|GPIO3_Pin|GPIO2_Pin;
+  /*Configure GPIO pin : CHRGR_EN_Pin */
+  GPIO_InitStruct.Pin = CHRGR_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(CHRGR_EN_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_3_IRQn);
 
 }
 
