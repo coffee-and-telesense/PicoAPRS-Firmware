@@ -45,14 +45,6 @@
 // Macro defining the prototype for the function that redirects printf output to UART
 
 /* --- Sensor addresses and register definitions --- */
-#define LTR329_ADDR (0x29 << 1)  // I2C address of the LTR-329 ambient light sensor (shifted for read/write operations)
-#define LTR329_CONTR 0x80        // Control register for configuring the LTR-329 sensor
-#define LTR329_MEAS_RATE 0x85    // Register to set the measurement rate and integration time
-#define LTR329_DATA_START 0x88   // Register address where ambient light data starts
-
-#define MCP9808_ADDR (0x18 << 1)       // I2C address of the MCP9808 temperature sensor (shifted for read/write operations)
-#define MCP9808_REG_AMBIENT_TEMP 0x05  // Register for reading the ambient temperature data
-
 #define MAX_M10S_DEFAULT_ADDR (0x42)  // Default I2C address of the MAX-M10S GPS module (shifted for read/write)
 #define sec 20
 

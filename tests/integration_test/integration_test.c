@@ -434,12 +434,19 @@ int main(void) {
     // Check if the ADC value is above a pre-defined threshold (good power check)
     if (PGOOD == 1) {
         // If the voltage is good
+        // Turns on gps transistor
+        HAL_GPIO_WritePin(GPIOA, GPS_RTC_PWR_EN_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOA, GPS_PWR_EN_Pin, GPIO_PIN_RESET);
         GPS_ReadOnce();
         wait_for_gps_fix();
         printf("back in main(), now calling BME_SensorRead()\r\n");
         BME_SensorRead();
         APRS_CreatePacket(analogValues, &digitalValue, &comment);
         PGOOD = 0;
+
+        // Turns off gps transistor
+        HAL_GPIO_WritePin(GPIOA, GPS_RTC_PWR_EN_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOA, GPS_PWR_EN_Pin, GPIO_PIN_SET);
         // Indicate system is entering standby mode
         Enter_Standby_Mode();
     }
