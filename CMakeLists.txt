@@ -32,7 +32,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
     # Add library directories
     add_subdirectory(targets/stm32U0xx/U083/cmake/stm32cubemx)
     add_subdirectory(libs/gps)
-    add_subdirectory(libs/common)
+    #add_subdirectory(libs/common)
     add_subdirectory(libs/bme68x)
     add_subdirectory(libs/aprs)
     add_subdirectory(libs/ax25)

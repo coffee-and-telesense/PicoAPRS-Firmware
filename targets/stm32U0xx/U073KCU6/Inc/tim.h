@@ -35,12 +35,14 @@ extern "C" {
 extern TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN Private defines */
+extern volatile uint8_t delay_complete;
 
 /* USER CODE END Private defines */
 
 void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void delay_us_timer(uint32_t us, void *intf_ptr);
 
 /* USER CODE END Prototypes */
 

@@ -12,10 +12,10 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "adc.h"
+//#include "adc.h"
 #include "gpio.h"
 #include "i2c.h"
-#include "usart.h"
+//#include "usart.h"
 //#include "logging.h"
 #include "main.h"
 #include "rtc.h"
@@ -90,10 +90,10 @@ char *comment = "hello!";
 
 /* --- Retarget printf to UART2 --- */
 /* Overrides putchar to send characters through UART2, allowing printf debugging */
-PUTCHAR_PROTOTYPE {
-    HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, COM_POLL_TIMEOUT);
-    return ch;
-}
+//PUTCHAR_PROTOTYPE {
+  //  HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, COM_POLL_TIMEOUT);
+    //return ch;
+//}
 
 
 /* ================================ */
@@ -103,7 +103,7 @@ PUTCHAR_PROTOTYPE {
 /* ================================ */
 /*       MAX10s GPS Functions       */
 /* ================================ */
-static void print_status(const char* message, gps_status_e status) {
+/*static void print_status(const char* message, gps_status_e status) {
     const char* status_str;
     switch (status) {
         case UBLOX_OK:
@@ -129,7 +129,7 @@ static void print_status(const char* message, gps_status_e status) {
             break;
     }
     printf("%s: %s (0x%02X)\r\n", message, status_str, status);
-}
+}*/
 
 void GPS_ReadOnce(void) {
     gps_status_e status;
@@ -347,11 +347,11 @@ void i2c_scan(void) {
 }
 
 // External interrupt callback function (called when rising edge detected on button pin)
-void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+/*void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
     if (GPIO_Pin == Cap_Intr_Pin) {  // Check if the triggered pin is the push button
         buttonPressed = 1;           // Set flag to indicate button press
     }
-}
+}*/
 
 /* RTC Wakeup Timer Interrupt Handler ----------------------------------------*/
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef* hrtc) {
@@ -419,10 +419,10 @@ void WakeInit() {
 void ADC_READ_TEST() {
     HAL_Delay(1000);  // Initial delay before reading ADC (stabilization time, if needed)
 
-    HAL_ADC_Start(&hadc1);                 // Start ADC conversion on ADC1
+    //HAL_ADC_Start(&hadc1);                 // Start ADC conversion on ADC1
     HAL_Delay(10);                         // Delay to allow some time before next reading (optional for testing)
-    value_adc = HAL_ADC_GetValue(&hadc1);  // Read the converted value (last result stored in register)
-    HAL_ADC_Stop(&hadc1);                  // Stop the ADC after reading (optional in single conversion mode, but good practice)
+   // value_adc = HAL_ADC_GetValue(&hadc1);  // Read the converted value (last result stored in register)
+   // HAL_ADC_Stop(&hadc1);                  // Stop the ADC after reading (optional in single conversion mode, but good practice)
 
     // Actual voltage value = (ADC_VAL / (2^n - 1)) * Vref
     // Print the current ADC value and the threshold value to UART (debugging output)
@@ -446,7 +446,7 @@ void APRS_CreatePacket(uint8_t *analogValues, char *digitalValue, char *comment)
     freeFrames(tFrame, NULL, NULL, NULL, NULL, &encodedFrame);
     
     //blinky
-    HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
+    //HAL_GPIO_TogglePin(UserLED_GPIO_Port, UserLED_Pin);
    
     HAL_Delay(10000);
 }
@@ -460,7 +460,7 @@ int main(void) {
         printf("First INIT \n");
     while(1) {
         HAL_Delay(50);
-        HAL_ADCEx_Calibration_Start(&hadc1);  // Calibrate ADC1 (recommended after power-up)
+       // HAL_ADCEx_Calibration_Start(&hadc1);  // Calibrate ADC1 (recommended after power-up)
 
         // Indicate the system has woken up from standby
         printf("System Successfully Booted!\n\n");
@@ -468,7 +468,7 @@ int main(void) {
 
         // Read initial ADC value to check battery/capacitor voltage
         printf("Starting ADC Calibration.\n");
-        ADC_READ_TEST();
+       // ADC_READ_TEST();
 
         // Check if the ADC value is above a pre-defined threshold (good power check)
         if (value_adc > Threshold) {
@@ -511,3 +511,4 @@ int main(void) {
     // Normally unreachable, but good practice to return 0 in main
     return 0;
 }
+
