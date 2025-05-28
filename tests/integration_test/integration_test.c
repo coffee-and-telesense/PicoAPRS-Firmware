@@ -7,7 +7,7 @@
  *
  * For a fresh run do cmake --preset Debug && cmake --build build/Debug
  * For a run that already has a debug cmake --build build/Debug --clean-first
- * For flashing/building STM32_Programmer_CLI --connect port=swd --download D:/School/CubeMXtest/u0_integrated_standby/build/Debug/u0_integrated_standby.elf -hardRst -rst --start
+ * For flashing/building STM32_Programmer_CLI --connect port=swd --download D:/School/Capstone/PicoAPRS-Firmware/build/U073KCU6/Debug/tests/integration_test/integration_test.elf -hardRst -rst --start
  ******************************************************************************
  */
 
@@ -435,26 +435,34 @@ int main(void) {
     HAL_Delay(500);
 
     // Read initial ADC value to check battery/capacitor voltage
-    printf("Starting ADC Calibration.\n");
+    // printf("Starting ADC Calibration.\n");
     //ADC_READ_TEST();
+    printf("PGOOD = %d\n",PGOOD);
 
+    printf("Forcing PGOOD to 1\n");
+    PGOOD = 1;
     // Check if the ADC value is above a pre-defined threshold (good power check)
     if (PGOOD == 1) {
         // If the voltage is good
-        // Turns on gps transistor
-        HAL_GPIO_WritePin(GPIOA, GPS_RTC_PWR_EN_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(GPIOA, GPS_PWR_EN_Pin, GPIO_PIN_RESET);
+        // Turns on gps transistor and enables 5V power lane
+        printf("Enabling 5V rail and GPS ports\n");
+        HAL_GPIO_WritePin(EN_5V_GPIO_Port, EN_5V_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPS_RTC_PWR_EN_GPIO_Port, GPS_RTC_PWR_EN_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPS_PWR_EN_GPIO_Port, GPS_PWR_EN_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(SNSR_EN_GPIO_Port, SNSR_EN_Pin, GPIO_PIN_RESET);
 
         GPS_ReadOnce();
         wait_for_gps_fix();
         printf("back in main(), now calling BME_SensorRead()\r\n");
         BME_SensorRead();
         APRS_CreatePacket(analogValues, &digitalValue, &comment);
-        PGOOD = 0;
-
-        // Turns off gps transistor
-        HAL_GPIO_WritePin(GPIOA, GPS_RTC_PWR_EN_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(GPIOA, GPS_PWR_EN_Pin, GPIO_PIN_SET);
+        HAL_Delay(5000);
+        // Turns off gps transistor and disables 5V power lane
+        printf("Turning off GPS and 5V rail\n");
+        HAL_GPIO_WritePin(GPS_RTC_PWR_EN_GPIO_Port, GPS_RTC_PWR_EN_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPS_PWR_EN_GPIO_Port, GPS_PWR_EN_Pin, GPIO_PIN_SET);
+        //HAL_GPIO_WritePin(EN_5V_GPIO_Port, EN_5V_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(SNSR_EN_GPIO_Port, SNSR_EN_Pin, GPIO_PIN_SET);
         // Indicate system is entering standby mode
         Enter_Standby_Mode();
     }

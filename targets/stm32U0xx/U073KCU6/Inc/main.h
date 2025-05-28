@@ -59,13 +59,14 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define PGOOD_Pin GPIO_PIN_0
 #define PGOOD_GPIO_Port GPIOA
-#define PGOOD_EXTI_IRQn EXTI0_1_IRQn
 #define SNSR_EN_Pin GPIO_PIN_1
 #define SNSR_EN_GPIO_Port GPIOA
 #define GPS_RTC_PWR_EN_Pin GPIO_PIN_0
 #define GPS_RTC_PWR_EN_GPIO_Port GPIOB
 #define GPS_PWR_EN_Pin GPIO_PIN_1
 #define GPS_PWR_EN_GPIO_Port GPIOB
+#define EN_5V_Pin GPIO_PIN_8
+#define EN_5V_GPIO_Port GPIOA
 #define LLD_Pin GPIO_PIN_15
 #define LLD_GPIO_Port GPIOA
 #define CHRGR_EN_Pin GPIO_PIN_5
