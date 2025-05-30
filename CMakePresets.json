@@ -6,8 +6,59 @@
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
-		    "toolchainFile": "${sourceDir}/CubeMX/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {}
+        },
+
+        {
+            "name": "U073KCU6-Debug",
+            "displayName": "STM32U073KCU6 Debug Build",
+            "description": "Debug build for STM32U073KCU6 target",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build/U073KCU6/Debug",
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "TARGET_MCU": "U073KCU6",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/targets/stm32U0xx/U073KCU6/cmake/gcc-arm-none-eabi.cmake",
+                "GPS_NON_BLOCKING": "ON"
+            }
+        },
+        {
+            "name": "U073KCU6-Release",
+            "displayName": "STM32U073KCU6 Release Build",
+            "description": "Release build for STM32U073KCU6 target",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build/U073KCU6/Release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "TARGET_MCU": "U073KCU6",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/targets/stm32U0xx/U073KCU6/cmake/gcc-arm-none-eabi.cmake",
+                "GPS_NON_BLOCKING": "ON"
+            }
+        },
+        {
+            "name": "U083-Debug",
+            "displayName": "STM32U083 Debug Build",
+            "description": "Debug build for STM32U083 target",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build/U083/Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "TARGET_MCU": "U083",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/targets/stm32U0xx/U083/cmake/gcc-arm-none-eabi.cmake",
+                "GPS_NON_BLOCKING": "ON"
+            }
+        },
+        {
+            "name": "U083-Release",
+            "displayName": "STM32U083 Release Build",
+            "description": "Release build for STM32U083 target",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build/U083/Release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "TARGET_MCU": "U083",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/targets/stm32U0xx/U083/cmake/gcc-arm-none-eabi.cmake",
+                "GPS_NON_BLOCKING": "ON"
             }
         },
         {
@@ -41,6 +92,22 @@
     ],
     "buildPresets": [
         {
+            "name": "U073KCU6-Debug",
+            "configurePreset": "U073KCU6-Debug"
+        },
+        {
+            "name": "U073KCU6-Release",
+            "configurePreset": "U073KCU6-Release"
+        },
+        {
+            "name": "U083-Debug",
+            "configurePreset": "U083-Debug"
+        },
+        {
+            "name": "U083-Release",
+            "configurePreset": "U083-Release"
+        },
+        {
             "name": "Debug",
             "configurePreset": "Debug"
         },
@@ -55,6 +122,24 @@
         {
             "name": "MinSizeRel",
             "configurePreset": "MinSizeRel"
+        },
+
+        {
+            "name": "gps_simple_test",
+            "description": "",
+            "displayName": ""
+        },
+
+        {
+            "name": "test_bme688",
+            "description": "",
+            "displayName": ""
+        },
+
+        {
+            "name": "test_integration",
+            "description": "",
+            "displayName": ""
         }
     ]
 }

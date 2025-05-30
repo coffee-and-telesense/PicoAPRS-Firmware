@@ -34,6 +34,8 @@
  * @date       2023-02-07
  * @version    v4.4.8
  *
+ * ADD TEMP,GAS,PRESSURE HUMIDTY ERRORS
+ * ADD I2C Errors
  */
 
 /*! @cond DOXYGEN_SUPRESS */
@@ -118,7 +120,7 @@
 
 /* Errors */
 /* Null pointer passed */
-#define BME68X_E_NULL_PTR INT8_C(-1)
+#define BME68X_E_NULL_PTR INT8_C(-11)
 
 /* Communication failure */
 #define BME68X_E_COM_FAIL INT8_C(-2)

@@ -12,7 +12,7 @@
 #include "stm32u0xx_hal.h" // Include the HAL header for STM32U0xx
 #include "usart.h"
 
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart1;
 
 // The following macro may be used when inlining the code is preferable for
 // performance reasons, and the additional code size is not a concern.
@@ -26,7 +26,7 @@ extern UART_HandleTypeDef huart2;
 
     void debug_print(const char *fmt, ...);
 
-    #define DEBUG_UART huart2
+    #define DEBUG_UART huart1
     #define debug_print_inline(fmt, ...)                                                                             \
     do                                                                                                               \
     {                                                                                                                \
