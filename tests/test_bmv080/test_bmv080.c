@@ -25,9 +25,17 @@
 #include "logging.h"
 #include "bmv080_example.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 uint8_t Read_Register(uint8_t reg);
+
+/* Print function */
+int bmv080_uart_print(const char *fmt, ...);
 
 void enable_external_interrupt(bool enable)
 {
@@ -63,8 +71,6 @@ int main(void)
 
   debug_print("BMV080 Test\r\n");
 
-  HAL_Delay(2000);
-
   // TODO: Check address - the define BMV080_I2C_ADDRESS is 0x54, from the Bosch example code,
   // but the default address is 0x57. The default of 0x57 works with a left shift, which seem
   // fine, though it's unclear why the example code defaults to 0x54.
@@ -78,7 +84,7 @@ int main(void)
     debug_print("Sensor not responding\r\n");
   }
 
-  HAL_Delay(5000);
+  HAL_Delay(1000);
 
   // Got the following output with the call to bmv080 below:
   // BMV080 sensor driver version: 24.0.0.16b8c68a693.0
@@ -92,12 +98,12 @@ int main(void)
       (const bmv080_callback_write_t)combridge_i2c_write_16bit,
       (const bmv080_callback_delay_t)combridge_delay,
       (const bmv080_callback_tick_t)HAL_GetTick,
-      (const print_function_t)debug_print,
+      (const print_function_t)bmv080_uart_print,
       (const enable_ext_interrupt_function_t)enable_external_interrupt);
 
   if (bmv080_final_status != E_BMV080_OK)
   {
-    printf("Executing the sensor APIs failed with bmv080 status %d\n", (int)bmv080_final_status);
+    debug_print("Executing the sensor APIs failed with bmv080 status %d\n", (int)bmv080_final_status);
   }
 
   /* Infinite loop */
@@ -107,4 +113,30 @@ int main(void)
     HAL_Delay(1000);
     debug_print("BMV080 test app loop\r\n");
   }
+}
+
+int bmv080_uart_print(const char *fmt, ...)
+{
+  char buffer[128];
+  int result;
+
+  va_list args;
+  va_start(args, fmt);
+  result = vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+
+  if (result < 0)
+  {
+    const char *err_msg = "[bmv080_print] vsnprintf error\n";
+    HAL_UART_Transmit(&huart2, (uint8_t *)err_msg, strlen(err_msg), 100);
+    return result;
+  }
+
+  buffer[sizeof(buffer) - 1] = '\0';
+  size_t len = (size_t)result;
+  if (len > sizeof(buffer))
+    len = sizeof(buffer) - 1;
+
+  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, 100);
+  return result;
 }
