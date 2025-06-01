@@ -79,7 +79,9 @@ extern "C" {
 /* BMV080 I2C address
  * note that the BMV080 pins are connected such that I2C Address Bit 0 = 0 and I2C Address Bit 1 = 0
  */
-#define BMV080_I2C_ADDRESS 0x54
+// TODO: Determine which address is used in which contexts
+// #define BMV080_I2C_ADDRESS 0x54
+#define BMV080_I2C_ADDRESS 0x57
 
 /* Helper macro for updating the final status */
 #define UPDATE_OPERATION_STATUS(current_status, final_status) (final_status = ((final_status) != 0) ? (final_status) : (current_status))
