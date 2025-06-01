@@ -24,7 +24,7 @@ extern UART_HandleTypeDef huart2;
     #include <stdio.h> // Required for snprintf()
     #include <stdarg.h> // Required for va_list handling
 
-    void debug_print(const char *fmt, ...);
+    int debug_print(const char *fmt, ...);
 
     #define DEBUG_UART huart2
     #define debug_print_inline(fmt, ...)                                                                             \

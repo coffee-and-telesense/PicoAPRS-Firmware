@@ -2,7 +2,7 @@
 
 #ifdef DEBUG
 
-void debug_print(const char *fmt, ...)
+int debug_print(const char *fmt, ...)
 {
   char buffer[128]; // Adjust size as needed
   va_list args;
@@ -14,8 +14,10 @@ void debug_print(const char *fmt, ...)
 
   if (result < 0)
   {
+    const char *err_msg = "vsnprintf error\n";
     // Handle snprintf error
-    HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)"vsnprintf error\n", 16, 100);
+    HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)err_msg, strlen(err_msg), 100);
+    return result;
   }
   else
   {
@@ -31,6 +33,7 @@ void debug_print(const char *fmt, ...)
 
     // Transmit the formatted message
     HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)buffer, len, 100);
+    return result;
   }
 }
 // Calling code should wrap in #ifdef DEBUG, so there is no #else here.
