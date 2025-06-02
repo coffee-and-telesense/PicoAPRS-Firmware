@@ -18,8 +18,8 @@ Note: The ARM toolchain (`arm-none-eabi-*`) appears as dependencies in your tool
 ## Project Structure
 ```bash
 .
-├── Config/                 # Global configuration
-├── Src/                    # Core source code
+├── CubeMX/                 # Global configuration
+├── libs/                    # Core source code
 │   └── Sensors/            # Sensor drivers
 ├── targets/                # Target-specific code
 ├── tests/                  # Development and testing
