@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(bmv080)
 
 add_library(bmv080 STATIC
-    
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/bmv080_driver.c
 )
 
 target_include_directories(bmv080 PUBLIC
