@@ -18,6 +18,11 @@
 #include "bmv080_defs.h"
 #include "bmv080.h"
 
+#include <stdlib.h>
+#include <math.h>
+#include <stdbool.h>
+#include <string.h> // For memset
+
 /* ========================== MACROS ========================== */
 /** @note: The datasheet states that the default I2C address is 0x57, but the Bosch
  * example code uses 0x54 as the default. User should confirm the address and override
@@ -194,19 +199,6 @@ bool bmv080_is_valid_output(const bmv080_output_t *o);
 bmv080_fixed_t bmv080_to_fixed(const bmv080_output_t *o);
 
 /**
- * @brief Formatted UART print function for BMV080 sensor messages
- *
- * Formats a message using `vsnprintf` and sends it over UART using HAL.
- * If `vsnprintf` fails, an error message is sent instead.
- *
- * @param[in] fmt Format string (supports standard printf format specifiers)
- * @param[in] ... Variadic arguments to be formatted
- *
- * @return Number of characters transmitted on success, negative value on error
- */
-int bmv080_uart_print(const char *fmt, ...);
-
-/**
  * @example main.c
  *
  * Example usage of the BMV080 sensor driver.
@@ -235,7 +227,7 @@ int bmv080_uart_print(const char *fmt, ...);
  *          bmv080_fixed_t fixed = bmv080_to_fixed(&bmv080.output);
 
  *          // Print fixed-point values (example)
- *          bmv080_uart_print("Fixed output: runtime=%u (0.01s), PM1=%u, PM2.5=%u, PM10=%u, flags=0x%02X\r\n",
+ *          debug_print("Fixed output: runtime=%u (0.01s), PM1=%u, PM2.5=%u, PM10=%u, flags=0x%02X\r\n",
  *                            fixed.runtime_in_0_01_sec,
  *                            fixed.pm1,
  *                            fixed.pm2_5,

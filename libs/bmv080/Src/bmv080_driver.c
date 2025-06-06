@@ -9,10 +9,6 @@
  ******************************************************************************/
 
 #include "bmv080_driver.h"
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-#include <string.h> // For memset
 
 /** Initializes a BMV080 sensor structure with default values and I2C interface. */
 void bmv080_init(bmv080_sensor_t *sensor, I2C_HandleTypeDef *i2c_handle)
@@ -100,11 +96,11 @@ void bmv080_print_output(const bmv080_output_t *output)
 
   if (!bmv080_is_valid_output(output))
   {
-    bmv080_uart_print("[bmv080_print] Invalid output detected\r\n");
+    debug_print("[bmv080_print] Invalid output detected\r\n");
     return;
   }
 
-  bmv080_uart_print(
+  debug_print(
       "Runtime: %.2f s, PM1: %.0f ug/m^3, PM2.5: %.0f ug/m^3, PM10: %.0f ug/m^3, "
       "obstructed: %s, outside range: %s\r\n",
       output->runtime_in_sec,
@@ -238,29 +234,3 @@ bmv080_fixed_t bmv080_to_fixed(const bmv080_output_t *o)
   return out;
 }
 
-/** Formatted UART print function for BMV080 sensor messages */
-int bmv080_uart_print(const char *fmt, ...)
-{
-  char buffer[128];
-  int result;
-
-  va_list args;
-  va_start(args, fmt);
-  result = vsnprintf(buffer, sizeof(buffer), fmt, args);
-  va_end(args);
-
-  if (result < 0)
-  {
-    const char *err_msg = "[bmv080_print] vsnprintf error\n";
-    HAL_UART_Transmit(&huart2, (uint8_t *)err_msg, strlen(err_msg), 100);
-    return result;
-  }
-
-  buffer[sizeof(buffer) - 1] = '\0';
-  size_t len = (size_t)result;
-  if (len > sizeof(buffer))
-    len = sizeof(buffer) - 1;
-
-  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, 100);
-  return result;
-}
