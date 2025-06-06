@@ -27,9 +27,22 @@
 
 /* ========================== TYPE DEFINITIONS ========================== */
 
-
-
-
+/**
+ * @struct bmv080_fixed_t
+ * @brief Fixed-point representation of BMV080 sensor output for transmission.
+ *
+ * Encodes selected fields from the BMV080 sensor output structure using fixed-point formats.
+ * PM values are scaled from 0–1000 µg/m³ into uint16_t (0–65535). Runtime is stored with
+ * 0.01-second resolution, and flags indicate obstruction and range validity.
+ */
+typedef struct
+{
+  uint16_t pm1;                 /**< PM1 mass concentration in fixed-point format (0–65535 maps to 0–1000 µg/m³) */
+  uint16_t pm2_5;               /**< PM2.5 mass concentration in fixed-point format (0–65535 maps to 0–1000 µg/m³) */
+  uint16_t pm10;                /**< PM10 mass concentration in fixed-point format (0–65535 maps to 0–1000 µg/m³) */
+  uint16_t runtime_in_0_01_sec; /**< Runtime since measurement start, stored in 0.01-second resolution (max ~655 s) */
+  uint8_t flags;                /**< Bitfield: [0] = obstructed, [1] = outside measurement range */
+} bmv080_fixed_t;
 
 /* ========================== FUNCTION PROTOTYPES ========================== */
 /**
@@ -71,5 +84,30 @@ int8_t i2c_write_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, const 
  * @param[in] period_us Duration of the delay in microseconds
  */
 int8_t delay_cb(uint32_t period_us);
+
+/**
+ * @brief Validates the BMV080 sensor output for numeric correctness.
+ *
+ * Checks for NaN and out-of-bounds values in the PM2.5 reading. Returns false if any critical
+ * value is invalid or the pointer is null. This function can be used to filter corrupt
+ * or uninitialized frames before processing or conversion.
+ *
+ * @param[in] o Pointer to the BMV080 sensor output structure to validate
+ * @return true if the output is valid, false otherwise
+ */
+bool bmv080_is_valid_output(const bmv080_output_t *o);
+
+/**
+ * @brief Converts BMV080 sensor output to a fixed-point representation.
+ *
+ * Maps float values from the BMV080 output structure into fixed-point fields suitable for
+ * transmission or compact storage. PM values are scaled to 16-bit unsigned integers using
+ * a linear transformation from 0–1000 µg/m³ to 0–65535. Runtime is converted to a 0.01-second
+ * resolution. Obstruction and range validity flags are encoded in a compact bitfield.
+ *
+ * @param[in] o Pointer to the BMV080 sensor output structure to convert
+ * @return bmv080_fixed_t structure containing the fixed-point values
+ */
+bmv080_fixed_t bmv080_to_fixed(const bmv080_output_t *o);
 
 // TODO: Include example usage

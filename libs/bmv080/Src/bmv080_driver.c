@@ -9,6 +9,9 @@
  ******************************************************************************/
 
 #include "bmv080_driver.h"
+#include <stdlib.h>
+#include <math.h>
+#include <stdbool.h>
 
 /** @brief Implements the default I2C read transaction */
 int8_t i2c_read_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, uint16_t *payload, uint16_t payload_length) {
@@ -82,4 +85,50 @@ int8_t i2c_write_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, const 
 int8_t delay_cb(uint32_t period_us) {
   HAL_Delay(period_us);
   return HAL_OK;
+}
+
+/** Validates the BMV080 sensor output for numeric correctness. */
+bool bmv080_is_valid_output(const bmv080_output_t *o)
+{
+  if (!o)
+    return false;
+
+  return !isnan(o->runtime_in_sec) &&
+         !isnan(o->pm2_5_mass_concentration) &&
+         o->pm2_5_mass_concentration >= 0.0f &&
+         o->pm2_5_mass_concentration <= 1000.0f;
+}
+
+/** Converts BMV080 sensor output to a fixed-point representation. */
+bmv080_fixed_t bmv080_to_fixed(const bmv080_output_t *o)
+{
+  bmv080_fixed_t out = {0};
+
+  if (!o) {
+    return out;
+  }
+
+  // Clamp and scale PM values: float [0–1000] -> uint16_t [0–65535]
+  float scale = 65535.0f / 1000.0f;
+
+  out.pm1 = (o->pm1_mass_concentration < 0.0f) ? 0 : (o->pm1_mass_concentration > 1000.0f) ? 65535
+                                                                                           : (uint16_t)(o->pm1_mass_concentration * scale + 0.5f);
+
+  out.pm2_5 = (o->pm2_5_mass_concentration < 0.0f) ? 0 : (o->pm2_5_mass_concentration > 1000.0f) ? 65535
+                                                                                                 : (uint16_t)(o->pm2_5_mass_concentration * scale + 0.5f);
+
+  out.pm10 = (o->pm10_mass_concentration < 0.0f) ? 0 : (o->pm10_mass_concentration > 1000.0f) ? 65535
+                                                                                              : (uint16_t)(o->pm10_mass_concentration * scale + 0.5f);
+
+  // Runtime in 0.01-second resolution, clipped at ~655s
+  out.runtime_in_0_01_sec = (uint16_t)(fminf(fmaxf(o->runtime_in_sec, 0.0f), 655.35f) * 100.0f + 0.5f);
+
+  // Set flags
+  out.flags = 0;
+  if (o->is_obstructed)
+    out.flags |= 0x01;
+  if (o->is_outside_measurement_range)
+    out.flags |= 0x02;
+
+  return out;
 }
