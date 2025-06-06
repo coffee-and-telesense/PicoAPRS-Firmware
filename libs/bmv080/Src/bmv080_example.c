@@ -518,3 +518,32 @@ int8_t combridge_delay(uint32_t period)
     HAL_Delay(period);
     return HAL_OK;
 }
+
+// Function below is for reference - this can be included in application
+// or driver code that has included the STM32 HAL
+/** Formatted UART print function for BMV080 sensor messages */
+// int bmv080_uart_print(const char *fmt, ...)
+// {
+//     char buffer[128];
+//     int result;
+
+//     va_list args;
+//     va_start(args, fmt);
+//     result = vsnprintf(buffer, sizeof(buffer), fmt, args);
+//     va_end(args);
+
+//     if (result < 0)
+//     {
+//         const char *err_msg = "[bmv080_print] vsnprintf error\n";
+//         HAL_UART_Transmit(&huart2, (uint8_t *)err_msg, strlen(err_msg), 100);
+//         return result;
+//     }
+
+//     buffer[sizeof(buffer) - 1] = '\0';
+//     size_t len = (size_t)result;
+//     if (len > sizeof(buffer))
+//         len = sizeof(buffer) - 1;
+
+//     HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, 100);
+//     return result;
+// }

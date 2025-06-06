@@ -74,6 +74,9 @@ extern "C" {
 #include "bmv080_defs.h"
 #include "bmv080.h"
 
+#include <stdlib.h>
+#include <stdarg.h> // For bmv080_uart_print
+
 // NOTE: BMV080_I2C_ADDRESS originally from combridge.c
 /* Private define ------------------------------------------------------------*/
 /* BMV080 I2C address
@@ -147,6 +150,21 @@ int8_t combridge_i2c_write_16bit(bmv080_sercom_handle_t handle, uint16_t header,
 
 /* Delay function */
 int8_t combridge_delay(uint32_t period);
+
+// Function below is for reference - this can be included in application
+// or driver code that has included the STM32 HAL
+/**
+ * @brief Formatted UART print function for BMV080 sensor messages
+ *
+ * Formats a message using `vsnprintf` and sends it over UART using HAL.
+ * If `vsnprintf` fails, an error message is sent instead.
+ *
+ * @param[in] fmt Format string (supports standard printf format specifiers)
+ * @param[in] ... Variadic arguments to be formatted
+ *
+ * @return Number of characters transmitted on success, negative value on error
+ */
+// int bmv080_uart_print(const char *fmt, ...);
 
 #ifdef __cplusplus  
 }
