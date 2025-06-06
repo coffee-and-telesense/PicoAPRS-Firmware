@@ -29,8 +29,8 @@ void bmv080_init(bmv080_sensor_t *sensor, I2C_HandleTypeDef *i2c_handle)
   sensor->status = bmv080_open(
       &sensor->handle,
       sensor->i2c_handle,
-      (const bmv080_callback_read_t)i2c_read_16bit_cb,
-      (const bmv080_callback_write_t)i2c_write_16bit_cb,
+      (const bmv080_callback_read_t)bmv080_i2c_read,
+      (const bmv080_callback_write_t)bmv080_i2c_write,
       (const bmv080_callback_delay_t)bmv080_delay_cb);
 }
 
@@ -116,7 +116,8 @@ void bmv080_print_output(const bmv080_output_t *output)
 }
 
 /** @brief Implements the default I2C read transaction */
-int8_t i2c_read_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, uint16_t *payload, uint16_t payload_length) {
+int8_t bmv080_i2c_read(bmv080_sercom_handle_t handle, uint16_t header, uint16_t *payload, uint16_t payload_length)
+{
   HAL_StatusTypeDef return_value;
   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)handle;
 
@@ -149,7 +150,8 @@ int8_t i2c_read_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, uint16_
 }
 
 /** Implements the default I2C write transaction */
-int8_t i2c_write_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, const uint16_t *payload, uint16_t payload_length) {
+int8_t bmv080_i2c_write(bmv080_sercom_handle_t handle, uint16_t header, const uint16_t *payload, uint16_t payload_length)
+{
   HAL_StatusTypeDef return_value;
   I2C_HandleTypeDef *i2c_handle = (I2C_HandleTypeDef *)handle;
 

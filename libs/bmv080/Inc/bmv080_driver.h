@@ -141,7 +141,7 @@ void bmv080_print_output(const bmv080_output_t *output);
  * @param[in] payload_length Lumber of _payload_ elements to be read.
  * @return 0 if successful, otherwise the return value is an externally defined error code.
  */
-int8_t i2c_read_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, uint16_t *payload, uint16_t payload_length);
+int8_t bmv080_i2c_read(bmv080_sercom_handle_t handle, uint16_t header, uint16_t *payload, uint16_t payload_length);
 
 /**
  * @brief Implements the default I2C write transaction
@@ -156,7 +156,7 @@ int8_t i2c_read_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, uint16_
  * @param[in] payload_length Lumber of _payload_ elements to be written.
  * @return 0 if successful, otherwise the return value is an externally defined error code.
  */
-int8_t i2c_write_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, const uint16_t *payload, uint16_t payload_length);
+int8_t bmv080_i2c_write(bmv080_sercom_handle_t handle, uint16_t header, const uint16_t *payload, uint16_t payload_length);
 
 /**
  * @brief Implementation for a microsecond delay callback
@@ -206,4 +206,47 @@ bmv080_fixed_t bmv080_to_fixed(const bmv080_output_t *o);
  */
 int bmv080_uart_print(const char *fmt, ...);
 
-// TODO: Include example usage
+/**
+ * @example main.c
+ *
+ * Example usage of the BMV080 sensor driver.
+ * @note: Requires HAL peripheral drivers and initialization, specifically for i2c.
+ * @note: Assumes an I2C_HandleTypeDef hi2c1 instance exists.
+ *
+ * @code
+ * #include "bmv080_driver.h"
+ *
+ * int main(void) {
+ *      bmv080_sensor_t bmv080;
+ *      bmv080_init(&bmv080, &hi2c1);
+ *      bmv080_configure_duty_cycle(&bmv080, 20); // 20 second cycle
+ *      if (bmv080.status != E_BMV080_OK)
+ *        printf("Failed to configure duty cycle: %d\r\n", bmv080.status);
+ *      bmv080_start_duty_cycle(&bmv080);
+
+ *      while (1)
+ *      {
+ *        if (bmv080_poll(&bmv080) == E_BMV080_OK && bmv080.data_available)
+ *        {
+ *          // Floating point output
+ *          bmv080_print_output(&bmv080.output);
+
+ *          // Convert to fixed-point representation
+ *          bmv080_fixed_t fixed = bmv080_to_fixed(&bmv080.output);
+
+ *          // Print fixed-point values (example)
+ *          bmv080_uart_print("Fixed output: runtime=%u (0.01s), PM1=%u, PM2.5=%u, PM10=%u, flags=0x%02X\r\n",
+ *                            fixed.runtime_in_0_01_sec,
+ *                            fixed.pm1,
+ *                            fixed.pm2_5,
+ *                            fixed.pm10,
+ *                            fixed.flags);
+
+ *           bmv080.data_available = false;
+ *           debug_print("\r\n");
+ *        }
+ *        HAL_Delay(100); // Polling period
+ *     }
+ * }
+ * @endcode
+ */

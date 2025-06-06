@@ -69,7 +69,7 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM2_Init();
 
-  debug_print("*********BMV080 Test*********\r\n");
+  debug_print("************BMV080 Test************\r\n");
 
   if (HAL_I2C_IsDeviceReady(&hi2c1, BMV080_I2C_ADDRESS << 1, 3, HAL_MAX_DELAY) == HAL_OK)
   {
@@ -83,22 +83,22 @@ int main(void)
   HAL_Delay(1000);
 
   // BMV080 sensor driver version: 24.0.0.16b8c68a693.0
-  bmv080_sensor_t sensor;
-  bmv080_init(&sensor, &hi2c1);
-  bmv080_configure_duty_cycle(&sensor, 20); // 20 second cycle
-  if (sensor.status != E_BMV080_OK)
-    printf("Failed to configure duty cycle: %d\r\n", sensor.status);
-  bmv080_start_duty_cycle(&sensor);
+  bmv080_sensor_t bmv080;
+  bmv080_init(&bmv080, &hi2c1);
+  bmv080_configure_duty_cycle(&bmv080, 20); // 20 second cycle
+  if (bmv080.status != E_BMV080_OK)
+    printf("Failed to configure duty cycle: %d\r\n", bmv080.status);
+  bmv080_start_duty_cycle(&bmv080);
 
   while (1)
   {
-    if (bmv080_poll(&sensor) == E_BMV080_OK && sensor.data_available)
+    if (bmv080_poll(&bmv080) == E_BMV080_OK && bmv080.data_available)
     {
       // Floating point output
-      bmv080_print_output(&sensor.output);
+      bmv080_print_output(&bmv080.output);
 
       // Convert to fixed-point representation
-      bmv080_fixed_t fixed = bmv080_to_fixed(&sensor.output);
+      bmv080_fixed_t fixed = bmv080_to_fixed(&bmv080.output);
 
       // Print fixed-point values (example)
       bmv080_uart_print("Fixed output: runtime=%u (0.01s), PM1=%u, PM2.5=%u, PM10=%u, flags=0x%02X\r\n",
@@ -108,7 +108,7 @@ int main(void)
                         fixed.pm10,
                         fixed.flags);
 
-      sensor.data_available = false;
+      bmv080.data_available = false;
       debug_print("\r\n");
     }
     HAL_Delay(100); // Polling period
