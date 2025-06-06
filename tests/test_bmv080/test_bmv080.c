@@ -27,7 +27,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <string.h>
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,12 +100,12 @@ int main(void)
       bmv080_fixed_t fixed = bmv080_to_fixed(&bmv080.output);
 
       // Print fixed-point values (example)
-      bmv080_uart_print("Fixed output: runtime=%u (0.01s), PM1=%u, PM2.5=%u, PM10=%u, flags=0x%02X\r\n",
-                        fixed.runtime_in_0_01_sec,
-                        fixed.pm1,
-                        fixed.pm2_5,
-                        fixed.pm10,
-                        fixed.flags);
+      debug_print("Fixed output: runtime=%u (0.01s), PM1=%u, PM2.5=%u, PM10=%u, flags=0x%02X\r\n",
+                  fixed.runtime_in_0_01_sec,
+                  fixed.pm1,
+                  fixed.pm2_5,
+                  fixed.pm10,
+                  fixed.flags);
 
       bmv080.data_available = false;
       debug_print("\r\n");
