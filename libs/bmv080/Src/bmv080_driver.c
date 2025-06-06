@@ -31,7 +31,89 @@ void bmv080_init(bmv080_sensor_t *sensor, I2C_HandleTypeDef *i2c_handle)
       sensor->i2c_handle,
       (const bmv080_callback_read_t)i2c_read_16bit_cb,
       (const bmv080_callback_write_t)i2c_write_16bit_cb,
-      (const bmv080_callback_delay_t)delay_cb);
+      (const bmv080_callback_delay_t)bmv080_delay_cb);
+}
+
+/** Internal data-ready callback used during polling, passed to bmv080_serve_interrupt */
+static void bmv080_data_callback(bmv080_output_t output, void *user_ptr)
+{
+  bmv080_sensor_t *sensor = (bmv080_sensor_t *)user_ptr;
+  sensor->output = output;
+  bmv080_print_output(&output);
+  sensor->data_available = true;
+}
+
+/** Get the current system time in milliseconds */
+uint32_t bmv080_get_tick_ms(void)
+{
+  return HAL_GetTick(); // Millisecond tick from HAL
+}
+
+/** Configure the sensor's duty cycling period */
+bmv080_status_code_t bmv080_configure_duty_cycle(bmv080_sensor_t *sensor, uint16_t period_s)
+{
+  if (!sensor)
+    return E_BMV080_ERROR_NULLPTR;
+
+  sensor->status = bmv080_reset(sensor->handle);
+  if (sensor->status != E_BMV080_OK)
+    return sensor->status;
+
+  sensor->status = bmv080_set_parameter(sensor->handle, "duty_cycling_period", &period_s);
+  return sensor->status;
+}
+
+/** Start a BMV080 measurement in duty cycling mode */
+bmv080_status_code_t bmv080_start_duty_cycle(bmv080_sensor_t *sensor)
+{
+  if (!sensor)
+    return E_BMV080_ERROR_NULLPTR;
+
+  return bmv080_start_duty_cycling_measurement(
+      sensor->handle,
+      bmv080_get_tick_ms,
+      E_BMV080_DUTY_CYCLING_MODE_0);
+}
+
+/** Poll the sensor for new measurement data */
+bmv080_status_code_t bmv080_poll(bmv080_sensor_t *sensor)
+{
+  if (!sensor)
+    return E_BMV080_ERROR_NULLPTR;
+
+  return bmv080_serve_interrupt(sensor->handle, bmv080_data_callback, sensor);
+}
+
+/** Stop the current measurement session */
+bmv080_status_code_t bmv080_stop(bmv080_sensor_t *sensor)
+{
+  if (!sensor)
+    return E_BMV080_ERROR_NULLPTR;
+
+  return bmv080_stop_measurement(sensor->handle);
+}
+
+/** Print a sensor output record over UART */
+void bmv080_print_output(const bmv080_output_t *output)
+{
+  if (!output)
+    return;
+
+  if (!bmv080_is_valid_output(output))
+  {
+    bmv080_uart_print("[bmv080_print] Invalid output detected\r\n");
+    return;
+  }
+
+  bmv080_uart_print(
+      "Runtime: %.2f s, PM1: %.0f ug/m^3, PM2.5: %.0f ug/m^3, PM10: %.0f ug/m^3, "
+      "obstructed: %s, outside range: %s\r\n",
+      output->runtime_in_sec,
+      output->pm1_mass_concentration,
+      output->pm2_5_mass_concentration,
+      output->pm10_mass_concentration,
+      output->is_obstructed ? "yes" : "no",
+      output->is_outside_measurement_range ? "yes" : "no");
 }
 
 /** @brief Implements the default I2C read transaction */
@@ -103,7 +185,8 @@ int8_t i2c_write_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, const 
 }
 
 /** Implementation for a microsecond delay callback */
-int8_t delay_cb(uint32_t period_us) {
+int8_t bmv080_delay_cb(uint32_t period_us)
+{
   HAL_Delay(period_us);
   return HAL_OK;
 }
@@ -152,4 +235,31 @@ bmv080_fixed_t bmv080_to_fixed(const bmv080_output_t *o)
     out.flags |= 0x02;
 
   return out;
+}
+
+/** Formatted UART print function for BMV080 sensor messages */
+int bmv080_uart_print(const char *fmt, ...)
+{
+  char buffer[128];
+  int result;
+
+  va_list args;
+  va_start(args, fmt);
+  result = vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+
+  if (result < 0)
+  {
+    const char *err_msg = "[bmv080_print] vsnprintf error\n";
+    HAL_UART_Transmit(&huart2, (uint8_t *)err_msg, strlen(err_msg), 100);
+    return result;
+  }
+
+  buffer[sizeof(buffer) - 1] = '\0';
+  size_t len = (size_t)result;
+  if (len > sizeof(buffer))
+    len = sizeof(buffer) - 1;
+
+  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, 100);
+  return result;
 }

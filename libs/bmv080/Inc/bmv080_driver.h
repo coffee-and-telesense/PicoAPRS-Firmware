@@ -73,6 +73,62 @@ typedef struct
 void bmv080_init(bmv080_sensor_t *sensor, I2C_HandleTypeDef *i2c_handle);
 
 /**
+ * @brief Get the current system time in milliseconds
+ *
+ * Used by the BMV080 driver for timing in duty cycle mode.
+ *
+ * @return Current tick count in milliseconds
+ */
+uint32_t bmv080_get_tick_ms(void);
+
+/**
+ * @brief Configure the sensor's duty cycling period
+ *
+ * Resets the sensor and applies a new duty cycle interval in seconds.
+ *
+ * @param[in,out] sensor Pointer to initialized sensor struct
+ * @param[in] period_s Desired duty cycling period in seconds (e.g., 10, 20)
+ * @return Status code from BMV080 API
+ */
+bmv080_status_code_t bmv080_configure_duty_cycle(bmv080_sensor_t *sensor, uint16_t period_s);
+
+/**
+ * @brief Start a BMV080 measurement in duty cycling mode
+ *
+ * Uses the internal system tick to support time-based cycling.
+ *
+ * @param[in,out] sensor Pointer to initialized sensor struct
+ * @return Status code from BMV080 API
+ */
+bmv080_status_code_t bmv080_start_duty_cycle(bmv080_sensor_t *sensor);
+
+/**
+ * @brief Poll the sensor for new measurement data
+ *
+ * Should be called repeatedly in a loop. If new data is available,
+ * updates `sensor->output` and sets `sensor->data_available = true`.
+ *
+ * @param[in,out] sensor Pointer to initialized sensor struct
+ * @return Status code from BMV080 API
+ */
+bmv080_status_code_t bmv080_poll(bmv080_sensor_t *sensor);
+
+/**
+ * @brief Stop the current measurement session
+ *
+ * @param[in,out] sensor Pointer to initialized sensor struct
+ * @return Status code from BMV080 API
+ */
+bmv080_status_code_t bmv080_stop(bmv080_sensor_t *sensor);
+
+/**
+ * @brief Print a sensor output record over UART
+ *
+ * @param[in] output Pointer to a valid BMV080 output structure
+ */
+void bmv080_print_output(const bmv080_output_t *output);
+
+/**
  * @brief Implements the default I2C read transaction
  *
  * Sets the read function callback pointer on the bmv080 device struct.
@@ -110,7 +166,7 @@ int8_t i2c_write_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, const 
  *
  * @param[in] period_us Duration of the delay in microseconds
  */
-int8_t delay_cb(uint32_t period_us);
+int8_t bmv080_delay_cb(uint32_t period_us);
 
 /**
  * @brief Validates the BMV080 sensor output for numeric correctness.
@@ -136,5 +192,18 @@ bool bmv080_is_valid_output(const bmv080_output_t *o);
  * @return bmv080_fixed_t structure containing the fixed-point values
  */
 bmv080_fixed_t bmv080_to_fixed(const bmv080_output_t *o);
+
+/**
+ * @brief Formatted UART print function for BMV080 sensor messages
+ *
+ * Formats a message using `vsnprintf` and sends it over UART using HAL.
+ * If `vsnprintf` fails, an error message is sent instead.
+ *
+ * @param[in] fmt Format string (supports standard printf format specifiers)
+ * @param[in] ... Variadic arguments to be formatted
+ *
+ * @return Number of characters transmitted on success, negative value on error
+ */
+int bmv080_uart_print(const char *fmt, ...);
 
 // TODO: Include example usage

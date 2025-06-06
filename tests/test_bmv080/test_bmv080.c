@@ -23,7 +23,7 @@
 #include "usart.h"
 #include "gpio.h"
 #include "logging.h"
-#include "bmv080_example.h"
+#include "bmv080_driver.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -69,74 +69,34 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM2_Init();
 
-  debug_print("BMV080 Test\r\n");
+  debug_print("*********BMV080 Test*********\r\n");
 
-  // TODO: Check address - the define BMV080_I2C_ADDRESS is 0x54, from the Bosch example code,
-  // but the default address is 0x57. The default of 0x57 works with a left shift, which seem
-  // fine, though it's unclear why the example code defaults to 0x54.
-  // Should but the working value into a define with the shift.
-  if (HAL_I2C_IsDeviceReady(&hi2c1, 0x57 << 1, 3, HAL_MAX_DELAY) == HAL_OK)
+  if (HAL_I2C_IsDeviceReady(&hi2c1, BMV080_I2C_ADDRESS << 1, 3, HAL_MAX_DELAY) == HAL_OK)
   {
-    debug_print("Yes sensor is ready\r\n");
+    debug_print("Success: BMV080 sensor is ready\r\n");
   }
   else
   {
-    debug_print("Sensor not responding\r\n");
+    debug_print("Error: BMV080 is not responding\r\n");
   }
 
   HAL_Delay(1000);
 
-  // Got the following output with the call to bmv080 below:
   // BMV080 sensor driver version: 24.0.0.16b8c68a693.0
-  // Opening BMV080 sensor unit failed with BMV080 status 106
-  // So next TODO: Look into status 106 failure for bmv080_open
+  bmv080_sensor_t sensor;
+  bmv080_init(&sensor, &hi2c1);
+  bmv080_configure_duty_cycle(&sensor, 20); // 20 second cycle
+  if (sensor.status != E_BMV080_OK)
+    printf("Failed to configure duty cycle: %d\r\n", sensor.status);
+  bmv080_start_duty_cycle(&sensor);
 
-  /* Sensor API execution */
-  bmv080_status_code_t bmv080_final_status = bmv080(
-      (bmv080_sercom_handle_t)&hi2c1,
-      (const bmv080_callback_read_t)combridge_i2c_read_16bit,
-      (const bmv080_callback_write_t)combridge_i2c_write_16bit,
-      (const bmv080_callback_delay_t)combridge_delay,
-      (const bmv080_callback_tick_t)HAL_GetTick,
-      (const print_function_t)bmv080_uart_print,
-      (const enable_ext_interrupt_function_t)enable_external_interrupt);
-
-  if (bmv080_final_status != E_BMV080_OK)
-  {
-    debug_print("Executing the sensor APIs failed with bmv080 status %d\n", (int)bmv080_final_status);
-  }
-
-  /* Infinite loop */
   while (1)
   {
-
-    HAL_Delay(1000);
-    debug_print("BMV080 test app loop\r\n");
+    if (bmv080_poll(&sensor) == E_BMV080_OK && sensor.data_available)
+    {
+      bmv080_print_output(&sensor.output);
+      sensor.data_available = false;
+    }
+    HAL_Delay(100); // Polling period
   }
-}
-
-int bmv080_uart_print(const char *fmt, ...)
-{
-  char buffer[128];
-  int result;
-
-  va_list args;
-  va_start(args, fmt);
-  result = vsnprintf(buffer, sizeof(buffer), fmt, args);
-  va_end(args);
-
-  if (result < 0)
-  {
-    const char *err_msg = "[bmv080_print] vsnprintf error\n";
-    HAL_UART_Transmit(&huart2, (uint8_t *)err_msg, strlen(err_msg), 100);
-    return result;
-  }
-
-  buffer[sizeof(buffer) - 1] = '\0';
-  size_t len = (size_t)result;
-  if (len > sizeof(buffer))
-    len = sizeof(buffer) - 1;
-
-  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, 100);
-  return result;
 }
