@@ -94,8 +94,22 @@ int main(void)
   {
     if (bmv080_poll(&sensor) == E_BMV080_OK && sensor.data_available)
     {
+      // Floating point output
       bmv080_print_output(&sensor.output);
+
+      // Convert to fixed-point representation
+      bmv080_fixed_t fixed = bmv080_to_fixed(&sensor.output);
+
+      // Print fixed-point values (example)
+      bmv080_uart_print("Fixed output: runtime=%u (0.01s), PM1=%u, PM2.5=%u, PM10=%u, flags=0x%02X\r\n",
+                        fixed.runtime_in_0_01_sec,
+                        fixed.pm1,
+                        fixed.pm2_5,
+                        fixed.pm10,
+                        fixed.flags);
+
       sensor.data_available = false;
+      debug_print("\r\n");
     }
     HAL_Delay(100); // Polling period
   }

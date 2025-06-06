@@ -39,7 +39,6 @@ static void bmv080_data_callback(bmv080_output_t output, void *user_ptr)
 {
   bmv080_sensor_t *sensor = (bmv080_sensor_t *)user_ptr;
   sensor->output = output;
-  bmv080_print_output(&output);
   sensor->data_available = true;
 }
 
