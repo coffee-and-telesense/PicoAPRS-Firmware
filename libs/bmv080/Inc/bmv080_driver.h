@@ -26,6 +26,21 @@
 #define BMV080_I2C_ADDRESS 0x57
 
 /* ========================== TYPE DEFINITIONS ========================== */
+/**
+ * @struct bmv080_sensor_t
+ * @brief Structure representing a complete BMV080 sensor instance.
+ *
+ * Encapsulates sensor handles, current status, output data, and data-ready flag.
+ * Intended to simplify the use of the BMV080 sensor through a wrapper layer.
+ */
+typedef struct
+{
+  bmv080_handle_t handle;             /**< Internal driver handle, initialized to NULL */
+  bmv080_status_code_t status;        /**< Latest status code from BMV080 operations */
+  bmv080_sercom_handle_t i2c_handle;  /**< I2C communication interface */
+  bmv080_output_t output;             /**< Most recent sensor output structure */
+  bool data_available;                /**< Indicates whether new sensor data is available */
+} bmv080_sensor_t;
 
 /**
  * @struct bmv080_fixed_t
@@ -45,6 +60,18 @@ typedef struct
 } bmv080_fixed_t;
 
 /* ========================== FUNCTION PROTOTYPES ========================== */
+/**
+ * @brief Initializes a BMV080 sensor structure with default values and I2C interface.
+ *
+ * Sets the sensor handle to NULL, status to E_BMV080_OK, clears the output data,
+ * and sets the data availability flag to false. Assigns the provided I2C handle
+ * to the communication interface field of the sensor.
+ *
+ * @param[in,out] sensor Pointer to the bmv080_sensor_t instance to initialize
+ * @param[in] i2c_handle Pointer to the I2C handle used for BMV080 communication
+ */
+void bmv080_init(bmv080_sensor_t *sensor, I2C_HandleTypeDef *i2c_handle);
+
 /**
  * @brief Implements the default I2C read transaction
  *

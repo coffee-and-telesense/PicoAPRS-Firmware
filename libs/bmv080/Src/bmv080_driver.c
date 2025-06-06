@@ -12,6 +12,27 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <string.h> // For memset
+
+/** Initializes a BMV080 sensor structure with default values and I2C interface. */
+void bmv080_init(bmv080_sensor_t *sensor, I2C_HandleTypeDef *i2c_handle)
+{
+  if (!sensor || !i2c_handle)
+    return;
+
+  sensor->handle = NULL;
+  sensor->status = E_BMV080_OK;
+  memset(&sensor->output, 0, sizeof(sensor->output));
+  sensor->data_available = false;
+  sensor->i2c_handle = (bmv080_sercom_handle_t)i2c_handle;
+
+  sensor->status = bmv080_open(
+      &sensor->handle,
+      sensor->i2c_handle,
+      (const bmv080_callback_read_t)i2c_read_16bit_cb,
+      (const bmv080_callback_write_t)i2c_write_16bit_cb,
+      (const bmv080_callback_delay_t)delay_cb);
+}
 
 /** @brief Implements the default I2C read transaction */
 int8_t i2c_read_16bit_cb(bmv080_sercom_handle_t handle, uint16_t header, uint16_t *payload, uint16_t payload_length) {
