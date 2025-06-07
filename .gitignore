@@ -5,3 +5,5 @@
 *.o
 *compile_commands.json
 *CmakeFiles
+build.ninja
+*CMakeFiles

@@ -60,6 +60,11 @@
             "name": "test_bme688",
             "description": "Test application for the BME688 sensor",
             "displayName": "Test BME68x"
+        },
+        {
+            "name": "test_bmv080",
+            "description": "Test application for the BMV080 sensor",
+            "displayName": "Test BMV080"
         }
     ]
 }
