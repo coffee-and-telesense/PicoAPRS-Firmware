@@ -25,7 +25,10 @@ add_subdirectory(CubeMX/cmake/stm32cubemx)
 add_subdirectory(libs/gps)
 add_subdirectory(libs/common)
 add_subdirectory(libs/bme68x)
+add_subdirectory(libs/bmv080)
 
 # Add tests
 add_subdirectory(tests/gps_simple_test)
 add_subdirectory(tests/test_bme688)
+add_subdirectory(tests/test_bmv080)
+
